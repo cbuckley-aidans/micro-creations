@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variables: Named Containers</title>
+  <style>
+    :root {
+      --navy:   #1b1f45;
+      --pink:   #ea008a;
+      --white:  #ffffff;
+      --dim:    rgba(255,255,255,0.38);
+      --faint:  rgba(255,255,255,0.1);
+      --pfaint: rgba(234,0,138,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: default;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    .hdr {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--faint);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hdr-tag {
+      padding: 14px 22px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--pink);
+      border-right: 1px solid var(--faint);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .hdr-title {
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 252px 1fr;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── PRINCIPLES PANEL ── */
+    .panel {
+      border-right: 1px solid var(--faint);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .principle {
+      flex: 1;
+      padding: 26px 22px;
+      border-bottom: 1px solid var(--faint);
+      position: relative;
+      transition: background 0.45s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .principle:last-child { border-bottom: none; }
+
+    .pnum {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 9px;
+      opacity: 0.32;
+      transition: opacity 0.45s;
+    }
+
+    .ptext {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--dim);
+      transition: color 0.45s;
+    }
+
+    .principle.active { background: var(--pfaint); }
+
+    .principle.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--pink);
+    }
+
+    .principle.active .pnum  { opacity: 1; }
+    .principle.active .ptext { color: var(--white); }
+
+    /* ── STAGE ── */
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 48px 36px;
+      position: relative;
+    }
+
+    /* ── PHASE INFO ── */
+    .phase-info {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .phase-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 8px;
+    }
+
+    .phase-text {
+      font-size: 20px;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.45;
+      transition: opacity 0.22s ease;
+    }
+
+    /* ── BOXES ── */
+    .boxes { display: flex; gap: 28px; margin-bottom: 52px; }
+
+    .bwrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .box {
+      width: 178px;
+      height: 178px;
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+
+    .box::after {
+      content: attr(data-name);
+      position: absolute;
+      top: 11px;
+      left: 13px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+
+    .box.hover {
+      border: 2px solid var(--pink);
+      background: rgba(234,0,138,0.07);
+      box-shadow: 0 0 0 4px rgba(234,0,138,0.11), inset 0 0 28px rgba(234,0,138,0.04);
+    }
+
+    .box.filled {
+      border: 2px solid rgba(255,255,255,0.35);
+    }
+
+    .box.filled::after { color: rgba(255,255,255,0.45); }
+
+    .bval {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+      padding: 6px 10px;
+      display: none;
+    }
+
+    .box.filled .bval { display: block; }
+
+    .blabel {
+      height: 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+    }
+
+    .bassign {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--pink);
+      opacity: 0;
+      transform: translateX(-5px);
+      transition: opacity 0.32s ease, transform 0.32s ease;
+    }
+
+    .bassign.show { opacity: 1; transform: none; }
+
+    /* ── CHIPS TRAY ── */
+    .tray {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 48px;
+      align-items: center;
+    }
+
+    .chip {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 20px;
+      background: var(--pink);
+      color: var(--white);
+      border-radius: 3px;
+      cursor: grab;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.24s ease;
+      white-space: nowrap;
+    }
+
+    .chip:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 26px rgba(234,0,138,0.5);
+    }
+
+    .chip.used {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: scale(0.88) translateY(-4px) !important;
+    }
+
+    .chip.dragging-src {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    /* ── PROGRESS ── */
+    .prog {
+      position: absolute;
+      bottom: 20px;
+      right: 34px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .prog b { color: var(--pink); }
+
+    /* ── GHOST ── */
+    #ghost {
+      position: fixed;
+      pointer-events: none;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 20px;
+      background: var(--pink);
+      color: var(--white);
+      border-radius: 3px;
+      box-shadow: 0 14px 32px rgba(234,0,138,0.55);
+      z-index: 9999;
+      transform: translate(-50%, -50%) rotate(-4deg) scale(1.08);
+      opacity: 0;
+      white-space: nowrap;
+      transition: opacity 0.1s;
+    }
+
+    #ghost.on { opacity: 1; }
+
+    /* ── COMPLETION OVERLAY ── */
+    .completion {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 13, 34, 0.97);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .completion.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .comp-inner {
+      width: min(720px, calc(100% - 80px));
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .comp-item {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .comp-item.reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    .ci-num {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 10px;
+    }
+
+    .ci-text {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.18;
+      color: var(--white);
+    }
+
+    .comp-note {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--dim);
+      border-top: 1px solid var(--faint);
+      padding-top: 28px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .comp-note.reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes snapIn {
+      0%   { opacity: 0; transform: scale(0.52) translateY(-14px); }
+      52%  { opacity: 1; transform: scale(1.15); }
+      74%  { transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes flyOut {
+      0%   { opacity: 1; transform: scale(1) translateY(0); }
+      18%  { transform: scale(1.14) translateY(-5px); }
+      100% { opacity: 0; transform: scale(0.58) translateY(-74px); }
+    }
+
+    @keyframes dropIn {
+      0%   { opacity: 0; transform: scale(0.62) translateY(-44px); }
+      58%  { opacity: 1; transform: scale(1.13) translateY(5px); }
+      80%  { transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      18%     { transform: translateX(-7px); }
+      36%     { transform: translateX(7px); }
+      54%     { transform: translateX(-4px); }
+      72%     { transform: translateX(4px); }
+    }
+
+    @keyframes chipAppear {
+      from { opacity: 0; transform: translateY(10px) scale(0.88); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes phasePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(234,0,138,0.35); }
+      50%  { box-shadow: 0 0 0 10px rgba(234,0,138,0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(234,0,138,0); }
+    }
+
+    .a-snap   { animation: snapIn    0.44s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .a-flyout { animation: flyOut    0.36s ease-in forwards; }
+    .a-dropin { animation: dropIn    0.46s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .a-shake  { animation: shake     0.38s ease; }
+    .a-chip   { animation: chipAppear 0.38s ease both; }
+    .a-pulse  { animation: phasePulse 0.65s ease; }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-tag">Lesson 01</div>
+  <h1 class="hdr-title">Variables: Named Containers</h1>
+</header>
+
+<div class="layout">
+
+  <aside class="panel">
+    <div class="principle active" id="p1">
+      <div class="pnum">01</div>
+      <div class="ptext">A variable is a named container</div>
+    </div>
+    <div class="principle" id="p2">
+      <div class="pnum">02</div>
+      <div class="ptext">The name stays; the value can change</div>
+    </div>
+    <div class="principle" id="p3">
+      <div class="pnum">03</div>
+      <div class="ptext">One name holds one value at a time</div>
+    </div>
+  </aside>
+
+  <main class="stage">
+
+    <div class="phase-info">
+      <div class="phase-tag" id="ptag">Phase 01</div>
+      <div class="phase-text" id="ptext">Drag each value into a named container.</div>
+    </div>
+
+    <div class="boxes">
+      <div class="bwrap">
+        <div class="box" id="b-name" data-name="name">
+          <div class="bval" id="bv-name"></div>
+        </div>
+        <div class="blabel">name<span class="bassign" id="ba-name"></span></div>
+      </div>
+      <div class="bwrap">
+        <div class="box" id="b-age" data-name="age">
+          <div class="bval" id="bv-age"></div>
+        </div>
+        <div class="blabel">age<span class="bassign" id="ba-age"></span></div>
+      </div>
+      <div class="bwrap">
+        <div class="box" id="b-sport" data-name="sport">
+          <div class="bval" id="bv-sport"></div>
+        </div>
+        <div class="blabel">sport<span class="bassign" id="ba-sport"></span></div>
+      </div>
+    </div>
+
+    <div class="tray" id="tray">
+      <div class="chip" data-value='"Mia"'>"Mia"</div>
+      <div class="chip" data-value='14'>14</div>
+      <div class="chip" data-value='"soccer"'>"soccer"</div>
+    </div>
+
+    <div class="prog">Filled: <b id="fc">0</b> / 3</div>
+
+  </main>
+</div>
+
+<!-- Completion overlay -->
+<div class="completion" id="completion">
+  <div class="comp-inner">
+    <div class="comp-item" id="ci1">
+      <span class="ci-num">01</span>
+      <p class="ci-text">A variable is a named container</p>
+    </div>
+    <div class="comp-item" id="ci2">
+      <span class="ci-num">02</span>
+      <p class="ci-text">The name stays; the value can change</p>
+    </div>
+    <div class="comp-item" id="ci3">
+      <span class="ci-num">03</span>
+      <p class="ci-text">One name holds one value at a time</p>
+    </div>
+    <p class="comp-note" id="comp-note">Head back to Stile to complete the next activity, or refresh the page to repeat this activity again.</p>
+  </div>
+</div>
+
+<div id="ghost"></div>
+
+<script>
+(() => {
+  let phase      = 1;
+  let filled     = 0;
+  let phase1Done = false;
+  let reassigns  = 0;
+  let dragging   = null;
+  const state    = { name: null, age: null, sport: null };
+
+  const ghost = document.getElementById('ghost');
+  const tray  = document.getElementById('tray');
+  const ptag  = document.getElementById('ptag');
+  const ptext = document.getElementById('ptext');
+  const fc    = document.getElementById('fc');
+
+  bind(tray.querySelectorAll('.chip'));
+
+  function bind(chips) {
+    chips.forEach(c => {
+      c.addEventListener('mousedown', mDown);
+      c.addEventListener('touchstart', tStart, { passive: false });
+    });
+  }
+
+  function mDown(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    beginDrag(e.currentTarget, e.clientX, e.clientY);
+    window.addEventListener('mousemove', mMove);
+    window.addEventListener('mouseup', mUp);
+  }
+  function mMove(e) { moveDrag(e.clientX, e.clientY); }
+  function mUp(e)   { endDrag(e.clientX, e.clientY); window.removeEventListener('mousemove', mMove); window.removeEventListener('mouseup', mUp); }
+
+  function tStart(e) {
+    e.preventDefault();
+    const t = e.touches[0];
+    beginDrag(e.currentTarget, t.clientX, t.clientY);
+    window.addEventListener('touchmove', tMove, { passive: false });
+    window.addEventListener('touchend', tEnd);
+  }
+  function tMove(e) { e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }
+  function tEnd(e)  { const t = e.changedTouches[0]; endDrag(t.clientX, t.clientY); window.removeEventListener('touchmove', tMove); window.removeEventListener('touchend', tEnd); }
+
+  function beginDrag(chip, x, y) {
+    dragging = chip;
+    ghost.textContent = chip.dataset.value;
+    ghost.style.left  = x + 'px';
+    ghost.style.top   = y + 'px';
+    chip.classList.add('dragging-src');
+    document.body.style.cursor = 'grabbing';
+    requestAnimationFrame(() => ghost.classList.add('on'));
+  }
+
+  function moveDrag(x, y) {
+    if (!dragging) return;
+    ghost.style.left = x + 'px';
+    ghost.style.top  = y + 'px';
+    document.querySelectorAll('.box').forEach(b => b.classList.remove('hover'));
+    const t = hitBox(x, y);
+    if (t) t.classList.add('hover');
+  }
+
+  function endDrag(x, y) {
+    if (!dragging) return;
+    ghost.classList.remove('on');
+    document.body.style.cursor = '';
+    document.querySelectorAll('.box').forEach(b => b.classList.remove('hover'));
+    const chip   = dragging;
+    dragging     = null;
+    const target = hitBox(x, y);
+    if (target) handleDrop(chip, target);
+    else chip.classList.remove('dragging-src');
+  }
+
+  function hitBox(x, y) {
+    for (const b of document.querySelectorAll('.box')) {
+      const r = b.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return b;
+    }
+    return null;
+  }
+
+  function handleDrop(chip, box) {
+    const key  = box.id.slice(2);
+    const val  = chip.dataset.value;
+    const bv   = document.getElementById('bv-' + key);
+    const ba   = document.getElementById('ba-' + key);
+    const prev = state[key];
+
+    chip.classList.remove('dragging-src');
+
+    if (phase === 1 && prev !== null) {
+      box.classList.add('a-shake');
+      box.addEventListener('animationend', () => box.classList.remove('a-shake'), { once: true });
+      return;
+    }
+
+    chip.classList.add('used');
+
+    if (prev === null) {
+      doSnap(box, bv, ba, val, key);
+    } else {
+      doReassign(box, bv, ba, val, key);
+    }
+  }
+
+  function doSnap(box, bv, ba, val, key) {
+    bv.textContent = val;
+    box.classList.add('filled');
+    bv.style.display = 'block';
+    clearA(bv);
+    void bv.offsetWidth;
+    bv.classList.add('a-snap');
+
+    ba.textContent = '\u00a0= ' + val;
+    setTimeout(() => ba.classList.add('show'), 290);
+
+    state[key] = val;
+    filled++;
+    fc.textContent = filled;
+
+    if (filled === 3 && !phase1Done) {
+      phase1Done = true;
+      document.querySelectorAll('.box').forEach(b => {
+        b.classList.add('a-pulse');
+        b.addEventListener('animationend', () => b.classList.remove('a-pulse'), { once: true });
+      });
+      setTimeout(startPhase2, 1100);
+    }
+  }
+
+  function doReassign(box, bv, ba, val, key) {
+    clearA(bv);
+    void bv.offsetWidth;
+    bv.classList.add('a-flyout');
+
+    setTimeout(() => {
+      bv.textContent = val;
+      clearA(bv);
+      void bv.offsetWidth;
+      bv.classList.add('a-dropin');
+
+      ba.textContent = '\u00a0= ' + val;
+      ba.classList.remove('show');
+      void ba.offsetWidth;
+      ba.classList.add('show');
+
+      state[key] = val;
+      reassigns++;
+
+      activate('p2');
+      activate('p3');
+
+      if (reassigns === 1) setInstruction(null, 'The name stays. The value changed.');
+      if (reassigns === 2) setInstruction(null, 'Each name holds exactly one value at a time.');
+      if (reassigns === 3) setTimeout(showCompletion, 900);
+    }, 375);
+  }
+
+  function startPhase2() {
+    phase = 2;
+    setInstruction('Phase 02', 'Drag a new value into an already-filled container.');
+
+    const newVals = ['"Jordan"', '"tennis"', '99'];
+    newVals.forEach((v, i) => {
+      const c = document.createElement('div');
+      c.className     = 'chip a-chip';
+      c.dataset.value = v;
+      c.textContent   = v;
+      c.style.animationDelay = (i * 0.11) + 's';
+      tray.appendChild(c);
+    });
+
+    bind(tray.querySelectorAll('.chip.a-chip'));
+  }
+
+  function showCompletion() {
+    const overlay = document.getElementById('completion');
+    overlay.classList.add('show');
+
+    ['ci1', 'ci2', 'ci3'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('reveal'), 420 + i * 250);
+    });
+
+    setTimeout(() => document.getElementById('comp-note').classList.add('reveal'), 420 + 3 * 250 + 180);
+  }
+
+  function activate(id) { document.getElementById(id).classList.add('active'); }
+
+  function clearA(el) { el.classList.remove('a-snap', 'a-flyout', 'a-dropin'); }
+
+  function setInstruction(tag, text) {
+    ptext.style.opacity = '0';
+    setTimeout(() => {
+      if (tag) ptag.textContent = tag;
+      ptext.textContent = text;
+      ptext.style.opacity = '1';
+    }, 180);
+  }
+
+})();
+</script>
+</body>
+</html>
