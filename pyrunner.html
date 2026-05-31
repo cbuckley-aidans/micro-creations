@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python Runner</title>
+
+  <!-- CodeMirror 5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
+  <!-- Skulpt (official CDN) -->
+  <script src="https://skulpt.org/js/skulpt.min.js" type="text/javascript"></script>
+  <script src="https://skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #1b1f45;
+      --navy-deep: #12163a;
+      --navy-mid:  #222756;
+      --pink:      #ea008a;
+      --pink-dim:  rgba(234, 0, 138, 0.12);
+      --border:    rgba(255, 255, 255, 0.09);
+      --text:      #ffffff;
+      --text-sub:  rgba(255, 255, 255, 0.45);
+      --text-body: rgba(255, 255, 255, 0.88);
+      --success:   #5de0a0;
+      --error:     #ff6e9c;
+    }
+
+    html {
+      background: var(--navy);
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 21px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--navy);
+      padding: 42px 36px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 21px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .phase-label {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--pink);
+    }
+
+    .snippet-label {
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    /* ── Section labels ───────────────────────── */
+    .section-label {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+    }
+
+    /* ── Editor ───────────────────────────────── */
+    .editor-wrap {
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 21px;
+    }
+
+    .CodeMirror {
+      height: auto;
+      background: var(--navy-deep);
+      color: #dde1f5;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 21px;
+      line-height: 1.65;
+      padding: 6px 0;
+    }
+
+    .CodeMirror-gutters {
+      background: var(--navy-deep);
+      border-right: 1px solid var(--border);
+      padding-right: 6px;
+    }
+
+    .CodeMirror-linenumber {
+      color: rgba(255, 255, 255, 0.18);
+      font-size: 18px;
+    }
+
+    .CodeMirror-scroll {
+      min-height: 78px;
+    }
+
+    /* Syntax colours */
+    .cm-s-default .cm-string   { color: #f888cc; }
+    .cm-s-default .cm-number   { color: #85e89d; }
+    .cm-s-default .cm-keyword  { color: #79aaff; }
+    .cm-s-default .cm-builtin  { color: #ea008a; }
+    .cm-s-default .cm-variable { color: #dde1f5; }
+    .cm-s-default .cm-operator { color: rgba(255,255,255,0.38); }
+    .cm-s-default .cm-comment  { color: rgba(255,255,255,0.28); font-style: italic; }
+    .cm-s-default .cm-def      { color: #dde1f5; }
+
+    /* Read-only: hide cursor */
+    .readonly-editor .CodeMirror-cursor { display: none !important; }
+    .readonly-editor .CodeMirror { cursor: default; }
+
+    /* ── Run button ───────────────────────────── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .run-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
+      background: var(--pink);
+      color: white;
+      border: none;
+      padding: 13px 27px 13px 24px;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.12s, transform 0.08s;
+      user-select: none;
+    }
+
+    .run-btn:hover  { background: #ff1a97; }
+    .run-btn:active { transform: scale(0.97); }
+    .run-btn:disabled {
+      background: rgba(234, 0, 138, 0.35);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .run-btn .play-icon {
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 7px 0 7px 13px;
+      border-color: transparent transparent transparent white;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .run-btn.running .play-icon {
+      border: none;
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Output ───────────────────────────────── */
+    .output-section {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      pointer-events: none;
+    }
+
+    .output-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .output-box {
+      background: var(--navy-deep);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 18px 21px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 21px;
+      line-height: 1.65;
+      min-height: 66px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 24px;
+      color: #dde1f5;
+    }
+
+    .output-box.is-error {
+      color: var(--error);
+      border-color: rgba(255, 110, 156, 0.25);
+    }
+
+    /* ── Post-run prompt ──────────────────────── */
+    .prompt-box {
+      border-left: 4px solid var(--pink);
+      background: var(--pink-dim);
+      border-radius: 0 3px 3px 0;
+      padding: 18px 24px;
+      margin-bottom: 18px;
+    }
+
+    .prompt-box .prompt-heading {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 7px;
+    }
+
+    .prompt-box .prompt-text {
+      font-size: 19px;
+      color: var(--text-body);
+      line-height: 1.55;
+    }
+
+    /* ── Next button ──────────────────────────── */
+    .next-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: #ffffff;
+      color: var(--navy);
+      border: none;
+      padding: 18px 24px;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.15s, transform 0.08s;
+      user-select: none;
+      text-align: left;
+    }
+
+    .next-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .next-btn:active {
+      transform: scale(0.99);
+    }
+
+    .next-btn .next-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: var(--navy);
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .next-btn:hover .next-arrow {
+      transform: translateX(3px);
+    }
+
+    .next-arrow svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Completion screen */
+    .complete-screen {
+      text-align: center;
+      padding: 48px 24px;
+      border: 1px solid rgba(93, 224, 160, 0.25);
+      border-radius: 3px;
+      background: rgba(93, 224, 160, 0.05);
+    }
+
+    .complete-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .complete-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--success);
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+    }
+
+    .complete-text {
+      font-size: 17px;
+      color: var(--text-sub);
+      line-height: 1.55;
+    }
+
+    /* Page transition */
+    #app {
+      transition: opacity 0.18s ease;
+    }
+
+    #app.fading {
+      opacity: 0;
+    }
+
+    /* ── Error: unknown config ────────────────── */
+    .config-error {
+      padding: 30px;
+      border: 1px solid rgba(255,110,156,0.3);
+      border-radius: 3px;
+      color: var(--error);
+      font-size: 19px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app"></div>
+
+  <script>
+  // ─────────────────────────────────────────────────────────────
+  //  CONFIGS — add new activities here
+  // ─────────────────────────────────────────────────────────────
+  const CONFIGS = {
+
+    phase2_a: {
+      phaseLabel:   'Phase 2 — Run',
+      snippetLabel: 'Snippet A',
+      code: `name = "Jordan"\nprint(name)`,
+      editable: false,
+      postRunPrompt: 'Head back to Stile and check your original prediction. Were you right?',
+      next: 'phase2_b'
+    },
+
+    phase2_b: {
+      phaseLabel:   'Phase 2 — Run',
+      snippetLabel: 'Snippet B',
+      code: `score = 10\nscore = 25\nprint(score)`,
+      editable: false,
+      postRunPrompt: 'Head back to Stile and check your original prediction. Did the output surprise you? Think about why only one number appeared.',
+      next: 'phase2_c'
+    },
+
+    phase2_c: {
+      phaseLabel:   'Phase 2 — Run',
+      snippetLabel: 'Snippet C',
+      code: `first = "Ada"\nlast = "Lovelace"\nprint(first)\nprint(last)`,
+      editable: false,
+      postRunPrompt: 'Head back to Stile and check your original prediction. How many lines of output appeared?',
+      next: 'phase2_d'
+    },
+
+    phase2_d: {
+      phaseLabel:   'Phase 2 — Run',
+      snippetLabel: 'Snippet D',
+      code: `age = 12\nprint(Age)`,
+      editable: false,
+      postRunPrompt: 'Head back to Stile and check your original prediction. Look closely at the two spellings of age in the code — can you spot the difference? What does this tell you about how Python reads variable names?',
+      next: null
+    }
+
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  //  INIT
+  // ─────────────────────────────────────────────────────────────
+  const params    = new URLSearchParams(window.location.search);
+  const configKey = params.get('config') || 'phase2_a';
+  const cfg       = CONFIGS[configKey];
+  const app       = document.getElementById('app');
+
+  if (!cfg) {
+    app.innerHTML = `<div class="config-error">
+      Unknown config key: <strong>${configKey}</strong><br>
+      Available: ${Object.keys(CONFIGS).join(', ')}
+    </div>`;
+  } else {
+    buildUI(cfg);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  BUILD UI
+  // ─────────────────────────────────────────────────────────────
+  function buildUI(cfg) {
+    app.innerHTML = `
+      <div class="header">
+        <span class="phase-label">${cfg.phaseLabel}</span>
+        <span class="snippet-label">${cfg.snippetLabel}</span>
+      </div>
+
+      <div class="section-label">Code</div>
+      <div class="editor-wrap ${cfg.editable ? '' : 'readonly-editor'}" id="editorWrap">
+        <textarea id="codeEditor"></textarea>
+      </div>
+
+      <div class="controls">
+        <button class="run-btn" id="runBtn">
+          <span class="play-icon"></span>
+          Run
+        </button>
+      </div>
+
+      <div class="output-section" id="outputSection">
+        <div class="section-label">Output</div>
+        <div class="output-box" id="outputBox"></div>
+        <div class="prompt-box">
+          <div class="prompt-heading">Check your prediction</div>
+          <div class="prompt-text">${cfg.postRunPrompt}</div>
+        </div>
+        <button class="next-btn" id="nextBtn">
+          <span>I've checked my prediction on Stile. Next snippet.</span>
+          <span class="next-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+      </div>
+    `;
+
+    // Init CodeMirror
+    const textarea = document.getElementById('codeEditor');
+    const editor = CodeMirror.fromTextArea(textarea, {
+      mode:        'python',
+      lineNumbers: true,
+      readOnly:    cfg.editable ? false : 'nocursor',
+      indentUnit:  4,
+      tabSize:     4,
+      viewportMargin: Infinity,
+      extraKeys: {
+        Tab: cm => cm.execCommand('insertSoftTab')
+      }
+    });
+    editor.setValue(cfg.code);
+
+    // Run button
+    const runBtn       = document.getElementById('runBtn');
+    const outputBox    = document.getElementById('outputBox');
+    const outputSection = document.getElementById('outputSection');
+
+    runBtn.addEventListener('click', () => {
+      runPython(editor.getValue(), runBtn, outputBox, outputSection);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+      if (cfg.next) {
+        // Fade out, swap config, fade back in
+        app.classList.add('fading');
+        setTimeout(() => {
+          buildUI(CONFIGS[cfg.next]);
+          app.classList.remove('fading');
+        }, 180);
+      } else {
+        // Last snippet — show completion screen
+        app.classList.add('fading');
+        setTimeout(() => {
+          app.innerHTML = `
+            <div class="complete-screen">
+              <div class="complete-icon">✓</div>
+              <div class="complete-title">All snippets complete</div>
+              <div class="complete-text">Head back to Stile to continue.</div>
+            </div>
+          `;
+          app.classList.remove('fading');
+        }, 180);
+      }
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  PYTHON RUNNER (Skulpt)
+  // ─────────────────────────────────────────────────────────────
+  function runPython(code, btn, outputBox, outputSection) {
+    if (typeof Sk === 'undefined') {
+      outputBox.textContent = 'Error: Python runtime failed to load.\nPlease check your internet connection and refresh.';
+      outputBox.classList.add('is-error');
+      outputSection.classList.add('visible');
+      return;
+    }
+
+    // Reset state
+    outputBox.textContent = '';
+    outputBox.classList.remove('is-error');
+    outputSection.classList.remove('visible');
+
+    btn.disabled = true;
+    btn.classList.add('running');
+    btn.querySelector('.play-icon').style.cssText = '';
+
+    let output = '';
+
+    Sk.configure({
+      output: text => { output += text; },
+      read: x => {
+        if (Sk.builtinFiles?.files?.[x] === undefined)
+          throw new Error(`File not found: '${x}'`);
+        return Sk.builtinFiles.files[x];
+      }
+    });
+
+    Sk.misceval.asyncToPromise(() =>
+      Sk.importMainWithBody('<stdin>', false, code, true)
+    ).then(() => {
+      outputBox.textContent = output.trimEnd() || '(no output)';
+      finish(false);
+    }).catch(err => {
+      outputBox.textContent = formatError(err);
+      outputBox.classList.add('is-error');
+      finish(true);
+    });
+
+    function finish(isError) {
+      btn.disabled = false;
+      btn.classList.remove('running');
+
+      // Small delay so the output render completes before animating in
+      requestAnimationFrame(() => {
+        outputSection.classList.add('visible');
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  ERROR FORMATTING — make Skulpt errors readable for students
+  // ─────────────────────────────────────────────────────────────
+  function formatError(err) {
+    const raw = err.toString();
+
+    // NameError
+    const nameMatch = raw.match(/NameError.*name '(.+?)' is not defined/);
+    if (nameMatch) {
+      return `NameError: '${nameMatch[1]}' is not defined.`;
+    }
+
+    // SyntaxError
+    if (raw.includes('SyntaxError')) {
+      return `SyntaxError: Check your code for missing quotes, brackets, or typos.`;
+    }
+
+    // TypeError
+    const typeMatch = raw.match(/TypeError[:\s]+(.+?)(?:\n|$)/);
+    if (typeMatch) {
+      return `TypeError: ${typeMatch[1]}`;
+    }
+
+    return raw;
+  }
+  </script>
+</body>
+</html>
