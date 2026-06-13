@@ -292,6 +292,117 @@
       transition: none !important;
     }
 
+    /* ── CHIP TYPE TOOLTIP ── */
+    .chip { position: relative; }
+
+    .chip[data-hint]::after {
+      content: attr(data-hint);
+      position: absolute;
+      bottom: calc(100% + 9px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--white);
+      color: var(--navy);
+      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 6px 9px;
+      border-radius: 3px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .chip[data-hint]:hover::after { opacity: 1; }
+
+    /* ── TARGET BOX (phase 2 guide) ── */
+    @keyframes targetPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(234,0,138,0); }
+      50%      { box-shadow: 0 0 0 7px rgba(234,0,138,0.12); }
+    }
+
+    .box.target {
+      border: 2px solid var(--pink);
+      animation: targetPulse 1.6s ease-in-out infinite;
+    }
+
+    body.p1 .box.filled { cursor: grab; }
+    body.p1 .box.filled:active { cursor: grabbing; }
+
+    .box.lifting {
+      border: 2px dashed rgba(255,255,255,0.2) !important;
+      box-shadow: none !important;
+    }
+
+    /* ── SOFT NUDGE ── */
+    .nudge {
+      margin: 12px auto 0;
+      max-width: 460px;
+      min-height: 18px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.55);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .nudge.show { opacity: 1; }
+
+    /* ── PREDICT BLOCK ── */
+    .predict {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 520px;
+    }
+
+    .predict-q {
+      font-size: 16px;
+      line-height: 1.5;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .opts {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .opt {
+      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      background: transparent;
+      border: 1px solid var(--faint);
+      border-radius: 3px;
+      padding: 13px 18px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.16s, background 0.16s, opacity 0.3s;
+    }
+
+    .opt:hover { border-color: var(--pink); background: var(--pfaint); }
+    .opt.chosen { border-color: var(--pink); background: rgba(234,0,138,0.16); }
+    .opt.locked:not(.chosen) { opacity: 0.34; }
+    .opt:disabled { cursor: default; }
+
+    .predict-after {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--dim);
+      text-align: center;
+      min-height: 16px;
+    }
+
     /* ── PROGRESS ── */
     .prog {
       position: absolute;
@@ -473,7 +584,8 @@
 
     <div class="phase-info">
       <div class="phase-tag" id="ptag">Phase 01</div>
-      <div class="phase-text" id="ptext">Drag each value into a named container.</div>
+      <div class="phase-text" id="ptext">Drag each value into a named container. Drag one back out to move it.</div>
+      <div class="nudge" id="nudge"></div>
     </div>
 
     <div class="boxes">
@@ -498,9 +610,19 @@
     </div>
 
     <div class="tray" id="tray">
-      <div class="chip" data-value='"Mia"'>"Mia"</div>
-      <div class="chip" data-value='14'>14</div>
-      <div class="chip" data-value='"soccer"'>"soccer"</div>
+      <div class="chip" data-value='"Mia"' data-hint="text · in quotes">"Mia"</div>
+      <div class="chip" data-value='14' data-hint="number · no quotes">14</div>
+      <div class="chip" data-value='"soccer"' data-hint="text · in quotes">"soccer"</div>
+    </div>
+
+    <div class="predict" id="predict">
+      <div class="predict-q">These containers are full. What happens if you drop a new value onto one?</div>
+      <div class="opts">
+        <button class="opt" type="button">Both values are kept side by side</button>
+        <button class="opt" type="button">The new value replaces the old one</button>
+        <button class="opt" type="button">Nothing happens, the box is already full</button>
+      </div>
+      <div class="predict-after" id="predict-after">Make your prediction, then run it to find out.</div>
     </div>
 
     <div class="prog">Filled: <b id="fc">0</b> / 3</div>
@@ -534,7 +656,7 @@
   let phase      = 1;
   let filled     = 0;
   let phase1Done = false;
-  let reassigns  = 0;
+  let nudgeTimer = null;
   let dragging   = null;
   const state    = { name: null, age: null, sport: null };
 
@@ -545,40 +667,79 @@
   const fc    = document.getElementById('fc');
 
   bind(tray.querySelectorAll('.chip'));
+  document.body.classList.add('p1');
+  document.querySelectorAll('.box').forEach(b => {
+    b.addEventListener('mousedown', boxDown);
+    b.addEventListener('touchstart', boxTouch, { passive: false });
+  });
 
   function bind(chips) {
     chips.forEach(c => {
-      c.addEventListener('mousedown', mDown);
-      c.addEventListener('touchstart', tStart, { passive: false });
+      c.addEventListener('mousedown', chipDown);
+      c.addEventListener('touchstart', chipTouch, { passive: false });
     });
   }
 
-  function mDown(e) {
+  // ── drag start: from a tray chip ──
+  function chipDown(e) {
     if (e.button !== 0) return;
     e.preventDefault();
-    beginDrag(e.currentTarget, e.clientX, e.clientY);
-    window.addEventListener('mousemove', mMove);
-    window.addEventListener('mouseup', mUp);
+    const c = e.currentTarget;
+    beginDrag({ value: c.dataset.value, srcChip: c, srcKey: null }, e.clientX, e.clientY);
+    addMove(false);
   }
-  function mMove(e) { moveDrag(e.clientX, e.clientY); }
-  function mUp(e)   { endDrag(e.clientX, e.clientY); window.removeEventListener('mousemove', mMove); window.removeEventListener('mouseup', mUp); }
+  function chipTouch(e) {
+    e.preventDefault();
+    const c = e.currentTarget, t = e.touches[0];
+    beginDrag({ value: c.dataset.value, srcChip: c, srcKey: null }, t.clientX, t.clientY);
+    addMove(true);
+  }
 
-  function tStart(e) {
+  // ── drag start: lifting a value back out of a filled box (phase 1 only) ──
+  function boxDown(e) {
+    if (e.button !== 0) return;
+    const key = e.currentTarget.id.slice(2);
+    if (phase !== 1 || phase1Done || state[key] === null) return;
+    e.preventDefault();
+    liftFromBox(e.currentTarget, key, e.clientX, e.clientY);
+    addMove(false);
+  }
+  function boxTouch(e) {
+    const key = e.currentTarget.id.slice(2);
+    if (phase !== 1 || phase1Done || state[key] === null) return;
     e.preventDefault();
     const t = e.touches[0];
-    beginDrag(e.currentTarget, t.clientX, t.clientY);
-    window.addEventListener('touchmove', tMove, { passive: false });
-    window.addEventListener('touchend', tEnd);
+    liftFromBox(e.currentTarget, key, t.clientX, t.clientY);
+    addMove(true);
   }
+
+  function liftFromBox(box, key, x, y) {
+    beginDrag({ value: state[key], srcChip: null, srcKey: key }, x, y);
+    document.getElementById('bv-' + key).style.visibility = 'hidden';
+    box.classList.add('lifting');
+  }
+
+  function addMove(touch) {
+    if (touch) {
+      window.addEventListener('touchmove', tMove, { passive: false });
+      window.addEventListener('touchend', tEnd);
+    } else {
+      window.addEventListener('mousemove', mMove);
+      window.addEventListener('mouseup', mUp);
+    }
+  }
+
+  function mMove(e) { moveDrag(e.clientX, e.clientY); }
+  function mUp(e)   { endDrag(e.clientX, e.clientY); window.removeEventListener('mousemove', mMove); window.removeEventListener('mouseup', mUp); }
   function tMove(e) { e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }
   function tEnd(e)  { const t = e.changedTouches[0]; endDrag(t.clientX, t.clientY); window.removeEventListener('touchmove', tMove); window.removeEventListener('touchend', tEnd); }
 
-  function beginDrag(chip, x, y) {
-    dragging = chip;
-    ghost.textContent = chip.dataset.value;
+  function beginDrag(d, x, y) {
+    dragging = d;
+    ghost.textContent = d.value;
     ghost.style.left  = x + 'px';
     ghost.style.top   = y + 'px';
-    chip.classList.add('dragging-src');
+    if (d.srcChip) d.srcChip.classList.add('dragging-src');
     document.body.style.cursor = 'grabbing';
     requestAnimationFrame(() => ghost.classList.add('on'));
   }
@@ -597,11 +758,11 @@
     ghost.classList.remove('on');
     document.body.style.cursor = '';
     document.querySelectorAll('.box').forEach(b => b.classList.remove('hover'));
-    const chip   = dragging;
-    dragging     = null;
+    const d = dragging;
+    dragging = null;
     const target = hitBox(x, y);
-    if (target) handleDrop(chip, target);
-    else chip.classList.remove('dragging-src');
+    if (d.srcChip) endChipDrag(d, target);
+    else endBoxDrag(d, target);
   }
 
   function hitBox(x, y) {
@@ -612,42 +773,99 @@
     return null;
   }
 
-  function handleDrop(chip, box) {
-    const key  = box.id.slice(2);
-    const val  = chip.dataset.value;
-    const bv   = document.getElementById('bv-' + key);
-    const ba   = document.getElementById('ba-' + key);
-    const prev = state[key];
-
-    chip.classList.remove('dragging-src');
-
-    if (phase === 1 && prev !== null) {
-      box.classList.add('a-shake');
-      box.addEventListener('animationend', () => box.classList.remove('a-shake'), { once: true });
-      return;
-    }
-
-    chip.classList.add('used');
-
-    if (prev === null) {
-      doSnap(box, bv, ba, val, key);
-    } else {
-      doReassign(box, bv, ba, val, key);
-    }
+  function shake(box) {
+    box.classList.add('a-shake');
+    box.addEventListener('animationend', () => box.classList.remove('a-shake'), { once: true });
   }
 
-  function doSnap(box, bv, ba, val, key) {
+  // ── a tray chip was dropped ──
+  function endChipDrag(d, box) {
+    d.srcChip.classList.remove('dragging-src');
+    if (!box) return;
+    const key  = box.id.slice(2);
+    const prev = state[key];
+
+    if (phase === 1 && prev !== null) { shake(box); return; }   // can't stack onto a full box yet
+
+    const bv = document.getElementById('bv-' + key);
+    const ba = document.getElementById('ba-' + key);
+    const chip = d.srcChip;
+    chip.classList.add('used');
+    setTimeout(() => chip.remove(), 280);
+
+    if (prev === null) doSnap(box, bv, ba, d.value, key);
+    else doReassign(box, bv, ba, d.value, key);
+  }
+
+  // ── a value lifted from a box was dropped (phase 1) ──
+  function endBoxDrag(d, target) {
+    const key    = d.srcKey;
+    const srcBox = document.getElementById('b-' + key);
+    document.getElementById('bv-' + key).style.visibility = '';
+    srcBox.classList.remove('lifting');
+
+    if (target === srcBox) return;                       // dropped on itself, no change
+    if (!target) { retrieveToTray(key); return; }        // dropped outside, return to tray
+
+    const tgt = target.id.slice(2);
+    if (state[tgt] !== null) { shake(target); return; }  // target already full, refuse
+    moveValue(key, tgt);                                 // relocate into an empty box
+  }
+
+  function hintFor(val) {
+    return val.trim().charAt(0) === '"' ? 'text · in quotes' : 'number · no quotes';
+  }
+
+  function clearBox(key) {
+    const box = document.getElementById('b-' + key);
+    const bv  = document.getElementById('bv-' + key);
+    const ba  = document.getElementById('ba-' + key);
+    box.classList.remove('filled');
+    bv.style.display = 'none';
+    bv.textContent = '';
+    ba.textContent = '';
+    ba.classList.remove('show');
+    state[key] = null;
+  }
+
+  function retrieveToTray(key) {
+    const val = state[key];
+    clearBox(key);
+    filled--;
+    fc.textContent = filled;
+    const c = document.createElement('div');
+    c.className = 'chip a-chip';
+    c.dataset.value = val;
+    c.dataset.hint = hintFor(val);
+    c.textContent = val;
+    tray.appendChild(c);
+    bind([c]);
+  }
+
+  function moveValue(fromKey, toKey) {
+    const val = state[fromKey];
+    clearBox(fromKey);
+    maybeNudge(toKey, val);
+    fillBox(document.getElementById('b-' + toKey),
+            document.getElementById('bv-' + toKey),
+            document.getElementById('ba-' + toKey), val, toKey);
+  }
+
+  function fillBox(box, bv, ba, val, key) {
     bv.textContent = val;
     box.classList.add('filled');
     bv.style.display = 'block';
     clearA(bv);
     void bv.offsetWidth;
     bv.classList.add('a-snap');
-
     ba.textContent = '\u00a0= ' + val;
     setTimeout(() => ba.classList.add('show'), 290);
-
     state[key] = val;
+  }
+
+  function doSnap(box, bv, ba, val, key) {
+    maybeNudge(key, val);
+    fillBox(box, bv, ba, val, key);
     filled++;
     fc.textContent = filled;
 
@@ -657,11 +875,14 @@
         b.classList.add('a-pulse');
         b.addEventListener('animationend', () => b.classList.remove('a-pulse'), { once: true });
       });
-      setTimeout(startPhase2, 1100);
+      setTimeout(showPredict, 1100);
     }
   }
 
   function doReassign(box, bv, ba, val, key) {
+    document.querySelectorAll('.box.target').forEach(b => b.classList.remove('target'));
+    activate('p2');                       // the name stays; the value is changing
+
     clearA(bv);
     void bv.offsetWidth;
     bv.classList.add('a-flyout');
@@ -678,32 +899,63 @@
       ba.classList.add('show');
 
       state[key] = val;
-      reassigns++;
 
-      activate('p2');
-      activate('p3');
-
-      if (reassigns === 1) setInstruction(null, 'The name stays. The value changed.');
-      if (reassigns === 2) setInstruction(null, 'Each name holds exactly one value at a time.');
-      if (reassigns === 3) setTimeout(showCompletion, 900);
+      activate('p3');                     // only one value remains
+      setInstruction(null, 'The name stayed. The value changed. One value at a time.');
+      setTimeout(showCompletion, 1100);
     }, 375);
   }
 
-  function startPhase2() {
-    phase = 2;
-    setInstruction('Phase 02', 'Drag a new value into an already-filled container.');
+  function showPredict() {
+    document.body.classList.remove('p1');
+    tray.style.display = 'none';
+    setInstruction('Phase 02', 'Predict first, then run it.');
+    const pre = document.getElementById('predict');
+    pre.style.display = 'flex';
+    pre.querySelectorAll('.opt').forEach(opt => opt.addEventListener('click', onPredict));
+  }
 
-    const newVals = ['"Jordan"', '"tennis"', '99'];
-    newVals.forEach((v, i) => {
-      const c = document.createElement('div');
-      c.className     = 'chip a-chip';
-      c.dataset.value = v;
-      c.textContent   = v;
-      c.style.animationDelay = (i * 0.11) + 's';
-      tray.appendChild(c);
+  function onPredict(e) {
+    document.querySelectorAll('.opt').forEach(o => {
+      o.classList.add('locked');
+      o.disabled = true;
     });
+    e.currentTarget.classList.add('chosen');
+    document.getElementById('predict-after').textContent = 'Good prediction. Now run it and see what really happens.';
+    setTimeout(startPhase2, 1200);
+  }
 
+  function startPhase2() {
+    document.getElementById('predict').style.display = 'none';
+    tray.querySelectorAll('.chip').forEach(c => c.remove());
+    tray.style.display = '';
+    phase = 2;
+    setInstruction('Phase 02', 'Drag 99 onto age, and watch what happens to the value inside.');
+    document.getElementById('b-age').classList.add('target');
+
+    const c = document.createElement('div');
+    c.className     = 'chip a-chip';
+    c.dataset.value = '99';
+    c.dataset.hint  = 'number · no quotes';
+    c.textContent   = '99';
+    tray.appendChild(c);
     bind(tray.querySelectorAll('.chip.a-chip'));
+  }
+
+  function showNudge(text) {
+    const n = document.getElementById('nudge');
+    n.textContent = text;
+    n.classList.add('show');
+    clearTimeout(nudgeTimer);
+    nudgeTimer = setTimeout(() => n.classList.remove('show'), 4400);
+  }
+
+  function maybeNudge(key, val) {
+    const gotText   = val.trim().charAt(0) === '"';
+    const wantsText = (key === 'name' || key === 'sport');
+    if (gotText === wantsText) return;
+    if (wantsText) showNudge('Numbers have no quotes. A name is usually text, which sits inside quotes. Drag it back out if you want to change it.');
+    else showNudge('Quotes mean text. age is usually a number, with no quotes. Drag it back out if you want to change it.');
   }
 
   function showCompletion() {
