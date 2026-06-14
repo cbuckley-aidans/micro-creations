@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Variables -- Completing Variables</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1b1f45;
+            --pink: #ea008a;
+            --teal: #1a6e6e;
+            --blue: #1a4ea6;
+            --purple: #5c3d99;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --light-grey: #e8e8e8;
+            --mid-grey: #9a9a9a;
+            --correct: #16a34a;
+            --incorrect: #dc2626;
+            --hint-bg: #fffbeb;
+            --hint-border: #f59e0b;
+            --hint-text: #78350f;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: #eaeaea;
+            color: var(--navy);
+        }
+
+        /* === SHEET HEADER === */
+        .sheet-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--navy);
+            letter-spacing: 0.01em;
+            margin: 0 0 8px 0;
+            padding-bottom: 14px;
+            border-bottom: 4px solid var(--navy);
+        }
+
+        .sheet-title span { color: var(--pink); }
+
+        .drag-hint {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--mid-grey);
+            margin: 10px 0 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drag-hint::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--pink);
+            flex-shrink: 0;
+        }
+
+        /* === SYNTAX REFERENCE === */
+        .syntax-ref {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            background-color: var(--off-white);
+            border: 2px solid var(--light-grey);
+            border-left: 6px solid var(--navy);
+            padding: 10px 22px;
+            margin-bottom: 32px;
+        }
+
+        .syntax-ref .ref-label {
+            font-size: 18px;
+            color: var(--mid-grey);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            white-space: nowrap;
+        }
+
+        .syntax-ref .ref-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        /* === ACTIVITY CARD === */
+        .activity-card {
+            border-top: 4px solid var(--navy);
+            border-left: 1.5px solid var(--light-grey);
+            border-right: 1.5px solid var(--light-grey);
+            border-bottom: 1.5px solid var(--light-grey);
+            margin-bottom: 34px;
+            background: var(--white);
+        }
+
+        .activity-header {
+            background-color: var(--navy);
+            padding: 11px 24px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .activity-number {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--pink);
+            white-space: nowrap;
+        }
+
+        .activity-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--white);
+            margin: 0;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .find-badge {
+            margin-left: auto;
+            background-color: var(--pink);
+            color: var(--white);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 5px 16px;
+            white-space: nowrap;
+        }
+
+        /* === STEP ROW === */
+        .step-row {
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            align-items: stretch;
+            min-height: 140px;
+        }
+
+        .step-label-col {
+            padding: 22px 22px;
+            border-right: 1.5px solid var(--light-grey);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .step-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--pink);
+            margin: 0 0 5px 0;
+        }
+
+        .data-type-chip {
+            display: inline-block;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 2px 9px;
+            letter-spacing: 0.02em;
+            margin-bottom: 8px;
+            color: white;
+            align-self: flex-start;
+        }
+
+        .chip-int   { background-color: var(--teal); }
+        .chip-str   { background-color: var(--pink); }
+        .chip-float { background-color: var(--blue); }
+
+        .step-instruction {
+            font-size: 17px;
+            margin: 0;
+            line-height: 1.45;
+            color: var(--navy);
+        }
+
+        .step-equation-col {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-tiles-col {
+            padding: 16px 20px;
+            background-color: var(--off-white);
+            border-left: 1.5px solid var(--light-grey);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            align-items: center;
+            align-content: center;
+        }
+
+        .step-tiles-col.drag-over { background-color: #dde8ff; }
+
+        /* === CODE BLOCK === */
+        .code-line {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--navy);
+            padding: 18px 22px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .code-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 26px;
+            font-weight: 700;
+            color: #dde2f0;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        /* === DROPPABLE BLANKS === */
+        .eq-blank {
+            border: 2.5px dashed #b0b8c1;
+            background-color: #f0f3f6;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+
+        .eq-blank-sm { min-width: 60px;  height: 52px; padding: 0 4px; }
+        .eq-blank-md { min-width: 112px; height: 52px; padding: 0 6px; }
+        .eq-blank-lg { min-width: 168px; height: 54px; padding: 0 8px; }
+
+        .code-line .eq-blank {
+            border-color: rgba(255,255,255,0.25);
+            background-color: rgba(255,255,255,0.07);
+        }
+
+        .eq-blank.drag-over {
+            border-color: var(--pink);
+            background-color: #fff0f8;
+            border-style: solid;
+        }
+
+        .code-line .eq-blank.drag-over {
+            border-color: var(--pink);
+            background-color: rgba(234,0,138,0.18);
+        }
+
+        .eq-blank.correct {
+            border: 3px solid var(--correct) !important;
+            background-color: #f0fdf4 !important;
+        }
+
+        .eq-blank.incorrect {
+            border: 3px solid var(--incorrect) !important;
+            background-color: #fef2f2 !important;
+            animation: shake 0.4s ease;
+        }
+
+        .eq-blank.has-tile {
+            border-style: solid;
+            border-color: transparent;
+            background-color: transparent;
+            padding: 0;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%  { transform: translateX(-7px); }
+            40%  { transform: translateX(7px); }
+            60%  { transform: translateX(-4px); }
+            80%  { transform: translateX(4px); }
+        }
+
+        /* === HINT AREA === */
+        .hint-area {
+            display: none;
+            padding: 12px 24px 14px 24px;
+            background-color: var(--hint-bg);
+            border-top: 1.5px solid #fde68a;
+            border-left: 5px solid var(--hint-border);
+        }
+
+        .hint-heading {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--hint-border);
+            margin: 0 0 5px 0;
+        }
+
+        .hint-item {
+            font-size: 16px;
+            color: var(--hint-text);
+            line-height: 1.5;
+            margin: 0 0 3px 0;
+        }
+
+        .hint-item:last-child { margin: 0; }
+
+        /* === TILES === */
+        .tile {
+            border-radius: 7px;
+            padding: 10px 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 19px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            cursor: grab;
+            user-select: none;
+            transition: opacity 0.15s, transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .tile:active { cursor: grabbing; }
+        .tile.dragging { opacity: 0.35; transform: scale(0.9); box-shadow: none; }
+
+        .tile-teal     { background-color: var(--teal);   color: var(--white); }
+        .tile-blue     { background-color: var(--blue);   color: var(--white); }
+        .tile-pink     { background-color: var(--pink);   color: var(--white); }
+        .tile-operator { background-color: var(--purple); color: var(--white); }
+
+        .eq-blank .tile { box-shadow: none; border-radius: 4px; }
+        .eq-blank .tile:hover { transform: none; box-shadow: none; }
+
+        /* === CHECK ROW === */
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            background-color: #f0f0f0;
+            border-top: 1.5px solid var(--light-grey);
+            flex-wrap: wrap;
+        }
+
+        .check-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background-color: var(--navy);
+            color: var(--white);
+            border: none;
+            padding: 11px 26px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .check-btn:hover { background-color: #2e3472; }
+        .check-btn:active { background-color: var(--pink); }
+
+        .reset-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background-color: transparent;
+            color: var(--mid-grey);
+            border: 2px solid var(--light-grey);
+            padding: 11px 26px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .reset-btn:hover { border-color: #aaa; color: var(--navy); }
+
+        .feedback {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .feedback-correct   { color: var(--correct); }
+        .feedback-incorrect { color: var(--incorrect); }
+
+        /* === SCORE SECTION === */
+        .score-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0;
+        }
+
+        .show-score-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            background-color: var(--pink);
+            color: var(--white);
+            border: none;
+            padding: 16px 56px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
+
+        .show-score-btn:hover { background-color: #c5006e; }
+        .show-score-btn:active { background-color: var(--navy); }
+
+        .score-panel {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            background-color: var(--navy);
+            border-top: 6px solid var(--pink);
+            padding: 36px 40px 32px;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .score-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--pink);
+            margin: 0;
+        }
+
+        .score-number {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--white);
+            line-height: 0.95;
+            letter-spacing: 0.02em;
+        }
+
+        .score-divider {
+            width: 60px;
+            height: 3px;
+            background-color: var(--pink);
+        }
+
+        .score-prompt {
+            font-family: 'Barlow', sans-serif;
+            font-size: 18px;
+            color: rgba(255,255,255,0.75);
+            margin: 0;
+            max-width: 480px;
+            line-height: 1.55;
+        }
+    </style>
+</head>
+<body>
+
+<h1 class="sheet-title">Practice Activities: <span>Completing Variables</span></h1>
+<p class="drag-hint">Drag the coloured tiles into the empty boxes, then press Check Answer</p>
+
+<div class="syntax-ref">
+    <span class="ref-label">Syntax</span>
+    <span class="ref-text">variable_name = value</span>
+</div>
+
+
+<!-- ================================================ -->
+<!-- ACTIVITY 1: score = 10  (int, drag value only)   -->
+<!-- ================================================ -->
+<div class="activity-card" id="act1">
+    <div class="activity-header">
+        <span class="activity-number">Activity 01</span>
+        <h3 class="activity-title">Player Score</h3>
+        <span class="find-badge">Data type: int</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-int">int</span>
+                <p class="step-instruction">Store a player's score of 10 as an integer. Drag the correct value into the blank.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <span class="code-text">score =</span>
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act1" data-correct="10"
+                         data-hint="Integers are whole numbers -- no decimal point and no quotation marks."
+                         id="act1-b1"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act1-pool">
+                <span class="tile tile-teal draggable" draggable="true" data-value="10"   data-pool-id="act1-pool">10</span>
+                <span class="tile tile-pink draggable" draggable="true" data-value='"10"' data-pool-id="act1-pool">"10"</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="10.0" data-pool-id="act1-pool">10.0</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="100"  data-pool-id="act1-pool">100</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act1-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act1')">Check Answer</button>
+            <button class="reset-btn" onclick="resetActivity('act1')">Reset</button>
+            <span class="feedback" id="act1-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ==================================================== -->
+<!-- ACTIVITY 2: city = "Brisbane"  (str, drag value)     -->
+<!-- ==================================================== -->
+<div class="activity-card" id="act2">
+    <div class="activity-header">
+        <span class="activity-number">Activity 02</span>
+        <h3 class="activity-title">City Name</h3>
+        <span class="find-badge">Data type: str</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-str">str</span>
+                <p class="step-instruction">Store the name of a city: Brisbane. Remember, strings must use quotation marks.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <span class="code-text">city =</span>
+                    <div class="eq-blank eq-blank-lg droppable" data-activity="act2" data-correct='"Brisbane"'
+                         data-hint="Strings are text values wrapped in quotation marks. Without quotes, Python reads it as a variable name."
+                         id="act2-b1"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act2-pool">
+                <span class="tile tile-pink draggable" draggable="true" data-value='"Brisbane"' data-pool-id="act2-pool">"Brisbane"</span>
+                <span class="tile tile-blue draggable" draggable="true" data-value="Brisbane"   data-pool-id="act2-pool">Brisbane</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="42"         data-pool-id="act2-pool">42</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="1.5"        data-pool-id="act2-pool">1.5</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act2-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act2')">Check Answer</button>
+            <button class="reset-btn" onclick="resetActivity('act2')">Reset</button>
+            <span class="feedback" id="act2-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ====================================================== -->
+<!-- ACTIVITY 3: temperature = 36.6  (float, drag value)    -->
+<!-- ====================================================== -->
+<div class="activity-card" id="act3">
+    <div class="activity-header">
+        <span class="activity-number">Activity 03</span>
+        <h3 class="activity-title">Body Temperature</h3>
+        <span class="find-badge">Data type: float</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-float">float</span>
+                <p class="step-instruction">Store a temperature reading of 36.6 degrees. A float includes a decimal point.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <span class="code-text">temperature =</span>
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act3" data-correct="36.6"
+                         data-hint="Floats include a decimal point. Check that the value is not wrapped in quotes and has a decimal."
+                         id="act3-b1"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act3-pool">
+                <span class="tile tile-teal draggable" draggable="true" data-value="36"     data-pool-id="act3-pool">36</span>
+                <span class="tile tile-pink draggable" draggable="true" data-value='"36.6"' data-pool-id="act3-pool">"36.6"</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="36.6"   data-pool-id="act3-pool">36.6</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="366"    data-pool-id="act3-pool">366</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act3-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act3')">Check Answer</button>
+            <button class="reset-btn" onclick="resetActivity('act3')">Reset</button>
+            <span class="feedback" id="act3-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================== -->
+<!-- ACTIVITY 4: lives = 3  (int, drag name + value)          -->
+<!-- ======================================================== -->
+<div class="activity-card" id="act4">
+    <div class="activity-header">
+        <span class="activity-number">Activity 04</span>
+        <h3 class="activity-title">Lives Remaining</h3>
+        <span class="find-badge">Data type: int</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-int">int</span>
+                <p class="step-instruction">Store the number of lives remaining: 3. Drag the variable name and the integer value into the blanks.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act4" data-correct="lives"
+                         data-hint="Variable names go on the left of the = sign. They do not use quotation marks."
+                         id="act4-b1"></div>
+                    <span class="code-text">=</span>
+                    <div class="eq-blank eq-blank-sm droppable" data-activity="act4" data-correct="3"
+                         data-hint="The value 3 is a whole number -- that makes it an integer, with no quotes and no decimal."
+                         id="act4-b2"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act4-pool">
+                <span class="tile tile-blue draggable" draggable="true" data-value="lives"   data-pool-id="act4-pool">lives</span>
+                <span class="tile tile-pink draggable" draggable="true" data-value='"lives"' data-pool-id="act4-pool">"lives"</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="3"       data-pool-id="act4-pool">3</span>
+                <span class="tile tile-pink draggable" draggable="true" data-value='"3"'     data-pool-id="act4-pool">"3"</span>
+                <span class="tile tile-blue draggable" draggable="true" data-value="score"   data-pool-id="act4-pool">score</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act4-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act4')">Check Answers</button>
+            <button class="reset-btn" onclick="resetActivity('act4')">Reset</button>
+            <span class="feedback" id="act4-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- ACTIVITY 5: username = "alex"  (str, drag name + op + value)     -->
+<!-- ================================================================ -->
+<div class="activity-card" id="act5">
+    <div class="activity-header">
+        <span class="activity-number">Activity 05</span>
+        <h3 class="activity-title">Username</h3>
+        <span class="find-badge">Data type: str</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-str">str</span>
+                <p class="step-instruction">Build the full assignment: a username variable storing the string "alex". Drag the name, operator, and value.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <div class="eq-blank eq-blank-lg droppable" data-activity="act5" data-correct="username"
+                         data-hint="The variable name goes on the left side of the = sign."
+                         id="act5-b1"></div>
+                    <div class="eq-blank eq-blank-sm droppable" data-activity="act5" data-correct="="
+                         data-hint="The assignment operator in Python is a single = sign, not +."
+                         id="act5-b2"></div>
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act5" data-correct='"alex"'
+                         data-hint="String values need quotation marks. Without them, Python reads it as a variable name."
+                         id="act5-b3"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act5-pool">
+                <span class="tile tile-blue     draggable" draggable="true" data-value="username" data-pool-id="act5-pool">username</span>
+                <span class="tile tile-operator draggable" draggable="true" data-value="="        data-pool-id="act5-pool">=</span>
+                <span class="tile tile-pink     draggable" draggable="true" data-value='"alex"'   data-pool-id="act5-pool">"alex"</span>
+                <span class="tile tile-blue     draggable" draggable="true" data-value="name"     data-pool-id="act5-pool">name</span>
+                <span class="tile tile-operator draggable" draggable="true" data-value="+"        data-pool-id="act5-pool">+</span>
+                <span class="tile tile-blue     draggable" draggable="true" data-value="alex"     data-pool-id="act5-pool">alex</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act5-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act5')">Check Answers</button>
+            <button class="reset-btn" onclick="resetActivity('act5')">Reset</button>
+            <span class="feedback" id="act5-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- ACTIVITY 6: height = 1.75  (float, drag name + value)        -->
+<!-- ============================================================ -->
+<div class="activity-card" id="act6">
+    <div class="activity-header">
+        <span class="activity-number">Activity 06</span>
+        <h3 class="activity-title">Height</h3>
+        <span class="find-badge">Data type: float</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-float">float</span>
+                <p class="step-instruction">Store a person's height of 1.75 metres. Drag the variable name and the float value into the blanks.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act6" data-correct="height"
+                         data-hint="Variable names go on the left of the = sign. Check you have the right name for a height measurement."
+                         id="act6-b1"></div>
+                    <span class="code-text">=</span>
+                    <div class="eq-blank eq-blank-md droppable" data-activity="act6" data-correct="1.75"
+                         data-hint="A height of 1.75 has a decimal point, making it a float. Watch out for the version in quotes."
+                         id="act6-b2"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act6-pool">
+                <span class="tile tile-blue draggable" draggable="true" data-value="height"   data-pool-id="act6-pool">height</span>
+                <span class="tile tile-blue draggable" draggable="true" data-value="weight"   data-pool-id="act6-pool">weight</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="1.75"     data-pool-id="act6-pool">1.75</span>
+                <span class="tile tile-pink draggable" draggable="true" data-value='"1.75"'   data-pool-id="act6-pool">"1.75"</span>
+                <span class="tile tile-teal draggable" draggable="true" data-value="175"      data-pool-id="act6-pool">175</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act6-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act6')">Check Answers</button>
+            <button class="reset-btn" onclick="resetActivity('act6')">Reset</button>
+            <span class="feedback" id="act6-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- ACTIVITY 7: item_count = 8  (int, drag name + op + value)          -->
+<!-- ================================================================== -->
+<div class="activity-card" id="act7">
+    <div class="activity-header">
+        <span class="activity-number">Activity 07</span>
+        <h3 class="activity-title">Item Count</h3>
+        <span class="find-badge">Data type: int</span>
+    </div>
+    <div class="activity-body">
+        <div class="step-row">
+            <div class="step-label-col">
+                <p class="step-label">Variable</p>
+                <span class="data-type-chip chip-int">int</span>
+                <p class="step-instruction">Build the full assignment: a variable that stores a count of 8 items. Drag the name, operator, and value.</p>
+            </div>
+            <div class="step-equation-col">
+                <div class="code-line">
+                    <div class="eq-blank eq-blank-lg droppable" data-activity="act7" data-correct="item_count"
+                         data-hint="The variable name goes on the left. This variable counts items, and uses an underscore to join the two words."
+                         id="act7-b1"></div>
+                    <div class="eq-blank eq-blank-sm droppable" data-activity="act7" data-correct="="
+                         data-hint="The assignment operator is a single = sign, not +."
+                         id="act7-b2"></div>
+                    <div class="eq-blank eq-blank-sm droppable" data-activity="act7" data-correct="8"
+                         data-hint="The value 8 is a whole number -- an integer. It does not need quotation marks."
+                         id="act7-b3"></div>
+                </div>
+            </div>
+            <div class="step-tiles-col pool" id="act7-pool">
+                <span class="tile tile-blue     draggable" draggable="true" data-value="item_count" data-pool-id="act7-pool">item_count</span>
+                <span class="tile tile-operator draggable" draggable="true" data-value="="          data-pool-id="act7-pool">=</span>
+                <span class="tile tile-teal     draggable" draggable="true" data-value="8"          data-pool-id="act7-pool">8</span>
+                <span class="tile tile-blue     draggable" draggable="true" data-value="count"      data-pool-id="act7-pool">count</span>
+                <span class="tile tile-operator draggable" draggable="true" data-value="+"          data-pool-id="act7-pool">+</span>
+                <span class="tile tile-pink     draggable" draggable="true" data-value='"8"'        data-pool-id="act7-pool">"8"</span>
+            </div>
+        </div>
+        <div class="hint-area" id="act7-hints"></div>
+        <div class="check-row">
+            <button class="check-btn" onclick="checkActivity('act7')">Check Answers</button>
+            <button class="reset-btn" onclick="resetActivity('act7')">Reset</button>
+            <span class="feedback" id="act7-feedback"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- === SCORE === -->
+<div class="score-section">
+    <button class="show-score-btn" onclick="showScore()">Show Score</button>
+</div>
+<div class="score-panel" id="score-panel">
+    <p class="score-label">Your Score</p>
+    <span class="score-number" id="score-number">-- / 7</span>
+    <div class="score-divider"></div>
+    <p class="score-prompt">Take a screenshot of this page and paste it into Stile as evidence of your work.</p>
+</div>
+
+
+<script>
+    const ACT_IDS = ['act1','act2','act3','act4','act5','act6','act7'];
+    let draggedTile = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.draggable').forEach(tile => {
+            tile.addEventListener('dragstart', onDragStart);
+            tile.addEventListener('dragend',   onDragEnd);
+        });
+        document.querySelectorAll('.droppable').forEach(blank => {
+            blank.addEventListener('dragover',  onDragOver);
+            blank.addEventListener('dragleave', onDragLeave);
+            blank.addEventListener('drop',      onDropBlank);
+        });
+        document.querySelectorAll('.pool').forEach(pool => {
+            pool.addEventListener('dragover',  onDragOver);
+            pool.addEventListener('dragleave', onDragLeave);
+            pool.addEventListener('drop',      onDropPool);
+        });
+    });
+
+    function onDragStart(e) {
+        draggedTile = e.target;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', e.target.dataset.value);
+        setTimeout(() => { if (draggedTile) draggedTile.classList.add('dragging'); }, 0);
+    }
+
+    function onDragEnd(e) {
+        e.target.classList.remove('dragging');
+        draggedTile = null;
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function onDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function onDropBlank(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const blank = e.currentTarget;
+        blank.classList.remove('drag-over', 'correct', 'incorrect');
+        if (!draggedTile) return;
+
+        const existing = blank.querySelector('.tile');
+        if (existing) {
+            const pool = document.getElementById(existing.dataset.poolId);
+            if (pool) pool.appendChild(existing);
+        }
+
+        if (draggedTile.parentElement && draggedTile.parentElement.classList.contains('droppable')) {
+            const prev = draggedTile.parentElement;
+            prev.classList.remove('has-tile', 'correct', 'incorrect');
+        }
+
+        blank.appendChild(draggedTile);
+        blank.classList.add('has-tile');
+    }
+
+    function onDropPool(e) {
+        e.preventDefault();
+        const pool = e.currentTarget;
+        pool.classList.remove('drag-over');
+        if (!draggedTile) return;
+        if (draggedTile.dataset.poolId !== pool.id) return;
+
+        if (draggedTile.parentElement && draggedTile.parentElement.classList.contains('droppable')) {
+            const prev = draggedTile.parentElement;
+            prev.classList.remove('has-tile', 'correct', 'incorrect');
+        }
+        pool.appendChild(draggedTile);
+    }
+
+    function checkActivity(actId) {
+        const blanks = document.querySelectorAll(`.droppable[data-activity="${actId}"]`);
+        let correct = 0;
+        const total  = blanks.length;
+        const hints  = [];
+
+        blanks.forEach(blank => {
+            const tile     = blank.querySelector('.tile');
+            const current  = tile ? tile.dataset.value : null;
+            const expected = blank.dataset.correct;
+
+            blank.classList.remove('correct', 'incorrect');
+            void blank.offsetWidth;
+
+            if (current === expected) {
+                blank.classList.add('correct');
+                correct++;
+            } else {
+                blank.classList.add('incorrect');
+                if (blank.dataset.hint) hints.push(blank.dataset.hint);
+            }
+        });
+
+        const fb = document.getElementById(`${actId}-feedback`);
+        if (correct === total) {
+            fb.textContent = 'Correct! Well done.';
+            fb.className = 'feedback feedback-correct';
+        } else {
+            fb.textContent = `${correct} of ${total} correct -- check the red boxes.`;
+            fb.className = 'feedback feedback-incorrect';
+        }
+
+        const hintArea = document.getElementById(`${actId}-hints`);
+        if (hints.length > 0) {
+            hintArea.innerHTML =
+                '<p class="hint-heading">Hints</p>' +
+                hints.map(h => `<p class="hint-item">\u25B6 ${h}</p>`).join('');
+            hintArea.style.display = 'block';
+        } else {
+            hintArea.style.display = 'none';
+            hintArea.innerHTML = '';
+        }
+    }
+
+    function resetActivity(actId) {
+        const card = document.getElementById(actId);
+        card.querySelectorAll('.tile').forEach(tile => {
+            const pool = document.getElementById(tile.dataset.poolId);
+            if (pool) pool.appendChild(tile);
+        });
+        card.querySelectorAll('.droppable').forEach(blank => {
+            blank.classList.remove('has-tile', 'correct', 'incorrect');
+        });
+        const fb = document.getElementById(`${actId}-feedback`);
+        fb.textContent = '';
+        fb.className = 'feedback';
+
+        const hintArea = document.getElementById(`${actId}-hints`);
+        if (hintArea) { hintArea.style.display = 'none'; hintArea.innerHTML = ''; }
+    }
+
+    function showScore() {
+        // Run check on all activities to mark correct/incorrect
+        ACT_IDS.forEach(id => checkActivity(id));
+
+        // Count fully correct activities
+        let totalCorrect = 0;
+        ACT_IDS.forEach(actId => {
+            const blanks = document.querySelectorAll(`.droppable[data-activity="${actId}"]`);
+            const allCorrect = blanks.length > 0 && [...blanks].every(b => b.classList.contains('correct'));
+            if (allCorrect) totalCorrect++;
+        });
+
+        document.getElementById('score-number').textContent = `${totalCorrect} / 7`;
+        const panel = document.getElementById('score-panel');
+        panel.style.display = 'flex';
+        panel.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>
