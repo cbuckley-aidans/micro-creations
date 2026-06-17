@@ -387,6 +387,15 @@
       code: `age = 12\nprint(Age)`,
       editable: false,
       postRunPrompt: 'Head back to Stile and check your original prediction. Look closely at the two spellings of age in the code — can you spot the difference? What does this tell you about how Python reads variable names?',
+      next: 'phase2_e'
+    },
+
+    phase2_e: {
+      phaseLabel:   'Phase 2 — Run',
+      snippetLabel: 'Snippet E',
+      code: `age = 12\nage = age + 1\nprint(age)`,
+      editable: false,
+      postRunPrompt: 'Head back to Stile and check your original prediction. The same variable appears on both sides of the second line — what does Python work out first, and what happens to the old value?',
       next: null
     }
 
