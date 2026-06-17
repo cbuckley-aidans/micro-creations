@@ -280,6 +280,54 @@ const STAGES = [
     }
   },
   {
+    id:"increment-self",
+    title:"Add one to itself",
+    task:'Here is a line that looks odd: <code>age = age + 1</code>. The computer works out the <strong>right side first</strong> using the old value, then stores the answer back into <code>age</code>. Before you run it, predict: what will the second print show? Add the line, then run it.',
+    code:'age = 12\nprint(age)\n\n# add a line here that increases age by 1\n\nprint(age)',
+    buckles:1,
+    hint:"Write age = age + 1 on its own line between the two prints. The old value (12) plus 1 becomes the new value.",
+    check(code, out){
+      if(!/age\s*=\s*age\s*\+\s*1\b/.test(code)) return "Add the line age = age + 1 between the two prints.";
+      const lines = out.trim().split("\n").filter(Boolean);
+      if(lines[0] !== "12") return "The first print should still show 12.";
+      if(lines[lines.length-1] !== "13") return "After adding 1, age should be 13.";
+      return true;
+    }
+  },
+  {
+    id:"increment-repeat",
+    title:"Keep counting up",
+    task:'Each time that pattern runs, the value grows. This post starts with <code>0</code> likes. Add <strong>two</strong> lines that each increase <code>likes</code> by 1, then run it.',
+    code:'likes = 0\nprint(likes)\n\n# someone likes the post\n\n# another person likes it\n\nprint(likes)',
+    buckles:1,
+    hint:"Use likes = likes + 1 twice, on two separate lines. Each line adds 1 to whatever likes is currently holding.",
+    check(code, out){
+      const incs = (code.match(/likes\s*=\s*likes\s*\+\s*1\b/g) || []).length;
+      if(incs < 2) return "Add the line likes = likes + 1 twice, once for each person.";
+      const lines = out.trim().split("\n").filter(Boolean);
+      if(lines[0] !== "0") return "The first print should show 0.";
+      if(lines[lines.length-1] !== "2") return "After two likes, the count should be 2.";
+      return true;
+    }
+  },
+  {
+    id:"plus-equals",
+    title:"Use the shortcut: +=",
+    task:'<code>score += 1</code> means exactly the same as <code>score = score + 1</code>, just shorter. Use the <code>+=</code> shortcut to add <code>3</code> to <code>coins</code>, then run it.',
+    code:'coins = 5\nprint(coins)\n\n# use += to add 3 to coins\n\nprint(coins)',
+    buckles:1,
+    hint:"Write coins += 3 on its own line. It does the same job as coins = coins + 3.",
+    check(code, out){
+      if(/coins\s*=\s*coins\s*\+\s*3\b/.test(code) && !/coins\s*\+=\s*3\b/.test(code))
+        return "That works, but use the shortcut form this time: coins += 3.";
+      if(!/coins\s*\+=\s*3\b/.test(code)) return "Use the += shortcut, like coins += 3.";
+      const lines = out.trim().split("\n").filter(Boolean);
+      if(lines[0] !== "5") return "The first print should show 5.";
+      if(lines[lines.length-1] !== "8") return "5 plus 3 should give 8.";
+      return true;
+    }
+  },
+  {
     id:"fix-nameerror",
     title:"Fix the bug",
     task:'This code has a bug. Run it first to see the <code>NameError</code>, then fix it so it prints <code>12</code>.',
