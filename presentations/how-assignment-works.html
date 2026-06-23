@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How assignment works</title>
+<style>
+  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
+  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
+  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
+  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
+  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:50vw; justify-content:flex-end; }
+  .dot { width:10px; height:10px; background:var(--line); }
+  .dot.active { background:var(--pink); }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
+  .slide { display:none; }
+  .slide.active { display:block; }
+  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
+  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
+  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
+  h2 { font-size:clamp(1.9rem,4.2vw,3.2rem); font-weight:800; line-height:1.08; letter-spacing:-0.01em; max-width:24ch; margin-bottom:6px; }
+  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:32ch; }
+  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
+  .frag.shown { opacity:1; transform:none; }
+  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:34ch; margin-top:20px; }
+  .def { font-size:clamp(1.1rem,2.2vw,1.6rem); line-height:1.5; max-width:34ch; margin:18px 0; padding:16px 20px; background:rgba(27,31,69,0.05); border-left:5px solid var(--pink); font-weight:600; }
+
+  .line { font-family:"SF Mono","Consolas","Liberation Mono",monospace; font-size:clamp(1.7rem,4.4vw,3.4rem); font-weight:700; letter-spacing:-0.01em; margin:6px 0; }
+  .line .eq { color:var(--pink); }
+  .line .lhs { transition:opacity 0.3s ease; }
+  .line.active .lhs { opacity:0.22; }
+
+  .annot { font-family:"SF Mono","Consolas",monospace; color:var(--pink); font-weight:700; font-size:clamp(1rem,2vw,1.45rem); margin-top:8px; }
+
+  .calc { font-family:"SF Mono","Consolas",monospace; font-size:clamp(1.3rem,3vw,2.2rem); font-weight:700; color:var(--navy); margin-top:14px; }
+  .calc b { color:var(--pink); }
+
+  .tracewrap { display:flex; gap:clamp(30px,5vw,70px); align-items:center; flex-wrap:wrap; margin:10px 0 4px; }
+  .box { width:clamp(120px,16vw,180px); border:3px solid var(--navy); background:#fff; }
+  .boxlabel { background:var(--navy); color:#fff; font-family:"SF Mono","Consolas",monospace; font-weight:700; text-align:center; padding:9px 6px; font-size:clamp(0.9rem,1.6vw,1.15rem); letter-spacing:0.06em; }
+  .boxval { font-size:clamp(3rem,8vw,5.5rem); font-weight:800; text-align:center; padding:14px 8px; min-height:1.3em; transition:color 0.25s ease; }
+  .boxval.bump { animation:pop 0.42s ease; color:var(--pink); }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
+
+  .rulecard { border:3px solid var(--navy); padding:26px 30px; max-width:30ch; margin-top:14px; font-family:"SF Mono","Consolas",monospace; font-weight:700; font-size:clamp(1.1rem,2.2vw,1.6rem); line-height:1.5; }
+  .rulecard .step { color:var(--pink); }
+
+  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
+  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
+  .hint.fade { opacity:0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">How assignment works</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body">
+
+    <!-- 1 TITLE -->
+    <section class="slide active" data-label="How assignment works">
+      <div class="bignum">0</div>
+      <p class="eyebrow">Modelled example</p>
+      <h1>Assignment</h1>
+      <p class="sub">What the equals sign actually does.</p>
+      <p class="sub frag">It does not mean what it means in maths.</p>
+    </section>
+
+    <!-- 2 THE PUZZLE -->
+    <section class="slide" data-label="The puzzle">
+      <div class="bignum">1</div>
+      <p class="eyebrow">The puzzle</p>
+      <div class="line"><span class="lhs">score</span> <span class="eq">=</span> score + 1</div>
+      <p class="note frag">In maths, this makes no sense.</p>
+      <p class="note frag">Nothing can equal itself plus one.</p>
+      <p class="note frag">So why is this line everywhere in code?</p>
+    </section>
+
+    <!-- 3 THE BIG IDEA -->
+    <section class="slide" data-label="The big idea">
+      <div class="bignum">2</div>
+      <p class="eyebrow">The big idea</p>
+      <h2>The equals sign is not "equals".</h2>
+      <div class="line" style="margin-top:18px;">score <span class="eq">=</span> 0</div>
+      <p class="def frag">It means: take the value on the right, and put it into the box on the left.</p>
+      <p class="annot frag">score &larr; put 0 in here</p>
+    </section>
+
+    <!-- 4 THE BOX MODEL -->
+    <section class="slide" data-label="A variable is a box">
+      <div class="bignum">3</div>
+      <p class="eyebrow">Picture it</p>
+      <h2>A variable is a box.</h2>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="?"></div></div>
+        <div>
+          <p class="note frag" style="margin-top:0;">It holds one value at a time.</p>
+          <p class="note frag">You can look inside it, or replace what is in it.</p>
+          <p class="note frag">Replace the value, and the old one is gone for good.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 score = 0 -->
+    <section class="slide" data-label="Putting a value in">
+      <div class="bignum">4</div>
+      <p class="eyebrow">Putting a value in</p>
+      <div class="line">score <span class="eq">=</span> 0</div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="?"></div></div>
+        <div>
+          <p class="note frag" data-box="0" style="margin-top:0;">Put 0 into the box.</p>
+          <p class="note frag">score now holds 0.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 score = 10 (overwrite) -->
+    <section class="slide" data-label="Replacing a value">
+      <div class="bignum">5</div>
+      <p class="eyebrow">Replacing a value</p>
+      <div class="line">score <span class="eq">=</span> 10</div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="0"></div></div>
+        <div>
+          <p class="note frag" data-box="10" style="margin-top:0;">Put 10 into the box.</p>
+          <p class="note frag">The 0 is gone. A box only ever holds one thing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 THE TRACE -->
+    <section class="slide" data-label="Now the tricky line">
+      <div class="bignum">6</div>
+      <p class="eyebrow">Now the tricky line</p>
+      <div class="line"><span class="lhs">score</span> <span class="eq">=</span> score + 1</div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="10"></div></div>
+        <div>
+          <p class="note frag" data-target=".slide.active .line" style="margin-top:0;">Rule: always work out the right-hand side first.</p>
+          <p class="note frag">What is in score right now? It's 10.</p>
+          <div class="calc frag">score + 1 &nbsp;=&nbsp; 10 + 1 &nbsp;=&nbsp; <b>11</b></div>
+          <p class="note frag" data-box="11">Now put that answer, 11, into the box.</p>
+          <p class="note frag">score is now 11.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 RUN AGAIN -->
+    <section class="slide" data-label="Run it again">
+      <div class="bignum">7</div>
+      <p class="eyebrow">Run it again</p>
+      <div class="line">score <span class="eq">=</span> score + 1</div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="11"></div></div>
+        <div>
+          <p class="note frag" style="margin-top:0;">Run the very same line again.</p>
+          <div class="calc frag">11 + 1 &nbsp;=&nbsp; <b>12</b></div>
+          <p class="note frag" data-box="12">12 goes into the box.</p>
+          <p class="note frag">Every time this line runs, the number climbs by one.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 THE RULE -->
+    <section class="slide" data-label="The one rule">
+      <div class="bignum">8</div>
+      <p class="eyebrow">The one rule</p>
+      <h2>Right side first. Then put the answer in the box.</h2>
+      <div class="rulecard frag">
+        <span class="step">1.</span> Work out the right-hand side.<br>
+        <span class="step">2.</span> Put that answer in the box on the left.
+      </div>
+      <p class="note frag">Remember that, and assignment will always make sense.</p>
+    </section>
+
+  </div>
+</div>
+
+<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const stepLabel = document.getElementById('stepLabel');
+  let s = 0, f = 0;
+  slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+  function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
+
+  function render(){
+    slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
+    const slide = slides[s];
+    const frags = fragsIn(slide);
+    let boxVal = null;
+    frags.forEach((el,i)=>{
+      const on = i < f;
+      el.classList.toggle('shown', on);
+      const tgt = el.dataset.target;
+      if(tgt){ const node = slide.querySelector(tgt); if(node) node.classList.toggle('active', on); }
+      if(on && el.dataset.box !== undefined) boxVal = el.dataset.box;
+    });
+    const box = slide.querySelector('.boxval');
+    if(box){
+      const v = (boxVal !== null) ? boxVal : (box.dataset.initial || '');
+      if(box.textContent !== v){
+        box.textContent = v;
+        box.classList.remove('bump'); void box.offsetWidth; box.classList.add('bump');
+      }
+    }
+    dots.forEach((d,i)=>d.classList.toggle('active', i===s));
+    stepLabel.innerHTML = slide.dataset.label;
+  }
+  function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
+  function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
+  document.addEventListener('keydown',(e)=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  document.addEventListener('click', next);
+  setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
+  render();
+</script>
+</body>
+</html>

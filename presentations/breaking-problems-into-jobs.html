@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thinking like a programmer</title>
+<style>
+  :root {
+    --navy: #1b1f45;
+    --pink: #ea008a;
+    --paper: #f4f4f1;
+    --line: rgba(27, 31, 69, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--navy);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 4vh 6vw;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--navy);
+    padding-bottom: 14px;
+  }
+
+  .step-label {
+    display: inline-block;
+    background: var(--navy);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+  }
+
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; max-width: 50vw; justify-content: flex-end; }
+  .dot { width: 10px; height: 10px; background: var(--line); }
+  .dot.active { background: var(--pink); }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+
+  .slide { display: none; }
+  .slide.active { display: block; }
+
+  .bignum {
+    position: absolute;
+    top: -2vh; right: 0;
+    font-size: 26vh;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--navy);
+    opacity: 0.05;
+    z-index: -1;
+    user-select: none;
+  }
+
+  .eyebrow {
+    color: var(--pink);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(2.6rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+
+  h2 {
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.01em;
+    max-width: 22ch;
+    margin-bottom: 6px;
+  }
+
+  .sub {
+    font-size: clamp(1.2rem, 2.4vw, 1.9rem);
+    font-weight: 400;
+    margin-top: 16px;
+    max-width: 30ch;
+  }
+
+  .problem {
+    font-size: clamp(1.3rem, 2.8vw, 2.2rem);
+    line-height: 1.5;
+    font-weight: 400;
+    max-width: 26ch;
+    border-left: 6px solid var(--navy);
+    padding-left: 26px;
+    margin-bottom: 8px;
+  }
+  .doingword { transition: all 0.25s ease; }
+  .problem.active .doingword {
+    color: var(--pink);
+    font-weight: 700;
+    box-shadow: inset 0 -0.35em 0 rgba(234, 0, 138, 0.16);
+  }
+
+  .frag {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .frag.shown { opacity: 1; transform: none; }
+
+  .note {
+    font-size: clamp(1.05rem, 2vw, 1.5rem);
+    line-height: 1.5;
+    max-width: 32ch;
+    margin-top: 22px;
+  }
+
+  .def {
+    font-size: clamp(1.05rem, 2vw, 1.45rem);
+    line-height: 1.5;
+    max-width: 34ch;
+    margin: 18px 0 28px;
+    padding: 16px 20px;
+    background: rgba(27, 31, 69, 0.05);
+    border-left: 5px solid var(--pink);
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+  .card {
+    font-size: clamp(1.15rem, 2.2vw, 1.7rem);
+    font-weight: 600;
+    background: #fff;
+    border: 2px solid var(--navy);
+    padding: 16px 22px;
+    max-width: 30ch;
+  }
+  .card .tag {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 6px;
+  }
+
+  .pair {
+    display: flex;
+    margin-top: 16px;
+    max-width: 56ch;
+    flex-wrap: wrap;
+  }
+  .pair .event, .pair .action {
+    flex: 1;
+    min-width: 200px;
+    padding: 16px 20px;
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
+    font-weight: 600;
+  }
+  .pair .event { background: var(--navy); color: #fff; }
+  .pair .action { background: #fff; border: 2px solid var(--navy); border-left: none; }
+  .pair .arrow {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--pink); color: #fff;
+    font-weight: 800; font-size: 1.6rem;
+    padding: 0 16px;
+  }
+  .pair .tag {
+    display: block; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    opacity: 0.7; margin-bottom: 4px;
+  }
+
+  ol.jobs { list-style: none; counter-reset: job; max-width: 40ch; margin-top: 10px; }
+  ol.jobs li {
+    counter-increment: job;
+    position: relative;
+    padding: 14px 0 14px 64px;
+    border-bottom: 1px solid var(--line);
+    font-size: clamp(1.1rem, 2.1vw, 1.55rem);
+    line-height: 1.4;
+  }
+  ol.jobs li::before {
+    content: counter(job);
+    position: absolute;
+    left: 0; top: 12px;
+    width: 44px;
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--pink);
+  }
+
+  .code {
+    font-family: "SF Mono", "Consolas", "Liberation Mono", monospace;
+    background: var(--navy);
+    color: #f4f4f1;
+    padding: 26px 30px;
+    font-size: clamp(0.95rem, 1.8vw, 1.45rem);
+    line-height: 1.65;
+    border-left: 6px solid var(--pink);
+    max-width: 42ch;
+    white-space: pre;
+    overflow-x: auto;
+    margin-top: 4px;
+  }
+  .code .kw { color: #ff5fb0; }
+  .code .num { color: #7fd1ff; }
+  .code .str { color: #9be6a0; }
+
+  .choice { display: flex; gap: 22px; margin-top: 30px; flex-wrap: wrap; max-width: 64ch; }
+  .opt { flex: 1; min-width: 260px; border: 2px solid var(--navy); padding: 22px 24px; }
+  .opt.go { background: var(--navy); color: #fff; }
+  .opt .tag {
+    display: block; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--pink); margin-bottom: 10px;
+  }
+  .opt h3 { font-size: clamp(1.3rem, 2.4vw, 1.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 8px; }
+  .opt p { font-size: clamp(1rem, 1.9vw, 1.3rem); line-height: 1.4; }
+
+  .hint {
+    position: fixed;
+    bottom: 18px; right: 24px;
+    font-size: 0.82rem;
+    color: var(--navy);
+    opacity: 0.55;
+    z-index: 5;
+    transition: opacity 0.6s ease;
+  }
+  .hint kbd { border: 1.5px solid var(--navy); padding: 1px 7px; font-family: inherit; font-weight: 700; margin: 0 1px; }
+  .hint.fade { opacity: 0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">Modelled example</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body">
+
+    <!-- ===== EXAMPLE 1 ===== -->
+    <section class="slide active" data-label="Modelled example">
+      <div class="bignum">0</div>
+      <p class="eyebrow">Modelled example</p>
+      <h1>Thinking like a programmer</h1>
+      <p class="sub">Breaking a problem into jobs.</p>
+      <p class="sub frag">I'll show you exactly how I work this out, one step at a time.</p>
+    </section>
+
+    <section class="slide" data-label="The problem">
+      <div class="bignum">1</div>
+      <p class="eyebrow">The problem</p>
+      <p class="problem" id="problem1">At the school fete, you are running the lemonade stall. You want the micro:bit to <span class="doingword">count</span> each cup you <span class="doingword">sell</span>. When you <span class="doingword">press</span> button A, it should <span class="doingword">show</span> how much money you have <span class="doingword">made</span>. Each cup costs $2.</p>
+      <p class="note frag">Before I write any code, I read the problem twice.</p>
+      <p class="note frag" data-target="#problem1">Then I look for the doing words.</p>
+      <p class="note frag">Each doing word is a clue about what my program has to do.</p>
+    </section>
+
+    <section class="slide" data-label="Step 1 &middot; Find the events">
+      <div class="bignum">2</div>
+      <p class="eyebrow">Step 1 &middot; Find the events</p>
+      <h2>What makes something happen?</h2>
+      <p class="def frag">An event is a trigger. Something that happens that the program reacts to.</p>
+      <div class="cards">
+        <div class="card frag"><span class="tag">Event</span>A cup is sold.</div>
+        <div class="card frag"><span class="tag">Event</span>Button A is pressed.</div>
+      </div>
+      <p class="note frag">Two triggers, so two events.</p>
+    </section>
+
+    <section class="slide" data-label="Step 2 &middot; Find the actions">
+      <div class="bignum">3</div>
+      <p class="eyebrow">Step 2 &middot; Find the actions</p>
+      <h2>What should the program do?</h2>
+      <div class="cards">
+        <div class="card frag"><span class="tag">When a cup is sold</span>Add one to the count.</div>
+        <div class="card frag"><span class="tag">When button A is pressed</span>Work out the money. Cups times $2.</div>
+        <div class="card frag"><span class="tag">Then</span>Show the money on the screen.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-label="Step 3 &middot; Pair them into jobs">
+      <div class="bignum">4</div>
+      <p class="eyebrow">Step 3 &middot; Pair them into jobs</p>
+      <h2>A job is an event joined to an action.</h2>
+      <div class="pair frag">
+        <div class="event"><span class="tag">When</span>a cup is sold</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>add one to the count</div>
+      </div>
+      <div class="pair frag">
+        <div class="event"><span class="tag">When</span>button A is pressed</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>work out the money</div>
+      </div>
+      <div class="pair frag">
+        <div class="event"><span class="tag">Then</span>straight after</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>show the money</div>
+      </div>
+    </section>
+
+    <section class="slide" data-label="The jobs">
+      <div class="bignum">5</div>
+      <p class="eyebrow">The jobs</p>
+      <ol class="jobs">
+        <li class="frag">Keep a count of how many cups have been sold.</li>
+        <li class="frag">Each time a cup is sold, add one to the count.</li>
+        <li class="frag">When button A is pressed, work out the money (cups &times; $2).</li>
+        <li class="frag">Show the money on the screen.</li>
+      </ol>
+      <p class="note frag">That is the whole program, planned before I wrote a single line of code.</p>
+    </section>
+
+    <section class="slide" data-label="One more question">
+      <div class="bignum">6</div>
+      <p class="eyebrow">One more question</p>
+      <h2>What does the program need to remember?</h2>
+      <p class="note frag">The number of cups. The program has to hold onto that number and change it as cups are sold.</p>
+      <p class="note frag">Anything the program remembers or works out is a <strong style="color:var(--pink)">variable</strong>.</p>
+    </section>
+
+    <section class="slide" data-label="From jobs to code">
+      <div class="bignum">{ }</div>
+      <p class="eyebrow">From jobs to code</p>
+      <p class="note" style="margin-top:0;margin-bottom:18px;">Once the jobs are clear, the code almost writes itself.</p>
+      <div class="code frag"><span class="kw">from</span> microbit <span class="kw">import</span> *
+cups = <span class="num">0</span>
+
+<span class="kw">while</span> True:
+    <span class="kw">if</span> button_b.was_pressed():
+        cups = cups + <span class="num">1</span>
+
+    <span class="kw">if</span> button_a.was_pressed():
+        money = cups * <span class="num">2</span>
+        display.scroll(money)</div>
+      <p class="note frag">Each job became a few lines. Don't worry about the exact words yet, just notice the shape.</p>
+    </section>
+
+    <!-- ===== CHECKPOINT ===== -->
+    <section class="slide" data-label="Checkpoint">
+      <p class="eyebrow">Checkpoint</p>
+      <h2>How are you feeling?</h2>
+      <div class="choice">
+        <div class="opt go frag">
+          <span class="tag">Feeling confident</span>
+          <h3>Make a start</h3>
+          <p>Head to the activity and begin breaking down your own problem.</p>
+        </div>
+        <div class="opt frag">
+          <span class="tag">Want more</span>
+          <h3>Keep watching</h3>
+          <p>Stay here for one more worked example before you begin.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== EXAMPLE 2 ===== -->
+    <section class="slide" data-label="Another example">
+      <div class="bignum">0</div>
+      <p class="eyebrow">Another example</p>
+      <h1>Let's do one more.</h1>
+      <p class="sub frag">Same three steps. A different problem.</p>
+    </section>
+
+    <section class="slide" data-label="The problem">
+      <div class="bignum">1</div>
+      <p class="eyebrow">The problem</p>
+      <p class="problem" id="problem2">In PE you are doing star jumps. You want the micro:bit to <span class="doingword">count</span> each star jump. When you <span class="doingword">press</span> button A, it should <span class="doingword">show</span> how much energy you have <span class="doingword">used</span>. Each star jump uses about 0.2 calories.</p>
+      <p class="note frag">Read it twice.</p>
+      <p class="note frag" data-target="#problem2">Find the doing words.</p>
+    </section>
+
+    <section class="slide" data-label="Step 1 &middot; Find the events">
+      <div class="bignum">2</div>
+      <p class="eyebrow">Step 1 &middot; Find the events</p>
+      <h2>What makes something happen?</h2>
+      <div class="cards">
+        <div class="card frag"><span class="tag">Event</span>A star jump happens.</div>
+        <div class="card frag"><span class="tag">Event</span>Button A is pressed.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-label="Step 2 &middot; Find the actions">
+      <div class="bignum">3</div>
+      <p class="eyebrow">Step 2 &middot; Find the actions</p>
+      <h2>What should the program do?</h2>
+      <div class="cards">
+        <div class="card frag"><span class="tag">When a star jump happens</span>Add one to the count.</div>
+        <div class="card frag"><span class="tag">When button A is pressed</span>Work out the energy. Jumps times 0.2.</div>
+        <div class="card frag"><span class="tag">Then</span>Show the energy on the screen.</div>
+      </div>
+    </section>
+
+    <section class="slide" data-label="Step 3 &middot; Pair them into jobs">
+      <div class="bignum">4</div>
+      <p class="eyebrow">Step 3 &middot; Pair them into jobs</p>
+      <h2>Join each event to its action.</h2>
+      <div class="pair frag">
+        <div class="event"><span class="tag">When</span>a star jump happens</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>add one to the count</div>
+      </div>
+      <div class="pair frag">
+        <div class="event"><span class="tag">When</span>button A is pressed</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>work out the energy</div>
+      </div>
+      <div class="pair frag">
+        <div class="event"><span class="tag">Then</span>straight after</div>
+        <div class="arrow">&rarr;</div>
+        <div class="action"><span class="tag">do this</span>show the energy</div>
+      </div>
+    </section>
+
+    <section class="slide" data-label="The jobs">
+      <div class="bignum">5</div>
+      <p class="eyebrow">The jobs</p>
+      <ol class="jobs">
+        <li class="frag">Keep a count of how many star jumps have been done.</li>
+        <li class="frag">Each time a star jump happens, add one to the count.</li>
+        <li class="frag">When button A is pressed, work out the energy (jumps &times; 0.2).</li>
+        <li class="frag">Show the energy on the screen.</li>
+      </ol>
+      <p class="note frag">Same shape as the lemonade stall. Count something, then work something out from it.</p>
+    </section>
+
+    <section class="slide" data-label="From jobs to code">
+      <div class="bignum">{ }</div>
+      <p class="eyebrow">From jobs to code</p>
+      <div class="code frag"><span class="kw">from</span> microbit <span class="kw">import</span> *
+jumps = <span class="num">0</span>
+
+<span class="kw">while</span> True:
+    <span class="kw">if</span> accelerometer.was_gesture(<span class="str">"shake"</span>):
+        jumps = jumps + <span class="num">1</span>
+
+    <span class="kw">if</span> button_a.was_pressed():
+        energy = jumps * <span class="num">0.2</span>
+        display.scroll(energy)</div>
+      <p class="note frag">Now it's your turn. Head to the activity and break down your own problem.</p>
+    </section>
+
+  </div>
+</div>
+
+<div class="hint" id="hint">
+  <kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const stepLabel = document.getElementById('stepLabel');
+  let s = 0, f = 0;
+
+  slides.forEach(() => {
+    const d = document.createElement('span');
+    d.className = 'dot';
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+
+  function fragsIn(slide) { return slide.querySelectorAll('.frag'); }
+
+  function render() {
+    slides.forEach((sl, i) => sl.classList.toggle('active', i === s));
+    const slide = slides[s];
+    const frags = fragsIn(slide);
+    frags.forEach((el, i) => {
+      const on = i < f;
+      el.classList.toggle('shown', on);
+      const tgt = el.dataset.target;
+      if (tgt) {
+        const node = slide.querySelector(tgt);
+        if (node) node.classList.toggle('active', on);
+      }
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === s));
+    stepLabel.innerHTML = slide.dataset.label;
+  }
+
+  function next() {
+    const frags = fragsIn(slides[s]);
+    if (f < frags.length) { f++; }
+    else if (s < slides.length - 1) { s++; f = 0; }
+    render();
+  }
+
+  function prev() {
+    if (f > 0) { f--; }
+    else if (s > 0) { s--; f = fragsIn(slides[s]).length; }
+    render();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', next);
+  setTimeout(() => document.getElementById('hint').classList.add('fade'), 5000);
+  render();
+</script>
+</body>
+</html>
