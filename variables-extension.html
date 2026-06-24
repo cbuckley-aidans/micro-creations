@@ -423,12 +423,13 @@ const STAGES = [
 
 /* ========================== Buckles (localStorage) ======================= */
 const Buckles = {
-  key:"buckles-" + PAGE_ID,
+  key:"buckles-shared",
   posKey:"pos-" + PAGE_ID,
+  ns(id){ return PAGE_ID + ":" + id; },
   load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {}; }catch(e){ return {}; } },
   save(d){ try{ localStorage.setItem(this.key, JSON.stringify(d)); }catch(e){} },
-  isDone(id){ return !!this.load()[id]; },
-  award(id, n){ const d=this.load(); if(!d[id]){ d[id]=n; this.save(d);} },
+  isDone(id){ return !!this.load()[this.ns(id)]; },
+  award(id, n){ const d=this.load(); const k=this.ns(id); if(!d[k]){ d[k]=n; this.save(d);} },
   total(){ return Object.values(this.load()).reduce((a,b)=>a+b,0); },
   setPos(i){ try{ localStorage.setItem(this.posKey, String(i)); }catch(e){} },
   getPos(){ try{ const v=parseInt(localStorage.getItem(this.posKey),10); return isNaN(v)?0:v; }catch(e){ return 0; } }
