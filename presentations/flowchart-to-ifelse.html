@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From flowchart to if / else</title>
+<style>
+  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
+  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
+  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
+  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
+  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:46vw; justify-content:flex-end; }
+  .dot { width:10px; height:10px; background:var(--line); }
+  .dot.active { background:var(--pink); }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
+  .slide { display:none; }
+  .slide.active { display:block; }
+  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
+  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
+  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
+  h2 { font-size:clamp(1.9rem,4.2vw,3.2rem); font-weight:800; line-height:1.08; letter-spacing:-0.01em; max-width:24ch; margin-bottom:6px; }
+  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:32ch; }
+  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
+  .frag.shown { opacity:1; transform:none; }
+  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:34ch; margin-top:18px; }
+  .note code { font-family:"SF Mono","Consolas",monospace; color:var(--pink); font-weight:700; }
+
+  /* ===== code block (shared) ===== */
+  .code { font-family:"SF Mono","Consolas","Liberation Mono",monospace; background:var(--navy); color:#f4f4f1; padding:26px 30px; font-size:clamp(1.05rem,2vw,1.55rem); line-height:1.7; border-left:6px solid var(--pink); max-width:46ch; }
+  .code .kw { color:#ff5fb0; }
+  .code .str { color:#9be6a0; }
+  .code .colon { color:var(--pink); font-weight:700; }
+  .cline.indent { padding-left:2.6ch; transition:box-shadow 0.3s ease, background 0.3s ease; }
+  .code .active { color:var(--pink); background:rgba(234,0,138,0.22); }
+  .cline.indent.tok-indent.active { color:inherit; background:rgba(234,0,138,0.14); box-shadow:inset 3px 0 0 var(--pink); }
+
+  /* worked code rows */
+  .crow { margin-top:14px; }
+  .crow:first-child { margin-top:0; }
+  .crow.indent { padding-left:2.6ch; }
+  .ann { display:block; font-size:0.62rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:4px; font-weight:700; }
+
+  /* ===== worked layout ===== */
+  .worklayout { display:grid; grid-template-columns:minmax(0,0.82fr) 1fr; gap:clamp(24px,4.5vw,58px); align-items:center; }
+  .flowcol { display:flex; flex-direction:column; align-items:center; }
+  .flow { width:100%; max-width:400px; height:auto; }
+  .ctx { font-size:clamp(1.3rem,2.6vw,2rem); font-weight:800; letter-spacing:-0.01em; margin-bottom:18px; }
+
+  .anatomy { display:grid; grid-template-columns:minmax(0,1fr) 1fr; gap:clamp(28px,5vw,64px); align-items:center; margin-top:18px; }
+  .anatomy .note { margin-top:14px; max-width:30ch; }
+  .anatomy .note:first-child { margin-top:0; }
+
+  /* svg flow */
+  .flow text { font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; }
+  .flow .diamond { fill:#fff; stroke:var(--pink); stroke-width:2.5; transition:fill 0.4s ease; }
+  .flow .cond { font-family:"SF Mono","Consolas",monospace; font-weight:700; font-size:19px; fill:var(--navy); }
+  .flow .conn { stroke:var(--navy); stroke-width:2; fill:none; }
+  .flow .arrowhead { fill:var(--navy); }
+  .flow .blabel { font-family:"SF Mono","Consolas",monospace; font-weight:700; font-size:12px; fill:var(--navy); opacity:0.55; transition:fill 0.3s ease, opacity 0.3s ease; }
+  .flow .actrect { fill:#fff; stroke:var(--navy); stroke-width:2; transition:fill 0.4s ease, stroke 0.4s ease; }
+  .flow .acttext { fill:var(--navy); font-weight:700; font-size:14px; transition:fill 0.4s ease; }
+
+  .flow.show-q .diamond { fill:rgba(234,0,138,0.12); }
+  .flow.show-yes .side-yes .actrect { fill:var(--pink); stroke:var(--pink); }
+  .flow.show-yes .side-yes .acttext { fill:#fff; }
+  .flow.show-yes .side-yes .blabel { fill:var(--pink); opacity:1; }
+  .flow.show-else .side-no .blabel { fill:var(--pink); opacity:1; }
+  .flow.show-no .side-no .actrect { fill:var(--pink); stroke:var(--pink); }
+  .flow.show-no .side-no .acttext { fill:#fff; }
+  .flow.show-no .side-no .blabel { fill:var(--pink); opacity:1; }
+
+  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
+  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
+  .hint.fade { opacity:0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">From flowchart to code</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body" id="bodyWrap">
+
+    <!-- TITLE -->
+    <section class="slide active" data-label="From flowchart to code">
+      <div class="bignum">{ }</div>
+      <p class="eyebrow">Modelled example</p>
+      <h1>From flowchart to if / else</h1>
+      <p class="sub">Turning a decision diamond into code.</p>
+      <p class="sub frag">First the shape of the statement, then five of them together.</p>
+    </section>
+
+    <!-- ANATOMY -->
+    <section class="slide" data-label="The shape of it">
+      <div class="bignum">if</div>
+      <p class="eyebrow">The shape of it</p>
+      <h2>Five parts. Every if / else has them.</h2>
+      <div class="anatomy">
+        <div class="code">
+          <div class="cline"><span class="kw tok-if">if</span> <span class="tok-cond">temperature &gt; 30</span><span class="colon tok-colon">:</span></div>
+          <div class="cline indent tok-indent">print(<span class="str">"hot"</span>)</div>
+          <div class="cline"><span class="kw tok-else">else</span><span class="colon tok-colon">:</span></div>
+          <div class="cline indent">print(<span class="str">"ok"</span>)</div>
+        </div>
+        <div class="thinkcol">
+          <p class="note frag" data-target=".tok-if">The word <code>if</code> begins the question.</p>
+          <p class="note frag" data-target=".tok-cond">Then the condition. A true or false question.</p>
+          <p class="note frag" data-target=".tok-colon">A colon ends each question line.</p>
+          <p class="note frag" data-target=".tok-indent">Indented lines belong to the if. They run only when it is true.</p>
+          <p class="note frag" data-target=".tok-else"><code>else</code> is the otherwise. It runs when the condition is false.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- worked examples + your turn injected here -->
+  </div>
+</div>
+
+<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function fmtCode(s){ return esc(s).replace(/&quot;([^&]*)&quot;/g, '<span class="str">"$1"</span>'); }
+
+function wrapLines(txt){
+  const w = txt.split(' ');
+  if (w.length <= 1) return [txt];
+  const cut = Math.ceil(w.length/2);
+  return [w.slice(0,cut).join(' '), w.slice(cut).join(' ')];
+}
+function actText(cx, txt){
+  const lines = wrapLines(txt);
+  const startY = 299 - (lines.length-1)*8.5;
+  return `<text class="acttext" text-anchor="middle">` +
+    lines.map((l,i)=>`<tspan x="${cx}" y="${startY+i*17}">${esc(l)}</tspan>`).join('') +
+    `</text>`;
+}
+function buildFlow(ex){
+  return `
+  <svg class="flow" viewBox="0 0 440 348" xmlns="http://www.w3.org/2000/svg">
+    <line class="conn" x1="220" y1="168" x2="220" y2="222"></line>
+    <line class="conn" x1="90"  y1="222" x2="350" y2="222"></line>
+    <polygon class="diamond" points="220,16 338,92 220,168 102,92"></polygon>
+    <text class="cond" x="220" y="98" text-anchor="middle">${esc(ex.cond)}</text>
+    <g class="side side-yes">
+      <line class="conn" x1="90" y1="222" x2="90" y2="252"></line>
+      <polygon class="arrowhead" points="90,257 85,250 95,250"></polygon>
+      <text class="blabel" x="83" y="240" text-anchor="end">YES</text>
+      <rect class="actrect" x="14" y="259" width="152" height="76"></rect>
+      ${actText(90, ex.yesShort)}
+    </g>
+    <g class="side side-no">
+      <line class="conn" x1="350" y1="222" x2="350" y2="252"></line>
+      <polygon class="arrowhead" points="350,257 345,250 355,250"></polygon>
+      <text class="blabel" x="357" y="240" text-anchor="start">NO</text>
+      <rect class="actrect" x="274" y="259" width="152" height="76"></rect>
+      ${actText(350, ex.noShort)}
+    </g>
+  </svg>`;
+}
+function buildWorked(ex, num){
+  return `
+  <section class="slide" data-label="${esc(ex.label)}">
+    <div class="bignum">${num}</div>
+    <p class="eyebrow">Worked example &middot; ${esc(ex.ctx)}</p>
+    <div class="worklayout">
+      <div class="flowcol">${buildFlow(ex)}</div>
+      <div class="thinkcol">
+        <p class="ctx">Read the diamond, then write it out.</p>
+        <div class="code">
+          <div class="crow frag" data-phase="1"><span class="ann">the question</span><span class="ln"><span class="kw">if</span> ${esc(ex.cond)}<span class="colon">:</span></span></div>
+          <div class="crow frag indent" data-phase="2"><span class="ann">if it is true</span><span class="ln">${fmtCode(ex.yesCode)}</span></div>
+          <div class="crow frag" data-phase="3"><span class="ann">otherwise</span><span class="ln"><span class="kw">else</span><span class="colon">:</span></span></div>
+          <div class="crow frag indent" data-phase="4"><span class="ann">if it is false</span><span class="ln">${fmtCode(ex.noCode)}</span></div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+const examples = [
+  { label:'Thermometer', ctx:'Classroom thermometer',
+    cond:'temp > 30', yesShort:'Print Hot', noShort:'Print OK',
+    yesCode:'print("Hot")', noCode:'print("OK")' },
+
+  { label:'Light sensor', ctx:'Light sensor',
+    cond:'light <= 50', yesShort:'Print Dark', noShort:'Print Bright',
+    yesCode:'print("Dark")', noCode:'print("Bright")' },
+
+  { label:'Score keeper', ctx:'Score keeper',
+    cond:'score >= 100', yesShort:'Print You win', noShort:'Print Play on',
+    yesCode:'print("You win")', noCode:'print("Play on")' },
+
+  { label:'Quiz checker', ctx:'Quiz checker',
+    cond:'answer == 7', yesShort:'Print Correct', noShort:'Print Try again',
+    yesCode:'print("Correct")', noCode:'print("Try again")' },
+
+  { label:'Reaction game', ctx:'Reaction game',
+    cond:'time < 300', yesShort:'Scroll Fast', noShort:'Scroll Too slow',
+    yesCode:'display.scroll("Fast")', noCode:'display.scroll("Too slow")' },
+];
+
+const bodyWrap = document.getElementById('bodyWrap');
+examples.forEach((ex,i)=> bodyWrap.insertAdjacentHTML('beforeend', buildWorked(ex, i+1)));
+
+bodyWrap.insertAdjacentHTML('beforeend', `
+  <section class="slide" data-label="Your turn">
+    <div class="bignum">&rarr;</div>
+    <p class="eyebrow">Your turn</p>
+    <h2>Now turn your own flowchart into code.</h2>
+    <p class="note frag">The diamond becomes the <code>if</code> line. The YES box goes inside it. <code>else</code> holds the NO box.</p>
+    <p class="note frag">Write yours out, then screenshot it into Stile.</p>
+  </section>`);
+
+// ===== engine =====
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('dots');
+const stepLabel = document.getElementById('stepLabel');
+let s = 0, f = 0;
+slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
+const dots = Array.from(document.querySelectorAll('.dot'));
+function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
+
+function render(){
+  slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
+  const slide = slides[s];
+  const frags = fragsIn(slide);
+  let phase = 0;
+  frags.forEach((el,i)=>{
+    const on = i < f;
+    el.classList.toggle('shown', on);
+    if(on){ const p = parseInt(el.dataset.phase || '0'); if(p > phase) phase = p; }
+  });
+  // single highlight: clear all targets, then light only the current step
+  frags.forEach(el=>{ const t=el.dataset.target; if(t) slide.querySelectorAll(t).forEach(n=>n.classList.remove('active')); });
+  if(f>0){ const t = frags[f-1].dataset.target; if(t) slide.querySelectorAll(t).forEach(n=>n.classList.add('active')); }
+  const flow = slide.querySelector('.flow');
+  if(flow){
+    flow.classList.toggle('show-q',    phase >= 1);
+    flow.classList.toggle('show-yes',  phase >= 2);
+    flow.classList.toggle('show-else', phase >= 3);
+    flow.classList.toggle('show-no',   phase >= 4);
+  }
+  dots.forEach((d,i)=>d.classList.toggle('active', i===s));
+  stepLabel.innerHTML = slide.dataset.label;
+}
+function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
+function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
+document.addEventListener('keydown',(e)=>{
+  if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
+  else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+  else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+});
+document.addEventListener('click', next);
+setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
+render();
+</script>
+</body>
+</html>
