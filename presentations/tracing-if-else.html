@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracing if / else</title>
+<style>
+  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
+  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
+  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
+  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
+  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:50vw; justify-content:flex-end; }
+  .dot { width:10px; height:10px; background:var(--line); }
+  .dot.active { background:var(--pink); }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
+  .slide { display:none; }
+  .slide.active { display:block; }
+  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
+  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
+  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
+  h2 { font-size:clamp(1.9rem,4vw,3rem); font-weight:800; line-height:1.06; letter-spacing:-0.01em; max-width:22ch; margin-bottom:10px; }
+  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:30ch; }
+  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
+  .frag.shown { opacity:1; transform:none; }
+  .note { font-size:clamp(1rem,1.9vw,1.4rem); line-height:1.55; max-width:32ch; margin-top:18px; }
+  .def { font-size:clamp(1rem,1.9vw,1.4rem); line-height:1.55; max-width:34ch; margin:16px 0 20px; padding:14px 18px; background:rgba(27,31,69,0.05); border-left:5px solid var(--pink); }
+  .cards { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+  .card { font-size:clamp(1.05rem,2vw,1.55rem); font-weight:600; background:#fff; border:2px solid var(--navy); padding:14px 20px; max-width:32ch; }
+  .card .tag { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:6px; }
+  code { font-family:"SF Mono","Consolas",monospace; color:var(--pink); font-weight:700; font-size:inherit; }
+  .calc { font-family:"SF Mono","Consolas",monospace; font-size:clamp(1.2rem,2.6vw,2rem); font-weight:700; color:var(--navy); margin-top:16px; }
+  .calc b { color:var(--pink); }
+  .calc b.t { color:#2db37a; }
+  .out { font-family:"SF Mono","Consolas",monospace; background:var(--navy); color:#9be6a0; padding:14px 20px; font-size:clamp(1rem,1.9vw,1.4rem); font-weight:700; border-left:6px solid var(--pink); max-width:28ch; margin-top:18px; }
+  .out-lbl { font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:5px; font-family:"SF Mono","Consolas",monospace; }
+  ol.steps { list-style:none; counter-reset:step; max-width:42ch; margin-top:10px; }
+  ol.steps li { counter-increment:step; position:relative; padding:12px 0 12px 60px; border-bottom:1px solid var(--line); font-size:clamp(1rem,1.9vw,1.4rem); line-height:1.5; }
+  ol.steps li::before { content:counter(step); position:absolute; left:0; top:10px; width:44px; font-size:1.6rem; font-weight:800; color:var(--pink); }
+  .choice { display:flex; gap:22px; margin-top:26px; flex-wrap:wrap; max-width:64ch; }
+  .opt { flex:1; min-width:240px; border:2px solid var(--navy); padding:20px 22px; }
+  .opt.go { background:var(--navy); color:#fff; }
+  .opt .tag { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:10px; }
+  .opt h3 { font-size:clamp(1.2rem,2.2vw,1.7rem); font-weight:800; line-height:1.1; margin-bottom:8px; }
+  .opt p { font-size:clamp(0.95rem,1.8vw,1.25rem); line-height:1.4; }
+
+  /* trace layout */
+  .trace { display:grid; grid-template-columns:1fr 1fr; gap:5vw; align-items:start; }
+  .tcode { font-family:"SF Mono","Consolas","Liberation Mono",monospace; background:#12162e; border-left:6px solid var(--pink); }
+  .cl { display:flex; align-items:center; padding:11px 20px 11px 14px; gap:10px; transition:background 0.25s, opacity 0.25s; }
+  .cl.blank { padding:5px 0; }
+  .cl .arr { width:14px; color:var(--pink); font-size:0.82em; font-weight:800; opacity:0; flex-shrink:0; }
+  .cl .txt { font-size:clamp(0.95rem,1.8vw,1.4rem); color:#c9d1e0; white-space:pre; }
+  .cl.active { background:rgba(234,0,138,0.18); }
+  .cl.active .arr { opacity:1; }
+  .cl.dimmed { opacity:0.18; }
+  .cl.done { opacity:0.42; }
+  .kw  { color:#ff5fb0; }
+  .num { color:#7fd1ff; }
+  .str { color:#9be6a0; }
+
+  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
+  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
+  .hint.fade { opacity:0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">Tracing if / else</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body">
+
+    <!-- 0 TITLE -->
+    <section class="slide" data-label="Tracing if / else">
+      <div class="bignum">0</div>
+      <p class="eyebrow">Modelled example</p>
+      <h1>Tracing if / else</h1>
+      <p class="sub">Working out what Python will do.</p>
+      <p class="sub frag">Not "what does this code do?" but "which line actually runs, and why?"</p>
+    </section>
+
+    <!-- 1 WHAT IS TRACING -->
+    <section class="slide" data-label="What is tracing?">
+      <div class="bignum">1</div>
+      <p class="eyebrow">What is tracing?</p>
+      <div class="def frag">Tracing means reading code line by line and working out what each part does, without running it.</div>
+      <p class="note frag">You are playing the role of the computer.</p>
+      <p class="note frag">The goal is to work out the output before Python does.</p>
+    </section>
+
+    <!-- 2 FOUR STEPS -->
+    <section class="slide" data-label="The four steps">
+      <div class="bignum">2</div>
+      <p class="eyebrow">The four steps</p>
+      <h2>Every trace follows these steps.</h2>
+      <ol class="steps">
+        <li class="frag">Find the variables. Note their starting values.</li>
+        <li class="frag">Reach the <code>if</code>. Read the condition.</li>
+        <li class="frag">Substitute and evaluate. Replace the variable with its value. Is the condition True or False?</li>
+        <li class="frag">Follow the correct path. True runs the <code>if</code> block. False runs the <code>else</code> block.</li>
+      </ol>
+    </section>
+
+    <!-- 3 EX1: STEP 1 — cups = 8 -->
+    <section class="slide" data-label="Example 1 · Step 1">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">cups = <span class="num">8</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 1 of 4 · Find the variables</p>
+          <h2>What values do the variables hold?</h2>
+          <div class="cards">
+            <div class="card frag"><span class="tag">Variable</span>cups = 8</div>
+          </div>
+          <p class="note frag">Every time we see <code>cups</code> in the code, we can replace it with 8.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 EX1: STEPS 2-3 — condition -->
+    <section class="slide" data-label="Example 1 · Steps 2 and 3">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">cups = <span class="num">8</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Steps 2 and 3 · Substitute and evaluate</p>
+          <h2>What is the condition?</h2>
+          <p class="note frag">Python reaches the <code>if</code> line. It needs to evaluate the condition before it can decide what to do.</p>
+          <div class="calc frag">cups &gt; 5 &nbsp;&rarr;&nbsp; 8 &gt; 5 &nbsp;&rarr;&nbsp; <b class="t">True</b></div>
+          <p class="note frag">cups holds 8, so the condition becomes 8 &gt; 5. That is True.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 EX1: STEP 4 — if block runs -->
+    <section class="slide" data-label="Example 1 · Step 4">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">cups = <span class="num">8</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl done"><span class="arr"></span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl dimmed"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl dimmed"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 4 · Follow the path</p>
+          <h2>Condition was True.</h2>
+          <p class="note frag">The <code>if</code> block runs.</p>
+          <p class="note frag">The <code>else</code> block is skipped entirely. Python never reads it.</p>
+          <div class="out frag">
+            <div class="out-lbl">Output</div>
+            Great selling!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 CHECKPOINT -->
+    <section class="slide" data-label="Checkpoint">
+      <p class="eyebrow">Checkpoint</p>
+      <h2>How are you feeling?</h2>
+      <div class="choice">
+        <div class="opt go frag">
+          <span class="tag">Following along</span>
+          <h3>Keep watching</h3>
+          <p>One more example. This time the condition is False and a different path runs.</p>
+        </div>
+        <div class="opt frag">
+          <span class="tag">Not quite</span>
+          <h3>Review the steps</h3>
+          <p>Look back at the four steps slide. We are about to do the exact same process again.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 EXAMPLE 2 INTRO -->
+    <section class="slide" data-label="Another example">
+      <div class="bignum">0</div>
+      <p class="eyebrow">Another example</p>
+      <h1>Same code.<br>Different value.</h1>
+      <p class="sub frag">This time, cups = 3.</p>
+      <p class="sub frag">What do you think will change?</p>
+    </section>
+
+    <!-- 8 EX2: STEP 1 — cups = 3 -->
+    <section class="slide" data-label="Example 2 · Step 1">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">cups = <span class="num">3</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 1 of 4 · Find the variables</p>
+          <h2>What values do the variables hold?</h2>
+          <div class="cards">
+            <div class="card frag"><span class="tag">Variable</span>cups = 3</div>
+          </div>
+          <p class="note frag">Same code. cups now holds 3 instead of 8.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 EX2: STEPS 2-3 — condition -->
+    <section class="slide" data-label="Example 2 · Steps 2 and 3">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">cups = <span class="num">3</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Steps 2 and 3 · Substitute and evaluate</p>
+          <h2>What is the condition?</h2>
+          <p class="note frag">cups holds 3 this time.</p>
+          <div class="calc frag">cups &gt; 5 &nbsp;&rarr;&nbsp; 3 &gt; 5 &nbsp;&rarr;&nbsp; <b>False</b></div>
+          <p class="note frag">3 is not greater than 5. The condition is False. This changes everything.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 EX2: STEP 4 — else block runs -->
+    <section class="slide" data-label="Example 2 · Step 4">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">cups = <span class="num">3</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl done"><span class="arr"></span><span class="txt"><span class="kw">if</span> cups &gt; <span class="num">5</span>:</span></div>
+          <div class="cl dimmed"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Great selling!"</span>)</span></div>
+          <div class="cl done"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep going!"</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 4 · Follow the path</p>
+          <h2>Condition was False.</h2>
+          <p class="note frag">The <code>if</code> block is skipped.</p>
+          <p class="note frag">The <code>else</code> block runs instead.</p>
+          <div class="out frag">
+            <div class="out-lbl">Output</div>
+            Keep going!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 NOTICE -->
+    <section class="slide" data-label="Notice the difference">
+      <div class="bignum">3</div>
+      <p class="eyebrow">Notice</p>
+      <h2>Same code. Different output.</h2>
+      <p class="note frag">Only the value of cups changed.</p>
+      <p class="note frag">True runs the <code>if</code> block. False runs the <code>else</code> block.</p>
+      <p class="note frag">The path through the code depends entirely on the values when the condition is checked. That is the whole point of if / else.</p>
+    </section>
+
+    <!-- 12 EX3: STEP 1 — lives = 1 -->
+    <section class="slide" data-label="Example 3 · Step 1">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">lives = <span class="num">1</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">if</span> lives &gt; <span class="num">0</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep playing!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Game over."</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 1 of 4 · Find the variables</p>
+          <h2>What values do the variables hold?</h2>
+          <div class="cards">
+            <div class="card frag"><span class="tag">Variable</span>lives = 1</div>
+          </div>
+          <p class="note frag">New code, same four steps. lives holds 1.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 EX3: STEPS 2-3 — condition -->
+    <section class="slide" data-label="Example 3 · Steps 2 and 3">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">lives = <span class="num">1</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt"><span class="kw">if</span> lives &gt; <span class="num">0</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep playing!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Game over."</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Steps 2 and 3 · Substitute and evaluate</p>
+          <h2>What is the condition?</h2>
+          <p class="note frag">lives holds 1.</p>
+          <div class="calc frag">lives &gt; 0 &nbsp;&rarr;&nbsp; 1 &gt; 0 &nbsp;&rarr;&nbsp; <b class="t">True</b></div>
+          <p class="note frag">1 is greater than 0. The condition is True.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 EX3: STEP 4 — if block runs -->
+    <section class="slide" data-label="Example 3 · Step 4">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl done"><span class="arr"></span><span class="txt">lives = <span class="num">1</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl done"><span class="arr"></span><span class="txt"><span class="kw">if</span> lives &gt; <span class="num">0</span>:</span></div>
+          <div class="cl active"><span class="arr">&#9658;</span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep playing!"</span>)</span></div>
+          <div class="cl dimmed"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl dimmed"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Game over."</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Step 4 · Follow the path</p>
+          <h2>Condition was True.</h2>
+          <p class="note frag">The <code>if</code> block runs. The <code>else</code> block is skipped.</p>
+          <div class="out frag">
+            <div class="out-lbl">Output</div>
+            Keep playing!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 EX4: YOUR TURN -->
+    <section class="slide" data-label="Example 4 · Your turn">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl"><span class="arr"></span><span class="txt">temp = <span class="num">40</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">if</span> temp &gt; <span class="num">37</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Too hot!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"All good."</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Example 4 · Your turn</p>
+          <h2>Trace this yourself.</h2>
+          <p class="note frag">Follow the four steps. What is the output?</p>
+          <div class="calc frag">temp &gt; 37 &nbsp;&rarr;&nbsp; 40 &gt; 37 &nbsp;&rarr;&nbsp; <b class="t">True</b></div>
+          <p class="note frag">The condition is True. The <code>if</code> block runs.</p>
+          <div class="out frag">
+            <div class="out-lbl">Output</div>
+            Too hot!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 EX5: YOUR TURN -->
+    <section class="slide" data-label="Example 5 · Your turn">
+      <div class="trace">
+        <div class="tcode">
+          <div class="cl"><span class="arr"></span><span class="txt">score = <span class="num">45</span></span></div>
+          <div class="cl blank"></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">if</span> score &gt; <span class="num">50</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"High score!"</span>)</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt"><span class="kw">else</span>:</span></div>
+          <div class="cl"><span class="arr"></span><span class="txt">    <span class="kw">print</span>(<span class="str">"Keep trying."</span>)</span></div>
+        </div>
+        <div>
+          <p class="eyebrow">Example 5 · Your turn</p>
+          <h2>One more.</h2>
+          <p class="note frag">Follow the four steps. What is the output?</p>
+          <div class="calc frag">score &gt; 50 &nbsp;&rarr;&nbsp; 45 &gt; 50 &nbsp;&rarr;&nbsp; <b>False</b></div>
+          <p class="note frag">The condition is False. The <code>else</code> block runs.</p>
+          <div class="out frag">
+            <div class="out-lbl">Output</div>
+            Keep trying.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const stepLabel = document.getElementById('stepLabel');
+  let s = 0, f = 0;
+  slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+  function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
+  function render(){
+    slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
+    const slide = slides[s];
+    const frags = fragsIn(slide);
+    frags.forEach((el,i)=>{
+      const on = i < f;
+      el.classList.toggle('shown', on);
+      const tgt = el.dataset.target;
+      if(tgt){ const node = slide.querySelector(tgt); if(node) node.classList.toggle('active', on); }
+    });
+    dots.forEach((d,i)=>d.classList.toggle('active', i===s));
+    stepLabel.innerHTML = slide.dataset.label;
+  }
+  function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
+  function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
+  document.addEventListener('keydown',(e)=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  document.addEventListener('click', next);
+  setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
+  render();
+</script>
+</body>
+</html>
