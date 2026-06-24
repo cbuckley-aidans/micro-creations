@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building if / else Statements</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1b1f45;
+            --pink: #ea008a;
+            --teal: #1a6e6e;
+            --blue: #1a4ea6;
+            --purple: #7c4dff;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --light-grey: #e8e8e8;
+            --mid-grey: #9a9a9a;
+            --panel: #14172f;
+            --panel-line: #20254a;
+            --code-text: #e7e9f7;
+            --code-dim: #7d83b5;
+            --amber-bg: #fff5db;
+            --amber-bar: #d99a00;
+            --amber-text: #7a5800;
+            --correct: #16a34a;
+            --incorrect: #dc2626;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: #eaeaea;
+            color: var(--navy);
+        }
+
+        .sheet-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--mid-grey);
+            margin-bottom: 6px;
+        }
+
+        .sheet-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--navy);
+            letter-spacing: 0.01em;
+            margin: 0 0 8px 0;
+            padding-bottom: 14px;
+            border-bottom: 4px solid var(--navy);
+        }
+
+        .sheet-title span { color: var(--pink); }
+
+        .drag-hint {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--mid-grey);
+            margin: 10px 0 28px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drag-hint::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--pink);
+            flex-shrink: 0;
+        }
+
+        /* ACTIVITY CARD */
+        .activity-card {
+            border-top: 4px solid var(--navy);
+            border-left: 1.5px solid var(--light-grey);
+            border-right: 1.5px solid var(--light-grey);
+            border-bottom: 1.5px solid var(--light-grey);
+            margin-bottom: 34px;
+            background: var(--white);
+        }
+
+        .activity-header {
+            background-color: var(--navy);
+            padding: 11px 24px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .activity-number {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--pink);
+            white-space: nowrap;
+        }
+
+        .activity-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--white);
+            margin: 0;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .find-badge {
+            margin-left: auto;
+            background-color: var(--pink);
+            color: var(--white);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 5px 16px;
+            white-space: nowrap;
+        }
+
+        /* TASK STRIP */
+        .task-strip {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 26px;
+            background-color: #f8f9fc;
+            border-bottom: 1.5px solid var(--light-grey);
+        }
+
+        .task-tag {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--pink);
+            white-space: nowrap;
+            padding-top: 2px;
+        }
+
+        .task-text {
+            font-size: 18px;
+            line-height: 1.45;
+            color: var(--navy);
+            margin: 0;
+        }
+
+        .task-text code {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            font-feature-settings: "liga" 0, "calt" 0;
+            font-size: 16px;
+            background: #eceffa;
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: var(--navy);
+        }
+
+        /* CODE PANEL */
+        .code-panel {
+            background-color: var(--panel);
+            padding: 22px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            font-feature-settings: "liga" 0, "calt" 0;
+        }
+
+        .code-line {
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+            padding: 2px 26px;
+            font-size: 19px;
+            line-height: 1.6;
+            color: var(--code-text);
+        }
+
+        .ln {
+            width: 30px;
+            flex-shrink: 0;
+            color: var(--code-dim);
+            font-size: 14px;
+            text-align: right;
+            margin-right: 22px;
+            user-select: none;
+        }
+
+        .code-content { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+        .indent { display: inline-block; width: 34px; flex-shrink: 0; }
+
+        .tok { white-space: pre; }
+        .tok-kw   { color: #c4a8ff; }
+        .tok-str  { color: #ff9ecb; }
+        .tok-num  { color: #6fd0d0; }
+        .tok-fn   { color: #c4a8ff; }
+        .tok-punc { color: #9aa0d4; }
+        .tok-cmt  { color: #5f8f6c; font-style: italic; }
+
+        /* CODE BLANKS */
+        .code-blank {
+            border: 2px dashed #4a5290;
+            background-color: #1d2247;
+            border-radius: 6px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            transition: border-color 0.15s, background-color 0.15s;
+            vertical-align: middle;
+        }
+
+        .code-blank-sm { min-width: 70px; }
+        .code-blank-md { min-width: 110px; }
+        .code-blank-lg { min-width: 170px; }
+
+        .code-blank.drag-over {
+            border-color: var(--pink);
+            background-color: #341632;
+            border-style: solid;
+        }
+
+        .code-blank.correct {
+            border: 2px solid var(--correct) !important;
+            background-color: #12331f !important;
+        }
+
+        .code-blank.incorrect {
+            border: 2px solid var(--incorrect) !important;
+            background-color: #3a1717 !important;
+            animation: shake 0.4s ease;
+        }
+
+        .code-blank.has-tile {
+            border-style: solid;
+            border-color: transparent;
+            background-color: transparent;
+            padding: 0;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%  { transform: translateX(-7px); }
+            40%  { transform: translateX(7px); }
+            60%  { transform: translateX(-4px); }
+            80%  { transform: translateX(4px); }
+        }
+
+        /* TILE POOL */
+        .pool-row {
+            padding: 18px 26px;
+            background-color: var(--off-white);
+            border-bottom: 1.5px solid var(--light-grey);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            min-height: 70px;
+        }
+
+        .pool-row.drag-over { background-color: #dde8ff; }
+
+        /* TILES */
+        .tile {
+            border-radius: 7px;
+            padding: 9px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            font-feature-settings: "liga" 0, "calt" 0;
+            font-size: 18px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            cursor: grab;
+            user-select: none;
+            transition: opacity 0.15s, transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .tile:active { cursor: grabbing; }
+        .tile.dragging { opacity: 0.35; transform: scale(0.9); box-shadow: none; }
+
+        .tile-purple { background-color: var(--purple); color: var(--white); }
+        .tile-blue   { background-color: var(--blue);   color: var(--white); }
+        .tile-teal   { background-color: var(--teal);   color: var(--white); }
+        .tile-pink   { background-color: var(--pink);   color: var(--white); }
+
+        .code-blank .tile { box-shadow: none; border-radius: 4px; font-size: 18px; padding: 7px 12px; }
+        .code-blank .tile:hover { transform: none; box-shadow: none; }
+
+        /* HINT STRIP */
+        .hint-strip {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 26px;
+            background-color: var(--amber-bg);
+            border-bottom: 1.5px solid var(--light-grey);
+            border-left: 6px solid var(--amber-bar);
+        }
+
+        .hint-tag {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--amber-text);
+            white-space: nowrap;
+            padding-top: 1px;
+        }
+
+        .hint-text { font-size: 16px; line-height: 1.4; color: var(--amber-text); margin: 0; }
+
+        /* CHECK ROW */
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            background-color: #f0f0f0;
+            flex-wrap: wrap;
+        }
+
+        .check-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background-color: var(--navy);
+            color: var(--white);
+            border: none;
+            padding: 11px 26px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .check-btn:hover { background-color: #2e3472; }
+        .check-btn:active { background-color: var(--pink); }
+
+        .reset-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background-color: transparent;
+            color: var(--mid-grey);
+            border: 2px solid var(--light-grey);
+            padding: 11px 26px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .reset-btn:hover { border-color: #aaa; color: var(--navy); }
+
+        .feedback {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .feedback-correct { color: var(--correct); }
+        .feedback-incorrect { color: var(--incorrect); }
+
+        /* COMPLETION BANNER */
+        .completion-banner {
+            display: none;
+            border-top: 4px solid var(--pink);
+            background-color: var(--navy);
+            padding: 30px 34px;
+            margin-bottom: 34px;
+            align-items: center;
+            gap: 26px;
+            flex-wrap: wrap;
+        }
+
+        .completion-banner.show { display: flex; }
+
+        .completion-tick {
+            width: 58px;
+            height: 58px;
+            flex-shrink: 0;
+            background-color: var(--correct);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 34px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .completion-text { flex: 1; min-width: 240px; }
+
+        .completion-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 30px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--white);
+            margin: 0 0 6px 0;
+        }
+
+        .completion-title span { color: var(--pink); }
+
+        .completion-instruction {
+            font-size: 18px;
+            line-height: 1.45;
+            color: #c7cbeb;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<p class="sheet-label">Computing -- Python</p>
+<h1 class="sheet-title">Building <span>if / else</span> Statements</h1>
+<p class="drag-hint">Drag the coloured tiles into the empty boxes, then press Check Answers</p>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 1: the keyword that starts a decision -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act1">
+    <div class="activity-header">
+        <span class="activity-number">Activity 01</span>
+        <h3 class="activity-title">Starting a Decision</h3>
+        <span class="find-badge">Keyword</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">A program checks whether someone is old enough to vote. Drag the keyword that begins the decision.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <div class="code-blank code-blank-sm droppable" data-activity="act1" data-correct="if" id="act1-b1"></div>
+            <span class="tok">age</span><span class="tok tok-kw"> &gt;= </span><span class="tok tok-num">18</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"You can vote"</span><span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act1-pool">
+        <span class="tile tile-purple draggable" draggable="true" data-value="if" data-pool-id="act1-pool">if</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="else" data-pool-id="act1-pool">else</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="print" data-pool-id="act1-pool">print</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="for" data-pool-id="act1-pool">for</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">An "if" statement runs the indented line below only when the condition is true.</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act1')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act1')">Reset</button>
+        <span class="feedback" id="act1-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 2: choosing the comparison operator -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act2">
+    <div class="activity-header">
+        <span class="activity-number">Activity 02</span>
+        <h3 class="activity-title">Choosing the Comparison</h3>
+        <span class="find-badge">Operator</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">The message should print only when the temperature is greater than 30. Drag the correct operator.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <span class="tok tok-kw">if</span><span class="tok"> temperature </span>
+            <div class="code-blank code-blank-sm droppable" data-activity="act2" data-correct="&gt;" id="act2-b1"></div>
+            <span class="tok tok-num"> 30</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"It is hot today"</span><span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act2-pool">
+        <span class="tile tile-purple draggable" draggable="true" data-value="&gt;" data-pool-id="act2-pool">&gt;</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&lt;" data-pool-id="act2-pool">&lt;</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="==" data-pool-id="act2-pool">==</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="=" data-pool-id="act2-pool">=</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">"Greater than" points to the smaller value. A single = is used to store a value, not to compare.</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act2')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act2')">Reset</button>
+        <span class="feedback" id="act2-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 3: the threshold value -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act3">
+    <div class="activity-header">
+        <span class="activity-number">Activity 03</span>
+        <h3 class="activity-title">Setting the Threshold</h3>
+        <span class="find-badge">Value</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">A student passes when their score is 50 or more. Drag the value that completes the condition.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <span class="tok tok-kw">if</span><span class="tok"> score </span><span class="tok tok-kw">&gt;= </span>
+            <div class="code-blank code-blank-sm droppable" data-activity="act3" data-correct="50" id="act3-b1"></div>
+            <span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"Pass"</span><span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act3-pool">
+        <span class="tile tile-teal draggable" draggable="true" data-value="5" data-pool-id="act3-pool">5</span>
+        <span class="tile tile-teal draggable" draggable="true" data-value="50" data-pool-id="act3-pool">50</span>
+        <span class="tile tile-teal draggable" draggable="true" data-value="100" data-pool-id="act3-pool">100</span>
+        <span class="tile tile-teal draggable" draggable="true" data-value="0" data-pool-id="act3-pool">0</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">Read the condition aloud: "score is greater than or equal to ...".</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act3')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act3')">Reset</button>
+        <span class="feedback" id="act3-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 4: adding an else branch (2 blanks) -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act4">
+    <div class="activity-header">
+        <span class="activity-number">Activity 04</span>
+        <h3 class="activity-title">Adding the Other Path</h3>
+        <span class="find-badge">Add else</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">Access is granted when the password matches, otherwise it is denied. Complete both blanks.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <span class="tok tok-kw">if</span><span class="tok"> password </span><span class="tok tok-kw">== </span><span class="tok tok-str">"1234"</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"Access granted"</span><span class="tok tok-punc">)</span>
+        </span></div>
+        <div class="code-line"><span class="ln">3</span><span class="code-content">
+            <div class="code-blank code-blank-md droppable" data-activity="act4" data-correct="else" id="act4-b1"></div>
+            <span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">4</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span>
+            <div class="code-blank code-blank-lg droppable" data-activity="act4" data-correct='"Access denied"' id="act4-b2"></div>
+            <span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act4-pool">
+        <span class="tile tile-purple draggable" draggable="true" data-value="else" data-pool-id="act4-pool">else</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="if" data-pool-id="act4-pool">if</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Access denied"' data-pool-id="act4-pool">"Access denied"</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Try again"' data-pool-id="act4-pool">"Try again"</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">"else" handles every case the "if" did not. It does not need a condition of its own.</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act4')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act4')">Reset</button>
+        <span class="feedback" id="act4-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 5: building the condition (3 blanks) -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act5">
+    <div class="activity-header">
+        <span class="activity-number">Activity 05</span>
+        <h3 class="activity-title">Building the Condition</h3>
+        <span class="find-badge">Condition</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">Full marks are awarded when the mark is exactly 100, otherwise the student is encouraged. Fill all three blanks.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <span class="tok tok-kw">if</span><span class="tok"> </span>
+            <div class="code-blank code-blank-md droppable" data-activity="act5" data-correct="mark" id="act5-b1"></div>
+            <div class="code-blank code-blank-sm droppable" data-activity="act5" data-correct="==" id="act5-b2"></div>
+            <span class="tok tok-num"> 100</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"Full marks!"</span><span class="tok tok-punc">)</span>
+        </span></div>
+        <div class="code-line"><span class="ln">3</span><span class="code-content">
+            <span class="tok tok-kw">else</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">4</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span>
+            <div class="code-blank code-blank-lg droppable" data-activity="act5" data-correct='"Keep trying"' id="act5-b3"></div>
+            <span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act5-pool">
+        <span class="tile tile-blue draggable" draggable="true" data-value="mark" data-pool-id="act5-pool">mark</span>
+        <span class="tile tile-blue draggable" draggable="true" data-value="total" data-pool-id="act5-pool">total</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="==" data-pool-id="act5-pool">==</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&gt;=" data-pool-id="act5-pool">&gt;=</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Keep trying"' data-pool-id="act5-pool">"Keep trying"</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Well done"' data-pool-id="act5-pool">"Well done"</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">"Exactly 100" means testing for equality, not for "more than".</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act5')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act5')">Reset</button>
+        <span class="feedback" id="act5-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 6: if / elif / else chain (4 blanks) -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act6">
+    <div class="activity-header">
+        <span class="activity-number">Activity 06</span>
+        <h3 class="activity-title">Build Both Branches</h3>
+        <span class="find-badge">if / else</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">A ride needs riders to be at least 120 cm tall. Tall enough riders can ride, everyone else is turned away. Fill all four blanks.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <span class="tok tok-kw">if</span><span class="tok"> </span>
+            <div class="code-blank code-blank-md droppable" data-activity="act6" data-correct="height" id="act6-b1"></div>
+            <div class="code-blank code-blank-sm droppable" data-activity="act6" data-correct="&gt;=" id="act6-b2"></div>
+            <div class="code-blank code-blank-sm droppable" data-activity="act6" data-correct="120" id="act6-b3"></div>
+            <span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span><span class="tok tok-str">"You can ride"</span><span class="tok tok-punc">)</span>
+        </span></div>
+        <div class="code-line"><span class="ln">3</span><span class="code-content">
+            <span class="tok tok-kw">else</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">4</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span>
+            <div class="code-blank code-blank-lg droppable" data-activity="act6" data-correct='"Too short"' id="act6-b4"></div>
+            <span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act6-pool">
+        <span class="tile tile-blue draggable" draggable="true" data-value="height" data-pool-id="act6-pool">height</span>
+        <span class="tile tile-blue draggable" draggable="true" data-value="age" data-pool-id="act6-pool">age</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&gt;=" data-pool-id="act6-pool">&gt;=</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&lt;=" data-pool-id="act6-pool">&lt;=</span>
+        <span class="tile tile-teal draggable" draggable="true" data-value="120" data-pool-id="act6-pool">120</span>
+        <span class="tile tile-teal draggable" draggable="true" data-value="12" data-pool-id="act6-pool">12</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Too short"' data-pool-id="act6-pool">"Too short"</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Welcome"' data-pool-id="act6-pool">"Welcome"</span>
+    </div>
+
+    <div class="hint-strip">
+        <span class="hint-tag">Hint</span>
+        <p class="hint-text">"at least 120" means 120 counts as tall enough, so include equal to in the operator.</p>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act6')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act6')">Reset</button>
+        <span class="feedback" id="act6-feedback"></span>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- ACTIVITY 7: full build, no hint (6 blanks) -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="activity-card" id="act7">
+    <div class="activity-header">
+        <span class="activity-number">Activity 07</span>
+        <h3 class="activity-title">Build It From Scratch</h3>
+        <span class="find-badge">Full build</span>
+    </div>
+
+    <div class="task-strip">
+        <span class="task-tag">Task</span>
+        <p class="task-text">Build the whole statement: if the age is 18 or over, print that they can vote, otherwise print that they are too young. There are spare tiles you will not need.</p>
+    </div>
+
+    <div class="code-panel">
+        <div class="code-line"><span class="ln">1</span><span class="code-content">
+            <div class="code-blank code-blank-sm droppable" data-activity="act7" data-correct="if" id="act7-b1"></div>
+            <div class="code-blank code-blank-md droppable" data-activity="act7" data-correct="age" id="act7-b2"></div>
+            <div class="code-blank code-blank-sm droppable" data-activity="act7" data-correct="&gt;=" id="act7-b3"></div>
+            <span class="tok tok-num"> 18</span><span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">2</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span>
+            <div class="code-blank code-blank-lg droppable" data-activity="act7" data-correct='"You can vote"' id="act7-b4"></div>
+            <span class="tok tok-punc">)</span>
+        </span></div>
+        <div class="code-line"><span class="ln">3</span><span class="code-content">
+            <div class="code-blank code-blank-md droppable" data-activity="act7" data-correct="else" id="act7-b5"></div>
+            <span class="tok tok-punc">:</span>
+        </span></div>
+        <div class="code-line"><span class="ln">4</span><span class="code-content">
+            <span class="indent"></span><span class="tok tok-fn">print</span><span class="tok tok-punc">(</span>
+            <div class="code-blank code-blank-lg droppable" data-activity="act7" data-correct='"Too young to vote"' id="act7-b6"></div>
+            <span class="tok tok-punc">)</span>
+        </span></div>
+    </div>
+
+    <div class="pool-row pool" id="act7-pool">
+        <span class="tile tile-purple draggable" draggable="true" data-value="if" data-pool-id="act7-pool">if</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="else" data-pool-id="act7-pool">else</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&gt;=" data-pool-id="act7-pool">&gt;=</span>
+        <span class="tile tile-purple draggable" draggable="true" data-value="&lt;=" data-pool-id="act7-pool">&lt;=</span>
+        <span class="tile tile-blue draggable" draggable="true" data-value="age" data-pool-id="act7-pool">age</span>
+        <span class="tile tile-blue draggable" draggable="true" data-value="total" data-pool-id="act7-pool">total</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"You can vote"' data-pool-id="act7-pool">"You can vote"</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Too young to vote"' data-pool-id="act7-pool">"Too young to vote"</span>
+        <span class="tile tile-pink draggable" draggable="true" data-value='"Try again"' data-pool-id="act7-pool">"Try again"</span>
+    </div>
+
+    <div class="check-row">
+        <button class="check-btn" onclick="checkActivity('act7')">Check Answers</button>
+        <button class="reset-btn" onclick="resetActivity('act7')">Reset</button>
+        <span class="feedback" id="act7-feedback"></span>
+    </div>
+</div>
+
+
+<div class="completion-banner" id="completion-banner">
+    <div class="completion-tick">&#10003;</div>
+    <div class="completion-text">
+        <p class="completion-title">All activities <span>complete!</span></p>
+        <p class="completion-instruction">Every statement is correct. Take a screenshot of this page and upload it to Stile as evidence of your work.</p>
+    </div>
+</div>
+
+
+<script>
+    let draggedTile = null;
+    const TOTAL_ACTIVITIES = 7;
+    const completed = {};
+
+    function updateCompletionBanner() {
+        const banner = document.getElementById('completion-banner');
+        const allDone = Object.keys(completed).length === TOTAL_ACTIVITIES
+            && Object.values(completed).every(Boolean);
+        banner.classList.toggle('show', allDone);
+        if (allDone) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.draggable').forEach(tile => {
+            tile.addEventListener('dragstart', onDragStart);
+            tile.addEventListener('dragend', onDragEnd);
+        });
+        document.querySelectorAll('.droppable').forEach(blank => {
+            blank.addEventListener('dragover', onDragOver);
+            blank.addEventListener('dragleave', onDragLeave);
+            blank.addEventListener('drop', onDropBlank);
+        });
+        document.querySelectorAll('.pool').forEach(pool => {
+            pool.addEventListener('dragover', onDragOver);
+            pool.addEventListener('dragleave', onDragLeave);
+            pool.addEventListener('drop', onDropPool);
+        });
+    });
+
+    function onDragStart(e) {
+        draggedTile = e.target;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', e.target.dataset.value);
+        setTimeout(() => { if (draggedTile) draggedTile.classList.add('dragging'); }, 0);
+    }
+
+    function onDragEnd(e) {
+        e.target.classList.remove('dragging');
+        draggedTile = null;
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function onDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function onDropBlank(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const blank = e.currentTarget;
+        blank.classList.remove('drag-over', 'correct', 'incorrect');
+        if (!draggedTile) return;
+
+        const existing = blank.querySelector('.tile');
+        if (existing) {
+            const pool = document.getElementById(existing.dataset.poolId);
+            if (pool) pool.appendChild(existing);
+        }
+
+        if (draggedTile.parentElement && draggedTile.parentElement.classList.contains('droppable')) {
+            const prev = draggedTile.parentElement;
+            prev.classList.remove('has-tile', 'correct', 'incorrect');
+        }
+
+        blank.appendChild(draggedTile);
+        blank.classList.add('has-tile');
+    }
+
+    function onDropPool(e) {
+        e.preventDefault();
+        const pool = e.currentTarget;
+        pool.classList.remove('drag-over');
+        if (!draggedTile) return;
+        if (draggedTile.dataset.poolId !== pool.id) return;
+
+        if (draggedTile.parentElement && draggedTile.parentElement.classList.contains('droppable')) {
+            const prev = draggedTile.parentElement;
+            prev.classList.remove('has-tile', 'correct', 'incorrect');
+        }
+        pool.appendChild(draggedTile);
+    }
+
+    function checkActivity(actId) {
+        const blanks = document.querySelectorAll(`.droppable[data-activity="${actId}"]`);
+        let correct = 0;
+        const total = blanks.length;
+
+        blanks.forEach(blank => {
+            const tile = blank.querySelector('.tile');
+            const current = tile ? tile.dataset.value : null;
+            const expected = blank.dataset.correct;
+
+            blank.classList.remove('correct', 'incorrect');
+            void blank.offsetWidth;
+
+            if (current === expected) {
+                blank.classList.add('correct');
+                correct++;
+            } else {
+                blank.classList.add('incorrect');
+            }
+        });
+
+        const fb = document.getElementById(`${actId}-feedback`);
+        if (correct === total) {
+            fb.textContent = 'All correct! Well done.';
+            fb.className = 'feedback feedback-correct';
+            completed[actId] = true;
+        } else {
+            fb.textContent = `${correct} of ${total} correct -- check the red boxes.`;
+            fb.className = 'feedback feedback-incorrect';
+            completed[actId] = false;
+        }
+        updateCompletionBanner();
+    }
+
+    function resetActivity(actId) {
+        const card = document.getElementById(actId);
+        card.querySelectorAll('.tile').forEach(tile => {
+            const pool = document.getElementById(tile.dataset.poolId);
+            if (pool) pool.appendChild(tile);
+        });
+        card.querySelectorAll('.droppable').forEach(blank => {
+            blank.classList.remove('has-tile', 'correct', 'incorrect');
+        });
+        const fb = document.getElementById(`${actId}-feedback`);
+        fb.textContent = '';
+        fb.className = 'feedback';
+        completed[actId] = false;
+        updateCompletionBanner();
+    }
+</script>
+</body>
+</html>
