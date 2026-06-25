@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>If / Else · Practice</title>
+
+<!-- Python execution + editor (matching your existing stack) -->
+<script src="https://skulpt.org/js/skulpt.min.js"></script>
+<script src="https://skulpt.org/js/skulpt-stdlib.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+
+<style>
+:root{
+  --navy:#1b1f45;
+  --pink:#ea008a;
+  --paper:#ffffff;
+  --ink:#1b1f45;
+  --line:#e4e6f0;
+  --muted:#6b6f8c;
+  --terminal-bg:#13162e;
+  --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;font-size:17px;line-height:1.5}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px}
+
+/* ---------- Top bar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;
+  background:var(--navy);color:#fff;padding:22px 28px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:1.45rem;font-weight:700;letter-spacing:.2px}
+.topbar .kicker{display:block;font-size:.72rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pink);margin-bottom:6px}
+.counter{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);padding:10px 16px}
+.counter-icon{width:32px;height:32px;display:block}
+.counter .num{font-size:1.25rem;line-height:1;font-weight:700}
+.counter .lbl{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:#b9bcd6;font-weight:700}
+
+/* ---------- Intro ---------- */
+.intro{margin:0 0 24px;font-size:1.06rem;max-width:74ch;color:var(--ink)}
+.intro code{background:#f3f0f8;color:var(--navy);padding:2px 7px;
+  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.92em}
+
+/* ---------- Editor + output ---------- */
+.stage{border:1px solid var(--line);background:#fff}
+.work{display:grid;grid-template-columns:1fr 1fr;gap:0}
+@media (max-width:820px){.work{grid-template-columns:1fr}}
+.panel{padding:24px 30px}
+.panel + .panel{border-left:1px solid var(--line)}
+@media (max-width:820px){.panel + .panel{border-left:none;border-top:1px solid var(--line)}}
+.panel-label{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px}
+.CodeMirror{height:auto;min-height:320px;border:1px solid var(--line);font-size:16px;
+  font-family:"SF Mono",Menlo,Consolas,monospace;line-height:1.6}
+.CodeMirror-gutters{background:#f7f7fb;border-right:1px solid var(--line)}
+.terminal{background:var(--terminal-bg);color:#e8eaff;min-height:320px;padding:16px 18px;
+  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:15px;white-space:pre-wrap;overflow:auto}
+.terminal .ready{color:#7e83b3}
+.terminal .out{color:#e8eaff}
+.terminal .err{color:#ff6b9d}
+
+/* ---------- Controls ---------- */
+.controls{display:flex;align-items:center;gap:12px;padding:18px 30px;border-top:1px solid var(--line);flex-wrap:wrap}
+.btn{font-family:var(--font);font-size:1rem;font-weight:700;border:none;cursor:pointer;
+  padding:13px 24px;letter-spacing:.02em}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-run{background:var(--pink);color:#fff}
+.btn-run:hover:not(:disabled){background:#c70076}
+.btn-clear{background:none;color:var(--navy);border:1px solid var(--navy)}
+.btn-clear:hover{background:var(--navy);color:#fff}
+.hint-run{font-size:.85rem;color:var(--muted)}
+
+/* ---------- Challenges tab + sidebar ---------- */
+.tab-open{position:fixed;top:160px;right:0;z-index:40;background:var(--pink);color:#fff;
+  border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:.82rem;
+  letter-spacing:.14em;text-transform:uppercase;padding:16px 14px;writing-mode:vertical-rl;
+  text-orientation:mixed}
+.tab-open:hover{background:#c70076}
+
+.sidebar{position:fixed;top:0;right:0;height:100vh;width:380px;max-width:90vw;background:#fff;
+  border-left:1px solid var(--line);box-shadow:-18px 0 50px rgba(27,31,69,.16);z-index:50;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);
+  display:flex;flex-direction:column}
+.sidebar.open{transform:translateX(0)}
+.sidebar-head{background:var(--navy);color:#fff;padding:22px 24px;display:flex;
+  align-items:flex-start;justify-content:space-between;gap:14px}
+.sidebar-head .ttl{font-size:1.2rem;font-weight:700;margin:0}
+.sidebar-head .sub{font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--pink);margin-bottom:6px;display:block}
+.sidebar-close{background:none;border:none;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;padding:0}
+.sidebar-count{font-size:.78rem;color:#b9bcd6;margin-top:8px;letter-spacing:.04em}
+.sidebar-body{overflow-y:auto;padding:8px 0 30px;flex:1}
+
+.cat{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  padding:20px 24px 8px}
+.chal{display:flex;gap:12px;align-items:flex-start;padding:11px 24px;border-bottom:1px solid var(--line);
+  cursor:pointer}
+.chal:hover{background:#fff7fb}
+.chal .box{flex:0 0 22px;width:22px;height:22px;border:2px solid var(--navy);margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;background:#fff}
+.chal.done .box{background:var(--pink);border-color:var(--pink)}
+.chal .txt{flex:1}
+.chal .txt strong{display:block;font-size:.98rem;color:var(--navy);font-weight:700}
+.chal.done .txt strong{color:var(--muted)}
+.chal .txt span{font-size:.84rem;color:var(--muted)}
+.chal .bk{flex:0 0 auto;font-size:.7rem;font-weight:700;letter-spacing:.08em;color:var(--pink);
+  text-transform:uppercase;margin-top:2px}
+
+.scrim{position:fixed;inset:0;background:rgba(27,31,69,.35);z-index:45;opacity:0;
+  pointer-events:none;transition:opacity .28s ease}
+.scrim.show{opacity:1;pointer-events:auto}
+
+/* ---------- Buckle award popup ---------- */
+.award{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);
+  background:#fff;border:3px solid var(--navy);padding:28px 40px;text-align:center;z-index:70;display:none;
+  box-shadow:0 22px 55px rgba(27,31,69,.32)}
+.award.show{display:block;animation:popIn .5s cubic-bezier(.18,.89,.32,1.28) forwards}
+.award.hide{display:block;animation:popOut .35s ease forwards}
+.award-img{width:150px;height:150px;display:block;margin:0 auto 12px}
+.award-text{font-size:1.5rem;font-weight:700;color:var(--navy)}
+@keyframes popIn{0%{transform:translate(-50%,-50%) scale(0);opacity:0}
+  60%{transform:translate(-50%,-50%) scale(1.18);opacity:1}
+  80%{transform:translate(-50%,-50%) scale(.94)}
+  100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes popOut{0%{transform:translate(-50%,-50%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(.7);opacity:0}}
+.confetti-canvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:60}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <span class="kicker">Practice · If / Else Statements</span>
+    <h1>Open coding playground</h1>
+  </div>
+  <div class="counter" title="Buckles earned">
+    <img src="buckle.svg" alt="" class="counter-icon">
+    <div>
+      <div class="num"><span id="buckleCount">0</span></div>
+      <div class="lbl">Buckles</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <p class="intro">Write whatever Python you like, then press <strong>Run</strong>. Open <strong>Challenges</strong> on the right for ideas. Buckles are awarded automatically the moment your code does what a challenge asks, so just keep experimenting with <code>if</code> and <code>else</code>.</p>
+
+  <section class="stage">
+    <div class="work">
+      <div class="panel">
+        <div class="panel-label">Your code</div>
+        <textarea id="editor"># Type your Python here, then press Run
+</textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Output</div>
+        <div class="terminal" id="terminal"><span class="ready">Press Run to execute your code...</span></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-run" id="runBtn">&#9654; Run</button>
+      <button class="btn btn-clear" id="clearBtn">Clear editor</button>
+      <span class="hint-run">or press Ctrl + Enter</span>
+    </div>
+  </section>
+
+</div>
+
+<button class="tab-open" id="openBtn">Challenges</button>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="sidebar" id="sidebar" aria-label="Challenges">
+  <div class="sidebar-head">
+    <div>
+      <span class="sub">Try these</span>
+      <h2 class="ttl">Challenges</h2>
+      <div class="sidebar-count"><span id="chalDone">0</span> of <span id="chalTotal">0</span> earned</div>
+    </div>
+    <button class="sidebar-close" id="closeBtn" aria-label="Close">&times;</button>
+  </div>
+  <div class="sidebar-body" id="chalList"></div>
+</aside>
+
+<div class="award" id="award" role="status" aria-live="polite">
+  <img src="penguin-with-buckle.svg" alt="" class="award-img">
+  <div class="award-text" id="awardText">+1 Buckle!</div>
+</div>
+
+<script>
+const PAGE_ID = "conditionals-practice";
+const $ = id => document.getElementById(id);
+
+/* =========================================================================
+   CHALLENGE PROMPTS — each has an auto-check that runs after every execution.
+   check(code, out) -> true when satisfied. Buckles are awarded once per id.
+   Tapping a prompt's text drops it into the editor as a comment to get going.
+   Scope: if / else only (no elif), comparison operators, indentation.
+   ========================================================================= */
+function lines(out){ return out.trim().split("\n").map(l=>l.trim()).filter(l=>l.length); }
+function ok(out){ return !/Error|Traceback/i.test(out); }
+function assigned(code){
+  const names=[]; const re=/(^|\n)\s*([A-Za-z_]\w*)\s*(?:=|\+=|-=|\*=|\/=)(?!=)/g; let m;
+  while((m=re.exec(code))) names.push(m[2]); return names;
+}
+function hasIf(c){ return /(?:^|\n)\s*if\s+.+:/.test(c); }
+function hasElse(c){ return /(?:^|\n)\s*else\s*:/.test(c); }
+function ifConditions(c){ return [...c.matchAll(/(?:^|\n)\s*if\s+(.+?)\s*:/g)].map(m=>m[1]); }
+function condHas(c, re){ return ifConditions(c).some(x=>re.test(x)); }
+function elseIndex(c){ return c.search(/(?:^|\n)[ \t]*else\s*:/); }
+function indentedStrings(region){
+  return [...region.matchAll(/\n[ \t]+print\s*\(\s*(['"])([\s\S]*?)\1/g)].map(m=>m[2]);
+}
+function ifBlockStrings(c){ const i=elseIndex(c); return indentedStrings(i>=0 ? c.slice(0,i) : c); }
+function elseBlockStrings(c){ const i=elseIndex(c); return i<0 ? [] : indentedStrings(c.slice(i)); }
+function printedStrings(c){ return [...c.matchAll(/print\s*\(\s*(['"])([\s\S]*?)\1\s*\)/g)].map(m=>m[2]); }
+
+const CHALLENGES = [
+  { cat:"Warm up", items:[
+    { id:"write-if", title:"Write an if statement that prints something", hint:"if a condition: then an indented print.", buckles:1,
+      check:(c,o)=>hasIf(c)&&ok(o)&&lines(o).length>0 },
+    { id:"add-else", title:"Add an else branch", hint:"if ...: then else: with a print in each.", buckles:1,
+      check:(c,o)=>hasIf(c)&&hasElse(c)&&ok(o) },
+    { id:"use-comparison", title:"Use a comparison in your condition", hint:"Try ==, >, <, >=, <= or !=.", buckles:1,
+      check:(c,o)=>condHas(c,/(==|!=|>=|<=|>|<)/)&&ok(o) }
+  ]},
+  { cat:"Comparison operators", items:[
+    { id:"check-equal", title:"Check if two things are equal", hint:"if score == 10:", buckles:1,
+      check:(c,o)=>condHas(c,/==/)&&ok(o) },
+    { id:"check-greater", title:"Check if something is greater than", hint:"if age > 12: (or >=).", buckles:1,
+      check:(c,o)=>condHas(c,/>/)&&ok(o) },
+    { id:"check-less", title:"Check if something is less than", hint:"if temp < 20: (or <=).", buckles:1,
+      check:(c,o)=>condHas(c,/</)&&ok(o) },
+    { id:"check-notequal", title:"Check if two things are not equal", hint:"if answer != 7:", buckles:1,
+      check:(c,o)=>condHas(c,/!=/)&&ok(o) }
+  ]},
+  { cat:"Making decisions", items:[
+    { id:"two-messages", title:"Print a different message in each branch", hint:"A print in the if and a different print in the else.", buckles:1,
+      check:(c,o)=>hasIf(c)&&hasElse(c)&&ok(o)&&new Set(printedStrings(c)).size>=2 },
+    { id:"text-condition", title:"Compare a variable to some text", hint:'if weather == "rain":', buckles:1,
+      check:(c,o)=>condHas(c,/['"]/)&&ok(o) },
+    { id:"if-runs", title:"Write code where the if branch runs", hint:"Make the condition true, then run it.", buckles:1,
+      check:(c,o)=>hasIf(c)&&ok(o)&&ifBlockStrings(c).some(s=>lines(o).includes(s)) },
+    { id:"else-runs", title:"Write code where the else branch runs", hint:"Make the condition false, then run it.", buckles:1,
+      check:(c,o)=>hasElse(c)&&ok(o)&&elseBlockStrings(c).some(s=>lines(o).includes(s)) }
+  ]},
+  { cat:"Going further", items:[
+    { id:"boundary", title:"Use >= or <= for a boundary", hint:"if money >= 5: so exactly 5 still counts.", buckles:1,
+      check:(c,o)=>condHas(c,/>=|<=/)&&ok(o) },
+    { id:"real-scenario", title:"Build a full if/else about a real situation", hint:"A variable, a comparison, and a print in both branches.", buckles:2,
+      check:(c,o)=>hasIf(c)&&hasElse(c)&&condHas(c,/(==|!=|>=|<=|>|<)/)&&assigned(c).length>=1&&ifBlockStrings(c).length>=1&&elseBlockStrings(c).length>=1&&ok(o)&&lines(o).length>0 },
+    { id:"capstone", title:"Earn every other challenge", hint:"A bonus 3 buckles once all the others are done.", buckles:3, capstone:true,
+      check:()=>false }
+  ]}
+];
+
+/* ===================== Buckles (shared localStorage) ===================== */
+/* One shared ledger so the buckle total stays consistent across every page.
+   Point other resources at this same key to unify their totals.            */
+const Buckles = {
+  key:"buckles-shared",
+  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {}; }catch(e){ return {}; } },
+  save(d){ try{ localStorage.setItem(this.key, JSON.stringify(d)); }catch(e){} },
+  isDone(id){ return !!this.load()[id]; },
+  award(id, n){ const d=this.load(); if(!d[id]){ d[id]=n; this.save(d); } },
+  total(){ return Object.values(this.load()).reduce((a,b)=>a+b,0); }
+};
+const nsId = id => PAGE_ID + ":" + id;
+
+let editor;
+
+/* ============================== Sidebar ================================= */
+function allItems(){ return CHALLENGES.flatMap(g=>g.items); }
+function nonCapstone(){ return allItems().filter(i=>!i.capstone); }
+
+function buildChallenges(){
+  const list = $("chalList"); list.innerHTML = "";
+  CHALLENGES.forEach(group=>{
+    const h = document.createElement("div"); h.className="cat"; h.textContent=group.cat;
+    list.appendChild(h);
+    group.items.forEach(item=>{
+      const done = Buckles.isDone(nsId(item.id));
+      const row = document.createElement("div");
+      row.className = "chal" + (done ? " done" : "");
+      row.id = "row-" + item.id;
+      row.innerHTML =
+        '<div class="box">' + (done ? "&#10003;" : "") + '</div>' +
+        '<div class="txt"><strong></strong><span></span></div>' +
+        '<div class="bk">' + item.buckles + 'bk</div>';
+      row.querySelector("strong").textContent = item.title;
+      row.querySelector("span").textContent = item.hint;
+      row.addEventListener("click", ()=> insertPrompt(item.title));
+      list.appendChild(row);
+    });
+  });
+  $("chalTotal").textContent = allItems().length;
+  refreshDoneCount();
+}
+
+function markDone(id){
+  const row = $("row-" + id);
+  if(row && !row.classList.contains("done")){
+    row.classList.add("done");
+    row.querySelector(".box").innerHTML = "&#10003;";
+  }
+  refreshDoneCount();
+}
+
+function refreshDoneCount(){
+  $("chalDone").textContent = allItems().filter(i=>Buckles.isDone(nsId(i.id))).length;
+}
+function refreshCount(){ $("buckleCount").textContent = Buckles.total(); }
+
+function insertPrompt(title){
+  const doc = editor.getDoc();
+  doc.replaceRange("\n# Challenge: " + title + "\n", { line: doc.lastLine() + 1, ch: 0 });
+  editor.focus(); editor.setCursor(doc.lastLine(), 0);
+}
+
+function openSidebar(){ $("sidebar").classList.add("open"); $("scrim").classList.add("show"); }
+function closeSidebar(){ $("sidebar").classList.remove("open"); $("scrim").classList.remove("show"); }
+
+/* ===================== Evaluate challenges after a run =================== */
+function evaluate(code, out){
+  let gained = 0;
+  nonCapstone().forEach(item=>{
+    if(Buckles.isDone(nsId(item.id))) return;
+    try{ if(item.check(code, out) === true){ Buckles.award(nsId(item.id), item.buckles); gained += item.buckles; markDone(item.id); } }catch(e){}
+  });
+  const cap = allItems().find(i=>i.capstone);
+  if(cap && !Buckles.isDone(nsId(cap.id)) && nonCapstone().every(i=>Buckles.isDone(nsId(i.id)))){
+    Buckles.award(nsId(cap.id), cap.buckles); gained += cap.buckles; markDone(cap.id);
+  }
+  if(gained > 0){ refreshCount(); celebrate(gained); }
+}
+
+/* ===================== Award popup + confetti =========================== */
+function celebrate(n){
+  const a = $("award");
+  $("awardText").textContent = "+" + n + " Buckle" + (n>1?"s":"") + "!";
+  a.classList.remove("hide"); a.classList.add("show");
+  burstConfetti();
+  setTimeout(()=>{ a.classList.remove("show"); a.classList.add("hide");
+    setTimeout(()=> a.classList.remove("hide"), 360); }, 1100);
+}
+function burstConfetti(){
+  const canvas = document.createElement("canvas");
+  canvas.className = "confetti-canvas";
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const colors = ["#ea008a","#1b1f45","#FFD166","#06d6a0","#ffd6ec"];
+  const cx = innerWidth/2, cy = innerHeight/2; const parts = [];
+  for(let i=0;i<150;i++){
+    const angle = Math.random()*Math.PI*2; const speed = 4 + Math.random()*10;
+    parts.push({ x:cx, y:cy, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed - 4,
+      size:5 + Math.random()*7, color:colors[Math.floor(Math.random()*colors.length)],
+      rot:Math.random()*Math.PI, vrot:(Math.random()-.5)*.3, life:0 });
+  }
+  const gravity = 0.22, drag = 0.992; let frame = 0;
+  (function tick(){
+    frame++; ctx.clearRect(0,0,innerWidth,innerHeight);
+    parts.forEach(p=>{
+      p.vx *= drag; p.vy = p.vy*drag + gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, 1 - p.life/95); ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6); ctx.restore();
+    });
+    if(frame < 95) requestAnimationFrame(tick); else canvas.remove();
+  })();
+}
+
+/* =============================== Run code =============================== */
+let outputBuffer = "";
+function runCode(){
+  const code = editor.getValue();
+  const runBtn = $("runBtn");
+  outputBuffer = "";
+  runBtn.disabled = true; runBtn.textContent = "Running...";
+  setTerminal('<span class="ready">Running...</span>');
+
+  Sk.configure({
+    output: t => { outputBuffer += t; },
+    read: x => {
+      if(Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+        throw "File not found: '" + x + "'";
+      return Sk.builtinFiles["files"][x];
+    },
+    __future__: Sk.python3,
+    execLimit: 5000
+  });
+
+  Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, code, true))
+    .then(() => {
+      const out = outputBuffer;
+      setTerminal('<span class="out">' + (out ? escapeHtml(out) : "(no output)") + '</span>');
+      evaluate(code, out);
+    })
+    .catch(err => {
+      let msg = err.toString().replace(/Sk\.builtin\./g, "").replace(/ on line \d+/g, "");
+      setTerminal('<span class="err">' + escapeHtml(msg) + '</span>');
+    })
+    .finally(() => { runBtn.disabled = false; runBtn.textContent = "\u25B6 Run"; });
+}
+
+function setTerminal(html){ $("terminal").innerHTML = html; }
+function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* =============================== Wiring ================================= */
+function init(){
+  editor = CodeMirror.fromTextArea($("editor"), {
+    mode:"python", lineNumbers:true, indentUnit:4, indentWithTabs:false,
+    lineWrapping:true, autoCloseBrackets:true, matchBrackets:true,
+    extraKeys:{
+      "Ctrl-Enter": runCode, "Cmd-Enter": runCode,
+      "Tab": cm => cm.somethingSelected() ? cm.indentSelection("add") : cm.replaceSelection("    ","end")
+    }
+  });
+
+  $("runBtn").addEventListener("click", runCode);
+  $("clearBtn").addEventListener("click", ()=>{ editor.setValue(""); editor.focus(); });
+  $("openBtn").addEventListener("click", openSidebar);
+  $("closeBtn").addEventListener("click", closeSidebar);
+  $("scrim").addEventListener("click", closeSidebar);
+  document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeSidebar(); });
+
+  buildChallenges();
+  refreshCount();
+  setTimeout(()=>editor.focus(), 60);
+}
+
+(function ready(){
+  if(typeof CodeMirror === "undefined" || typeof Sk === "undefined") return setTimeout(ready, 80);
+  init();
+})();
+</script>
+</body>
+</html>
