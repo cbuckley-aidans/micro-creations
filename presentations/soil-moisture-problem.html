@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soil moisture meter</title>
+<style>
+  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
+  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
+  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
+  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
+  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:50vw; justify-content:flex-end; }
+  .dot { width:10px; height:10px; background:var(--line); }
+  .dot.active { background:var(--pink); }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
+  .slide { display:none; }
+  .slide.active { display:block; }
+  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
+  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
+  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
+  h2 { font-size:clamp(2rem,4.5vw,3.4rem); font-weight:800; line-height:1.06; letter-spacing:-0.01em; max-width:22ch; margin-bottom:6px; }
+  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:34ch; }
+  .problem { font-size:clamp(1.3rem,2.8vw,2.1rem); line-height:1.5; font-weight:400; max-width:30ch; border-left:6px solid var(--navy); padding-left:26px; margin-bottom:8px; }
+  .doingword { transition:all 0.25s ease; }
+  .problem.active .doingword { color:var(--pink); font-weight:700; box-shadow:inset 0 -0.35em 0 rgba(234,0,138,0.16); }
+  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
+  .frag.shown { opacity:1; transform:none; }
+  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:36ch; margin-top:20px; }
+  .note strong { color:var(--pink); }
+
+  /* moisture scale */
+  .scale { position:relative; width:100%; max-width:60ch; margin:48px 0 78px; }
+  .scaletrack { position:relative; height:92px; }
+  .scalebar { position:absolute; bottom:0; left:0; right:0; border-bottom:3px solid var(--navy); }
+  .scalecap { position:absolute; bottom:0; width:3px; height:20px; background:var(--navy); }
+  .scalecap.l { left:0; } .scalecap.r { right:0; }
+  .scaleend { position:absolute; bottom:-38px; font-family:"SF Mono","Consolas",monospace; font-weight:700; font-size:clamp(0.85rem,1.6vw,1.1rem); }
+  .scaleend.l { left:0; } .scaleend.r { right:0; text-align:right; }
+  .scaleend .s2 { display:block; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; font-weight:400; font-size:0.78em; opacity:0.55; margin-top:3px; }
+
+  .sfill { position:absolute; bottom:3px; left:0; width:0; height:62px; background:rgba(234,0,138,0.12); border-right:3px solid var(--pink); opacity:0; transition:opacity 0.25s ease, width 1s cubic-bezier(0.22,1,0.36,1); }
+  .sfill.show { opacity:1; width:78%; }
+  .sfill .tag { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-family:"SF Mono","Consolas",monospace; font-weight:700; color:var(--pink); font-size:clamp(0.9rem,1.7vw,1.2rem); white-space:nowrap; }
+
+  .marker { position:absolute; bottom:3px; height:74px; width:3px; background:var(--navy); opacity:0; transition:opacity 0.4s ease; }
+  .marker.show { opacity:1; }
+  .marker .mlab { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-family:"SF Mono","Consolas",monospace; font-weight:700; font-size:clamp(0.85rem,1.7vw,1.15rem); padding-bottom:8px; }
+  .marker.pink { background:var(--pink); } .marker.pink .mlab { color:var(--pink); }
+
+  .zone { position:absolute; bottom:3px; height:62px; opacity:0; transition:opacity 0.5s ease; display:flex; align-items:center; justify-content:center; }
+  .zone.show { opacity:1; }
+  .zone.dry { left:0; width:60%; background:rgba(27,31,69,0.08); }
+  .zone.wet { left:60%; right:0; background:rgba(234,0,138,0.12); }
+  .zonelab { font-weight:800; text-transform:uppercase; letter-spacing:0.14em; font-size:clamp(0.9rem,1.9vw,1.4rem); }
+  .zone.dry .zonelab { color:var(--navy); } .zone.wet .zonelab { color:var(--pink); }
+  .threshold { position:absolute; bottom:3px; left:60%; height:80px; width:3px; background:var(--pink); transform:translateX(-50%); opacity:0; transition:opacity 0.4s ease; }
+  .threshold.show { opacity:1; }
+  .threshold .tlab { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); white-space:nowrap; color:var(--pink); font-weight:700; font-family:"SF Mono","Consolas",monospace; font-size:clamp(0.85rem,1.7vw,1.15rem); padding-bottom:8px; }
+
+  /* requirements list */
+  .reqs { margin-top:14px; max-width:52ch; }
+  .req { display:flex; gap:20px; align-items:flex-start; margin:16px 0; }
+  .req .n { flex:0 0 auto; width:44px; height:44px; background:var(--navy); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+  .req .txt { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.35; padding-top:7px; }
+  .req .txt strong { color:var(--pink); }
+
+  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
+  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
+  .hint.fade { opacity:0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">Soil moisture meter</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body">
+
+    <!-- 0 TITLE -->
+    <section class="slide active" data-label="Soil moisture meter">
+      <div class="bignum">0</div>
+      <p class="eyebrow">The challenge</p>
+      <h1>Does this plant need watering?</h1>
+      <p class="sub">Building a moisture meter with a micro:bit.</p>
+      <p class="sub frag">The plant cannot tell us. So we will build something that can.</p>
+    </section>
+
+    <!-- 1 THE TASK -->
+    <section class="slide" data-label="The task">
+      <div class="bignum">1</div>
+      <p class="eyebrow">The task</p>
+      <p class="problem" id="task">You have a pot of soil and a micro:bit. Build a moisture meter that can <span class="doingword">sense whether the soil is dry or wet</span>. If the soil is dry, the micro:bit should buzz so you know the plant needs a drink. Otherwise, if the soil is wet, it should show a happy face so you do not overwater.</p>
+      <p class="note frag" data-target="#task">Simple enough to say. But a micro:bit cannot feel wetness.</p>
+      <p class="note frag">It can only work with numbers. So our first job is to turn moisture into a number.</p>
+    </section>
+
+    <!-- 2 SCIENCE: HOW -->
+    <section class="slide" data-label="The science">
+      <div class="bignum">2</div>
+      <p class="eyebrow">The science</p>
+      <h2>How can electricity tell us about water?</h2>
+      <p class="note frag">We push two metal nails into the soil and connect them to the micro:bit.</p>
+      <p class="note frag">The soil sitting between the nails becomes part of an electric circuit.</p>
+      <p class="note frag">Whether electricity can flow across that gap depends entirely on the soil.</p>
+    </section>
+
+    <!-- 3 VARIABLE RESISTOR -->
+    <section class="slide" data-label="Variable resistor">
+      <div class="bignum">3</div>
+      <p class="eyebrow">The science</p>
+      <h2>Soil resists the flow of electricity.</h2>
+      <p class="note frag">Pure water does not carry electricity well. The nutrients dissolved in it do.</p>
+      <p class="note frag">More water means more dissolved nutrients moving about, so current flows more easily.</p>
+      <p class="note frag">Dry soil blocks the current. Wet soil lets it through. Soil behaves like a <strong>variable resistor</strong>.</p>
+    </section>
+
+    <!-- 4 THE READING -->
+    <section class="slide" data-label="The reading">
+      <div class="bignum">4</div>
+      <p class="eyebrow">The reading</p>
+      <h2>The micro:bit turns that flow into a number.</h2>
+      <div class="scale">
+        <div class="scaletrack">
+          <div class="sfill" data-at="2"><span class="tag">a wet pot reads high</span></div>
+          <div class="scalebar"></div>
+          <div class="scalecap l"></div><div class="scalecap r"></div>
+          <div class="scaleend l">0<span class="s2">no current</span></div>
+          <div class="scaleend r">1023<span class="s2">max current</span></div>
+        </div>
+      </div>
+      <p class="note frag">It reads the current as a number from 0 to 1023.</p>
+      <p class="note frag">The more easily current flows, the higher the number climbs.</p>
+      <p class="note frag">So dry soil reads <strong>low</strong> and wet soil reads <strong>high</strong>. Moisture has become a number.</p>
+    </section>
+
+    <!-- 5 CALIBRATION -->
+    <section class="slide" data-label="Calibration">
+      <div class="bignum">5</div>
+      <p class="eyebrow">Calibration</p>
+      <h2>But what counts as dry?</h2>
+      <div class="scale">
+        <div class="scaletrack">
+          <div class="marker" data-at="2" style="left:24%;"><span class="mlab">dry &asymp; 250</span></div>
+          <div class="marker pink" data-at="3" style="left:96%;"><span class="mlab">wet &asymp; 1000</span></div>
+          <div class="scalebar"></div>
+          <div class="scalecap l"></div><div class="scalecap r"></div>
+          <div class="scaleend l">0<span class="s2">no current</span></div>
+          <div class="scaleend r">1023<span class="s2">max current</span></div>
+        </div>
+      </div>
+      <p class="note frag">A number like 400 means nothing on its own. It depends on your soil and your nails.</p>
+      <p class="note frag">So test your own setup. Push the nails into dry soil and note the reading.</p>
+      <p class="note frag">Then push them into wet soil and note that reading.</p>
+      <p class="note frag">Now you have your scale. Dry sits low, wet sits high, and your soil decides the exact numbers.</p>
+    </section>
+
+    <!-- 6 THE DECISION -->
+    <section class="slide" data-label="The decision">
+      <div class="bignum">6</div>
+      <p class="eyebrow">The decision</p>
+      <h2>Pick a line in the middle.</h2>
+      <div class="scale">
+        <div class="scaletrack">
+          <div class="zone dry" data-at="2"><span class="zonelab">dry</span></div>
+          <div class="zone wet" data-at="3"><span class="zonelab">wet</span></div>
+          <div class="threshold" data-at="1"><span class="tlab">threshold</span></div>
+          <div class="scalebar"></div>
+          <div class="scalecap l"></div><div class="scalecap r"></div>
+          <div class="scaleend l">0</div>
+          <div class="scaleend r">1023</div>
+        </div>
+      </div>
+      <p class="note frag">Choose a value somewhere between your dry and wet readings. Call it the threshold.</p>
+      <p class="note frag">Any reading <strong>below</strong> the line, the soil is dry.</p>
+      <p class="note frag">Any reading <strong>on or above</strong> the line, the soil is wet.</p>
+      <p class="note frag">That single comparison is the decision your program has to make.</p>
+    </section>
+
+    <!-- 7 SAVING ENERGY -->
+    <section class="slide" data-label="A real constraint">
+      <div class="bignum">7</div>
+      <p class="eyebrow">A real constraint</p>
+      <h2>A meter has to last.</h2>
+      <p class="note frag">If we measure constantly, the probes are always powered. That drains the battery and slowly corrodes the nails.</p>
+      <p class="note frag">So we only power the probes for the instant we take a reading, then switch them off.</p>
+      <p class="note frag">Soil dries out slowly, so we can also wait a few seconds between readings rather than checking thousands of times a second.</p>
+    </section>
+
+    <!-- 8 PUTTING IT TOGETHER -->
+    <section class="slide" data-label="The problem, broken down">
+      <div class="bignum">8</div>
+      <p class="eyebrow">Your problem, broken down</p>
+      <h2>What your solution must do.</h2>
+      <div class="reqs">
+        <div class="req frag"><span class="n">1</span><span class="txt"><strong>Sense</strong> the soil by reading the value from the probes.</span></div>
+        <div class="req frag"><span class="n">2</span><span class="txt"><strong>Decide</strong> dry or wet by comparing the reading to your threshold.</span></div>
+        <div class="req frag"><span class="n">3</span><span class="txt">If the soil is dry, <strong>buzz</strong> to warn that the plant needs a drink.</span></div>
+        <div class="req frag"><span class="n">4</span><span class="txt">Otherwise, if the soil is wet, show a <strong>happy face</strong> so you do not overwater.</span></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const stepLabel = document.getElementById('stepLabel');
+  let s = 0, f = 0;
+  slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+  function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
+  function render(){
+    slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
+    const slide = slides[s];
+    const frags = fragsIn(slide);
+    frags.forEach((el,i)=>{
+      const on = i < f;
+      el.classList.toggle('shown', on);
+      const tgt = el.dataset.target;
+      if(tgt){ const node = slide.querySelector(tgt); if(node) node.classList.toggle('active', on); }
+    });
+    slide.querySelectorAll('[data-at]').forEach(el=>{
+      el.classList.toggle('show', f >= parseInt(el.dataset.at,10));
+    });
+    dots.forEach((d,i)=>d.classList.toggle('active', i===s));
+    stepLabel.innerHTML = slide.dataset.label;
+  }
+  function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
+  function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
+  document.addEventListener('keydown',(e)=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  document.addEventListener('click', next);
+  setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
+  render();
+</script>
+</body>
+</html>
