@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Variables — Completing Variables</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1b1f45;
+  --pink:#ea008a;
+  --teal:#1a6e6e;
+  --blue:#1a4ea6;
+  --purple:#5c3d99;
+  --white:#fff;
+  --paper:#f2f2f0;
+  --line:#e0e0dd;
+  --grey:#8b8b93;
+  --correct:#16a34a;
+  --incorrect:#dc2626;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'Barlow','Helvetica Neue',Helvetica,Arial,sans-serif;
+  margin:0;padding:0;background:var(--paper);color:var(--navy);
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{width:100%;max-width:880px;padding:32px 28px 60px;}
+
+/* ---------- HEADER ---------- */
+.masthead{display:flex;align-items:baseline;gap:16px;border-bottom:3px solid var(--navy);padding-bottom:10px;}
+.masthead h1{
+  font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.02em;margin:0;
+}
+.masthead h1 span{color:var(--pink);}
+.masthead .syntax{
+  margin-left:auto;font-family:'Courier New',monospace;font-size:15px;font-weight:700;
+  color:var(--grey);white-space:nowrap;
+}
+
+/* ---------- PROGRESS ---------- */
+.progress{display:flex;gap:6px;margin:18px 0 26px;}
+.pip{
+  flex:1;height:6px;background:var(--line);border:none;padding:0;cursor:pointer;
+  transition:background .15s;
+}
+.pip:hover{background:#c8c8c4;}
+.pip.done{background:var(--correct);}
+.pip.current{background:var(--pink);}
+
+/* ---------- CARD ---------- */
+.card{background:var(--white);border:1px solid var(--line);border-top:4px solid var(--navy);}
+.card-head{display:flex;align-items:center;gap:16px;padding:20px 28px 0;}
+.counter{
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;
+  letter-spacing:.16em;color:var(--grey);
+}
+.card-head h2{
+  font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.02em;margin:0;
+}
+.chip{
+  margin-left:auto;font-family:'Courier New',monospace;font-size:13px;font-weight:700;
+  color:#fff;padding:3px 10px;
+}
+.chip-int{background:var(--teal);}
+.chip-str{background:var(--pink);}
+.chip-float{background:var(--blue);}
+
+.prompt{font-size:19px;line-height:1.5;margin:12px 28px 0;max-width:62ch;}
+
+/* ---------- CODE LINE ---------- */
+.code-stage{padding:28px;}
+.code-line{
+  background:var(--navy);padding:24px 26px;display:flex;align-items:center;
+  gap:12px;flex-wrap:wrap;justify-content:center;
+}
+.code-text{
+  font-family:'Courier New',monospace;font-size:28px;font-weight:700;
+  color:#dde2f0;line-height:1;white-space:nowrap;
+}
+.blank{
+  border:2px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.06);
+  border-radius:5px;height:54px;display:flex;align-items:center;justify-content:center;
+  padding:0 6px;transition:border-color .15s,background .15s;cursor:pointer;
+}
+.blank.sm{min-width:64px;}
+.blank.md{min-width:120px;}
+.blank.lg{min-width:180px;}
+.blank.over{border-color:var(--pink);border-style:solid;background:rgba(234,0,138,.2);}
+.blank.filled{border-style:solid;border-color:transparent;background:transparent;padding:0;}
+.blank.correct{border:3px solid var(--correct)!important;background:rgba(22,163,74,.15)!important;}
+.blank.incorrect{border:3px solid var(--incorrect)!important;background:rgba(220,38,38,.15)!important;animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-3px);}}
+
+/* ---------- TILES ---------- */
+.pool{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+  padding:22px 0 0;min-height:56px;
+}
+.pool.over{background:#f7f0f6;}
+.tile{
+  font-family:'Courier New',monospace;font-size:19px;font-weight:700;color:#fff;
+  padding:11px 18px;border-radius:6px;cursor:pointer;user-select:none;
+  box-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s,opacity .15s;
+}
+.tile:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(0,0,0,.2);}
+.tile.dragging{opacity:.35;}
+.t-num{background:var(--teal);}
+.t-str{background:var(--pink);}
+.t-name{background:var(--blue);}
+.t-op{background:var(--purple);}
+.blank .tile{box-shadow:none;border-radius:4px;}
+.blank .tile:hover{transform:none;box-shadow:none;}
+
+/* ---------- HINT ---------- */
+.hint{
+  display:none;margin:0 28px 8px;padding:12px 16px;background:#fffbeb;
+  border-left:4px solid #f59e0b;font-size:16px;line-height:1.5;color:#78350f;
+}
+.hint p{margin:0 0 4px;}
+.hint p:last-child{margin:0;}
+
+/* ---------- FOOTER ---------- */
+.card-foot{
+  display:flex;align-items:center;gap:14px;padding:18px 28px;
+  border-top:1px solid var(--line);background:#fafaf9;
+}
+button{font-family:'Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+.btn-primary{
+  font-size:20px;font-weight:800;background:var(--navy);color:#fff;border:none;padding:12px 34px;
+  transition:background .15s;
+}
+.btn-primary:hover{background:#2e3472;}
+.btn-primary.ready{background:var(--pink);}
+.btn-primary.ready:hover{background:#c5006e;}
+.btn-ghost{
+  font-size:17px;font-weight:700;background:none;color:var(--grey);
+  border:2px solid var(--line);padding:11px 20px;transition:color .15s,border-color .15s;
+}
+.btn-ghost:hover{color:var(--navy);border-color:#bbb;}
+.btn-ghost.right{margin-left:auto;}
+.feedback{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.f-ok{color:var(--correct);}
+.f-no{color:var(--incorrect);}
+
+/* ---------- SCORE ---------- */
+.score{
+  display:none;flex-direction:column;align-items:center;gap:16px;text-align:center;
+  background:var(--navy);border-top:6px solid var(--pink);padding:44px 40px;
+}
+.score .label{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--pink);margin:0;}
+.score .num{font-family:'Barlow Condensed',sans-serif;font-size:84px;font-weight:900;color:#fff;line-height:.9;}
+.score .rule{width:56px;height:3px;background:var(--pink);}
+.score p.msg{color:rgba(255,255,255,.78);font-size:18px;max-width:440px;margin:0;line-height:1.55;}
+.score button{margin-top:8px;}
+
+@media (max-width:640px){
+  .wrap{padding:22px 16px 48px;}
+  .masthead .syntax{display:none;}
+  .code-text{font-size:22px;}
+  .card-head{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Completing <span>Variables</span></h1>
+    <span class="syntax">variable_name = value</span>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card" id="card"></div>
+
+  <div class="score" id="score">
+    <p class="label">Your score</p>
+    <span class="num" id="score-num">0 / 7</span>
+    <div class="rule"></div>
+    <p class="msg">Take a screenshot of this panel and paste it into Stile as evidence of your work.</p>
+    <button class="btn-ghost" onclick="restart()" style="color:#fff;border-color:rgba(255,255,255,.3)">Start again</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   EDIT HERE: each object is one question.
+   parts: strings are fixed code text, objects are blanks.
+   ========================================================= */
+const ACTIVITIES = [
+  {
+    title:'Player Score', type:'int',
+    prompt:'A player has a score of 10. Drag the correct value into the blank.',
+    parts:['score =', {answer:'10', hint:'Integers are whole numbers: no decimal point and no quotation marks.'}],
+    tiles:['10','"10"','10.0','100']
+  },
+  {
+    title:'City Name', type:'str',
+    prompt:'Store the city name Brisbane.',
+    parts:['city =', {answer:'"Brisbane"', hint:'Text values need quotation marks. Without them, Python reads it as a variable name.'}],
+    tiles:['"Brisbane"','Brisbane','42','1.5']
+  },
+  {
+    title:'Body Temperature', type:'float',
+    prompt:'Store a temperature reading of 36.6 degrees.',
+    parts:['temperature =', {answer:'36.6', hint:'A float has a decimal point and no quotation marks.'}],
+    tiles:['36','"36.6"','36.6','366']
+  },
+  {
+    title:'Lives Remaining', type:'int',
+    prompt:'Store the number of lives remaining: 3. This time you need the variable name too.',
+    parts:[{answer:'lives', hint:'The variable name goes on the left of the = sign, with no quotation marks.'}, '=', {answer:'3', hint:'3 is a whole number, so no quotes and no decimal point.'}],
+    tiles:['lives','"lives"','3','"3"','score']
+  },
+  {
+    title:'Height', type:'float',
+    prompt:'Store a height of 1.75 metres.',
+    parts:[{answer:'height', hint:'Pick the name that matches what is being measured.'}, '=', {answer:'1.75', hint:'1.75 has a decimal point, so it is a float. Watch out for the version in quotes.'}],
+    tiles:['height','weight','1.75','"1.75"','175']
+  },
+  {
+    title:'Username', type:'str',
+    prompt:'Build the whole line: a username storing the text alex.',
+    parts:[{answer:'username', hint:'The variable name goes on the left.'}, {answer:'=', hint:'Assignment in Python uses a single = sign.'}, {answer:'"alex"', hint:'Text values need quotation marks.'}],
+    tiles:['username','=','"alex"','name','+','alex']
+  },
+  {
+    title:'Item Count', type:'int',
+    prompt:'Build the whole line: a variable storing a count of 8 items.',
+    parts:[{answer:'item_count', hint:'Two words joined with an underscore, no spaces.'}, {answer:'=', hint:'Assignment in Python uses a single = sign, not +.'}, {answer:'8', hint:'8 is a whole number, so it needs no quotation marks.'}],
+    tiles:['item_count','=','8','count','+','"8"']
+  }
+];
+
+const TOTAL = ACTIVITIES.length;
+let index = 0;
+let solved = new Array(TOTAL).fill(false);
+let dragged = null;
+
+/* ---------- helpers ---------- */
+function tileClass(v){
+  if(v === '=' || v === '+') return 't-op';
+  if(v.startsWith('"')) return 't-str';
+  if(/^[\d.]+$/.test(v)) return 't-num';
+  return 't-name';
+}
+function blankSize(v){
+  if(v.length <= 2) return 'sm';
+  if(v.length <= 7) return 'md';
+  return 'lg';
+}
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+/* ---------- render ---------- */
+function renderProgress(){
+  const p = document.getElementById('progress');
+  p.innerHTML = '';
+  for(let i=0;i<TOTAL;i++){
+    const b = document.createElement('button');
+    b.className = 'pip' + (solved[i] ? ' done' : '') + (i === index ? ' current' : '');
+    b.title = 'Question ' + (i+1);
+    b.onclick = () => { index = i; render(); };
+    p.appendChild(b);
+  }
+}
+
+function render(){
+  const a = ACTIVITIES[index];
+  const card = document.getElementById('card');
+  document.getElementById('score').style.display = 'none';
+  card.style.display = '';
+
+  let codeHTML = '';
+  let bi = 0;
+  a.parts.forEach(part => {
+    if(typeof part === 'string'){
+      codeHTML += `<span class="code-text">${part}</span>`;
+    }else{
+      codeHTML += `<div class="blank ${blankSize(part.answer)}" data-i="${bi++}"></div>`;
+    }
+  });
+
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="counter">${String(index+1).padStart(2,'0')} / ${String(TOTAL).padStart(2,'0')}</span>
+      <h2>${a.title}</h2>
+      <span class="chip chip-${a.type}">${a.type}</span>
+    </div>
+    <p class="prompt">${a.prompt}</p>
+    <div class="code-stage">
+      <div class="code-line">${codeHTML}</div>
+      <div class="pool" id="pool"></div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="card-foot">
+      <button class="btn-primary" id="action">Check</button>
+      <span class="feedback" id="feedback"></span>
+      ${index > 0 ? '<button class="btn-ghost right" onclick="goBack()">Back</button>' : ''}
+    </div>`;
+
+  const pool = document.getElementById('pool');
+  shuffle(a.tiles).forEach(v => pool.appendChild(makeTile(v)));
+
+  card.querySelectorAll('.blank').forEach(b => {
+    b.addEventListener('dragover', overOn);
+    b.addEventListener('dragleave', overOff);
+    b.addEventListener('drop', dropBlank);
+    b.addEventListener('click', () => {
+      const t = b.querySelector('.tile');
+      if(t) returnTile(t);
+    });
+  });
+  pool.addEventListener('dragover', overOn);
+  pool.addEventListener('dragleave', overOff);
+  pool.addEventListener('drop', e => {
+    e.preventDefault(); pool.classList.remove('over');
+    if(dragged) returnTile(dragged);
+  });
+
+  document.getElementById('action').onclick = check;
+  renderProgress();
+}
+
+function makeTile(v){
+  const t = document.createElement('span');
+  t.className = 'tile ' + tileClass(v);
+  t.textContent = v;
+  t.dataset.value = v;
+  t.draggable = true;
+  t.addEventListener('dragstart', e => {
+    dragged = t; e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => t.classList.add('dragging'), 0);
+  });
+  t.addEventListener('dragend', () => { t.classList.remove('dragging'); dragged = null; });
+  t.addEventListener('click', () => {
+    if(t.parentElement.classList.contains('blank')) return;
+    const next = [...document.querySelectorAll('.blank')].find(b => !b.querySelector('.tile'));
+    if(next) placeTile(next, t);
+  });
+  return t;
+}
+
+function overOn(e){ e.preventDefault(); e.currentTarget.classList.add('over'); }
+function overOff(e){ e.currentTarget.classList.remove('over'); }
+
+function dropBlank(e){
+  e.preventDefault(); e.stopPropagation();
+  const b = e.currentTarget;
+  b.classList.remove('over');
+  if(dragged) placeTile(b, dragged);
+}
+
+function placeTile(blank, tile){
+  const existing = blank.querySelector('.tile');
+  if(existing) document.getElementById('pool').appendChild(existing);
+  const prev = tile.parentElement;
+  if(prev && prev.classList.contains('blank')) prev.classList.remove('filled','correct','incorrect');
+  blank.classList.remove('correct','incorrect');
+  blank.appendChild(tile);
+  blank.classList.add('filled');
+  clearFeedback();
+}
+
+function returnTile(tile){
+  const prev = tile.parentElement;
+  if(prev && prev.classList.contains('blank')) prev.classList.remove('filled','correct','incorrect');
+  document.getElementById('pool').appendChild(tile);
+  clearFeedback();
+}
+
+function clearFeedback(){
+  const f = document.getElementById('feedback');
+  if(f){ f.textContent = ''; f.className = 'feedback'; }
+  const h = document.getElementById('hint');
+  if(h){ h.style.display = 'none'; h.innerHTML = ''; }
+  const btn = document.getElementById('action');
+  if(btn && btn.dataset.mode !== 'next'){ btn.textContent = 'Check'; }
+}
+
+/* ---------- checking ---------- */
+function check(){
+  const a = ACTIVITIES[index];
+  const answers = a.parts.filter(p => typeof p !== 'string');
+  const blanks = [...document.querySelectorAll('.blank')];
+  let ok = 0;
+  const hints = [];
+
+  blanks.forEach((b, i) => {
+    const tile = b.querySelector('.tile');
+    const val = tile ? tile.dataset.value : null;
+    b.classList.remove('correct','incorrect');
+    void b.offsetWidth;
+    if(val === answers[i].answer){
+      b.classList.add('correct'); ok++;
+    }else{
+      b.classList.add('incorrect');
+      hints.push(answers[i].hint);
+    }
+  });
+
+  const f = document.getElementById('feedback');
+  const hint = document.getElementById('hint');
+  const btn = document.getElementById('action');
+
+  if(ok === blanks.length){
+    solved[index] = true;
+    f.textContent = 'Correct';
+    f.className = 'feedback f-ok';
+    hint.style.display = 'none';
+    btn.textContent = index === TOTAL - 1 ? 'Finish' : 'Next question';
+    btn.className = 'btn-primary ready';
+    btn.dataset.mode = 'next';
+    btn.onclick = advance;
+  }else{
+    f.textContent = blanks.length > 1 ? `${ok} of ${blanks.length} correct` : 'Not quite';
+    f.className = 'feedback f-no';
+    hint.innerHTML = hints.map(h => `<p>${h}</p>`).join('');
+    hint.style.display = 'block';
+  }
+  renderProgress();
+}
+
+function advance(){
+  if(index === TOTAL - 1){ finish(); }
+  else { index++; render(); }
+}
+
+function goBack(){ index--; render(); }
+
+function finish(){
+  document.getElementById('card').style.display = 'none';
+  const panel = document.getElementById('score');
+  document.getElementById('score-num').textContent = `${solved.filter(Boolean).length} / ${TOTAL}`;
+  panel.style.display = 'flex';
+  renderProgress();
+  panel.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function restart(){
+  solved = new Array(TOTAL).fill(false);
+  index = 0;
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>
