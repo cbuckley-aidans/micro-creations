@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to variables</title>
+<link rel="stylesheet" href="slide-styles.css">
+<style>
+  /* deck-local blocks carried over from the original prototype */
+  h2 { font-size:clamp(1.9rem,4.2vw,3.2rem); line-height:1.08; max-width:24ch; margin-bottom:6px; }
+  .sub { max-width:34ch; }
+  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:36ch; }
+  .def { font-size:clamp(1.1rem,2.2vw,1.6rem); line-height:1.5; max-width:36ch; margin:18px 0; padding:16px 20px; font-weight:600; }
+
+  .line { font-family:"SF Mono","Consolas","Liberation Mono",monospace; font-size:clamp(1.5rem,3.6vw,2.7rem); font-weight:700; letter-spacing:-0.01em; margin:10px 0; }
+  .line .op { color:var(--pink); }
+  .line .str { color:#0a8a3f; }
+  .line .num { color:#1466c4; }
+
+  .tracewrap { display:flex; gap:clamp(28px,5vw,64px); align-items:center; flex-wrap:wrap; margin:12px 0 4px; }
+  .box { width:clamp(120px,16vw,180px); border:3px solid var(--navy); background:#fff; }
+  .boxlabel { background:var(--navy); color:#fff; font-family:"SF Mono","Consolas",monospace; font-weight:700; text-align:center; padding:9px 6px; font-size:clamp(0.9rem,1.6vw,1.15rem); letter-spacing:0.06em; }
+  .boxval { font-size:clamp(2.4rem,7vw,4.6rem); font-weight:800; text-align:center; padding:14px 8px; min-height:1.3em; transition:color 0.25s ease; word-break:break-word; }
+  .boxval.bump { animation:pop 0.42s ease; color:var(--pink); }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.16)} 100%{transform:scale(1)} }
+
+  .recap { list-style:none; counter-reset:r; max-width:40ch; margin-top:8px; }
+  .recap li { counter-increment:r; position:relative; padding:14px 0 14px 60px; border-bottom:1px solid var(--line); font-size:clamp(1.1rem,2.1vw,1.55rem); line-height:1.4; }
+  .recap li::before { content:counter(r, decimal-leading-zero); position:absolute; left:0; top:14px; font-size:1.1rem; font-weight:800; color:var(--pink); letter-spacing:0.05em; }
+  .recap code { font-family:"SF Mono","Consolas",monospace; font-weight:700; color:var(--navy); background:rgba(27,31,69,0.07); padding:1px 7px; }
+</style>
+</head>
+<body data-deck="Introduction to variables">
+
+<div class="stage">
+  <div class="topbar">
+    <span class="step-label" id="stepLabel">Introduction</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="body">
+
+    <!-- 1 TITLE -->
+    <section class="slide" data-label="Introduction">
+      <div class="bignum">0</div>
+      <p class="eyebrow">New concept</p>
+      <h1>Variables</h1>
+      <p class="sub">How programs store and remember information.</p>
+      <p class="sub frag">We will start from the very beginning.</p>
+    </section>
+
+    <!-- 2 WHAT IS A VARIABLE -->
+    <section class="slide" data-label="What is a variable?">
+      <div class="bignum">1</div>
+      <p class="eyebrow">What is a variable?</p>
+      <h2>A variable is a named box.</h2>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="?">?</div></div>
+        <div>
+          <p class="def frag" style="margin-top:0;">It stores one piece of information your program can use later.</p>
+          <p class="note frag" data-box="10">This box is named score. Right now it holds 10.</p>
+          <p class="note frag">The name lets you find it. The value is what is inside.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 MAKING ONE -->
+    <section class="slide" data-label="Making a variable">
+      <div class="bignum">2</div>
+      <p class="eyebrow">Making a variable</p>
+      <div class="line">score <span class="op">=</span> <span class="num">0</span></div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="?">?</div></div>
+        <div>
+          <p class="note frag" data-box="0" style="margin-top:0;">This makes a box called score and puts 0 inside.</p>
+          <p class="note frag">The name goes on the left. The value goes on the right.</p>
+          <p class="note frag">The = sign means "put this value into the box".</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 VALUES / TYPES -->
+    <section class="slide" data-label="What can it hold?">
+      <div class="bignum">3</div>
+      <p class="eyebrow">What can a variable hold?</p>
+      <h2>Numbers and words.</h2>
+      <div class="line frag">age <span class="op">=</span> <span class="num">13</span></div>
+      <p class="note frag" style="margin-top:6px;">A number is written on its own.</p>
+      <div class="line frag">name <span class="op">=</span> <span class="str">"Ada"</span></div>
+      <p class="note frag" style="margin-top:6px;">Words, or text, go inside quote marks. The quotes tell the program this is text, not a number.</p>
+    </section>
+
+    <!-- 5 MATHS -->
+    <section class="slide" data-label="Variables in maths">
+      <div class="bignum">4</div>
+      <p class="eyebrow">Variables in maths</p>
+      <h2>You can calculate with them.</h2>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="10">10</div></div>
+        <div>
+          <div class="line frag" style="margin-top:0;">score + <span class="num">5</span></div>
+          <p class="note frag">score holds 10, so this works out to 15.</p>
+          <p class="note frag">A variable is used just like the value it holds.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 CHANGING IT -->
+    <section class="slide" data-label="Changing a variable">
+      <div class="bignum">5</div>
+      <p class="eyebrow">Changing a variable</p>
+      <h2>A variable can change. That is the whole point.</h2>
+      <div class="line">score <span class="op">=</span> <span class="num">10</span></div>
+      <div class="tracewrap">
+        <div class="box"><div class="boxlabel">score</div><div class="boxval" data-initial="0">0</div></div>
+        <div>
+          <p class="note frag" data-box="10" style="margin-top:0;">Give it a new value, and the old one is replaced.</p>
+          <p class="note frag">The 0 is gone. A box only ever holds one value at a time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 GOOD NAMES -->
+    <section class="slide" data-label="Naming your variables">
+      <div class="bignum">6</div>
+      <p class="eyebrow">Naming your variables</p>
+      <h2>Choose names that explain themselves.</h2>
+      <p class="note frag">Good names say what they hold: <strong style="color:var(--pink)">score</strong>, <strong style="color:var(--pink)">age</strong>, <strong style="color:var(--pink)">total</strong>.</p>
+      <p class="note frag">score is much clearer than something like x.</p>
+      <p class="note frag">Two rules: no spaces, and start with a lowercase letter.</p>
+      <p class="note frag">If a name needs two words, join them with an underscore: <strong style="color:var(--pink);font-family:'SF Mono',Consolas,monospace;">high_score</strong>.</p>
+    </section>
+
+    <!-- 8 RECAP -->
+    <section class="slide" data-label="Recap">
+      <div class="bignum">7</div>
+      <p class="eyebrow">Recap</p>
+      <h2>Three things to remember.</h2>
+      <ol class="recap">
+        <li class="frag">A variable is a named container.</li>
+        <li class="frag">The name stays; the value can change.</li>
+        <li class="frag">One name holds one value at a time.</li>
+      </ol>
+    </section>
+
+  </div>
+</div>
+
+<script src="slide-engine.js"></script>
+<script>
+  /* keeps the variable boxes in sync with revealed fragments, engine agnostic */
+  (function () {
+    var syncing = false;
+    function sync() {
+      if (syncing) return;
+      syncing = true;
+      document.querySelectorAll('.slide').forEach(function (slide) {
+        var box = slide.querySelector('.boxval');
+        if (!box) return;
+        var val = null;
+        slide.querySelectorAll('.frag').forEach(function (el) {
+          if (el.classList.contains('shown') && el.dataset.box !== undefined) val = el.dataset.box;
+        });
+        var target = (val !== null) ? val : (box.dataset.initial || '');
+        if (box.textContent !== target) {
+          box.textContent = target;
+          box.classList.remove('bump');
+          void box.offsetWidth;
+          box.classList.add('bump');
+        }
+      });
+      syncing = false;
+    }
+    new MutationObserver(sync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    sync();
+  })();
+</script>
+</body>
+</html>

@@ -4,29 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The print function</title>
+<link rel="stylesheet" href="slide-styles.css">
 <style>
-  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
-  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
-  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
-  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
-  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
-  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:50vw; justify-content:flex-end; }
-  .dot { width:10px; height:10px; background:var(--line); }
-  .dot.active { background:var(--pink); }
-  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
-  .slide { display:none; }
-  .slide.active { display:block; }
-  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
-  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
-  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
-  h2 { font-size:clamp(1.9rem,4.2vw,3.2rem); font-weight:800; line-height:1.08; letter-spacing:-0.01em; max-width:24ch; margin-bottom:6px; }
-  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:32ch; }
-  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
-  .frag.shown { opacity:1; transform:none; }
+  /* deck-local blocks carried over from the original prototype */
+  h2 { font-size:clamp(1.9rem,4.2vw,3.2rem); line-height:1.08; max-width:24ch; margin-bottom:6px; }
+  .sub { max-width:32ch; }
   .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:34ch; margin-top:20px; }
-  .def { font-size:clamp(1.1rem,2.2vw,1.6rem); line-height:1.5; max-width:34ch; margin:18px 0; padding:16px 20px; background:rgba(27,31,69,0.05); border-left:5px solid var(--pink); font-weight:600; }
+  .def { font-size:clamp(1.1rem,2.2vw,1.6rem); line-height:1.5; max-width:34ch; margin:18px 0; padding:16px 20px; font-weight:600; }
 
   .line { font-family:"SF Mono","Consolas","Liberation Mono",monospace; font-size:clamp(1.7rem,4.6vw,3.6rem); font-weight:700; letter-spacing:-0.01em; margin:6px 0; line-height:1.3; }
   .line .fn { color:var(--navy); }
@@ -47,7 +31,7 @@
   .code .str { color:#9be6a0; }
   .code .cmt { color:#8a8fb5; }
 
-  .out { font-family:"SF Mono","Consolas",monospace; background:#fff; border:2px solid var(--navy); padding:14px 20px; margin-top:14px; max-width:40ch; font-size:clamp(1.05rem,2.1vw,1.6rem); font-weight:700; }
+  .out { font-family:"SF Mono","Consolas",monospace; background:#fff; color:var(--navy); border:2px solid var(--navy); border-left:2px solid var(--navy); padding:14px 20px; margin-top:14px; max-width:40ch; font-size:clamp(1.05rem,2.1vw,1.6rem); font-weight:700; }
   .out .tag { display:block; font-size:0.66rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:6px; }
 
   .wrong { border-left:6px solid var(--pink); }
@@ -55,21 +39,16 @@
   .bad { font-family:"SF Mono","Consolas",monospace; font-size:clamp(1.05rem,2.2vw,1.6rem); font-weight:700; background:#fff; border:2px solid var(--navy); padding:14px 18px; }
   .bad .why { display:block; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; font-weight:400; font-size:clamp(0.95rem,1.8vw,1.25rem); color:var(--pink); margin-top:8px; }
 
-  .choice { display:flex; gap:22px; margin-top:30px; flex-wrap:wrap; max-width:64ch; }
-  .opt { flex:1; min-width:260px; border:2px solid var(--navy); padding:22px 24px; }
-  .opt.go { background:var(--navy); color:#fff; }
-  .opt .tag { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:10px; }
-  .opt h3 { font-size:clamp(1.3rem,2.4vw,1.8rem); font-weight:800; line-height:1.1; margin-bottom:8px; }
+  .choice { gap:22px; margin-top:30px; max-width:64ch; }
+  .opt { min-width:260px; padding:22px 24px; }
+  .opt h3 { font-size:clamp(1.3rem,2.4vw,1.8rem); margin-bottom:8px; }
   .opt p { font-size:clamp(1rem,1.9vw,1.3rem); line-height:1.4; }
 
   .runcue { display:inline-block; margin-top:22px; background:var(--pink); color:#fff; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:clamp(0.8rem,1.5vw,1rem); padding:10px 18px; }
-
-  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
-  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
-  .hint.fade { opacity:0; }
 </style>
 </head>
-<body>
+<body data-deck="The print function">
+
 <div class="stage">
   <div class="topbar">
     <span class="step-label" id="stepLabel">The print function</span>
@@ -79,7 +58,7 @@
   <div class="body">
 
     <!-- 1 TITLE -->
-    <section class="slide active" data-label="The print function">
+    <section class="slide" data-label="The print function">
       <div class="bignum">0</div>
       <p class="eyebrow">Modelled example</p>
       <h1>print</h1>
@@ -228,39 +207,6 @@ print(<span class="str">"Score"</span>, <span class="num">10</span>)</div>
   </div>
 </div>
 
-<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
-
-<script>
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  const dotsWrap = document.getElementById('dots');
-  const stepLabel = document.getElementById('stepLabel');
-  let s = 0, f = 0;
-  slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
-  const dots = Array.from(document.querySelectorAll('.dot'));
-  function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
-  function render(){
-    slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
-    const slide = slides[s];
-    const frags = fragsIn(slide);
-    frags.forEach((el,i)=>{
-      const on = i < f;
-      el.classList.toggle('shown', on);
-      const tgt = el.dataset.target;
-      if(tgt){ const node = slide.querySelector(tgt); if(node) node.classList.toggle('active', on); }
-    });
-    dots.forEach((d,i)=>d.classList.toggle('active', i===s));
-    stepLabel.innerHTML = slide.dataset.label;
-  }
-  function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
-  function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
-  document.addEventListener('keydown',(e)=>{
-    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
-    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
-    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-  });
-  document.addEventListener('click', next);
-  setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
-  render();
-</script>
+<script src="slide-engine.js"></script>
 </body>
 </html>
