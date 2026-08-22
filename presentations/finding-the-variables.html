@@ -4,56 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finding the variables</title>
+<link rel="stylesheet" href="slide-styles.css">
 <style>
-  :root { --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12); }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; background:var(--paper); color:var(--navy); overflow:hidden; -webkit-font-smoothing:antialiased; }
-  body::before { content:""; position:fixed; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:64px 64px; pointer-events:none; z-index:0; }
-  .stage { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:4vh 6vw; }
-  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--navy); padding-bottom:14px; }
-  .step-label { display:inline-block; background:var(--navy); color:#fff; font-size:0.78rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; padding:7px 14px; }
-  .dots { display:flex; gap:6px; flex-wrap:wrap; max-width:50vw; justify-content:flex-end; }
-  .dot { width:10px; height:10px; background:var(--line); }
-  .dot.active { background:var(--pink); }
-  .body { flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
-  .slide { display:none; }
-  .slide.active { display:block; }
-  .bignum { position:absolute; top:-2vh; right:0; font-size:26vh; font-weight:800; line-height:1; color:var(--navy); opacity:0.05; z-index:-1; user-select:none; }
-  .eyebrow { color:var(--pink); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:0.95rem; margin-bottom:18px; }
-  h1 { font-size:clamp(2.6rem,6vw,5rem); font-weight:800; line-height:1.02; letter-spacing:-0.02em; max-width:18ch; }
-  h2 { font-size:clamp(2rem,4.5vw,3.4rem); font-weight:800; line-height:1.06; letter-spacing:-0.01em; max-width:22ch; margin-bottom:6px; }
-  .sub { font-size:clamp(1.2rem,2.4vw,1.9rem); font-weight:400; margin-top:16px; max-width:30ch; }
+  /* deck-local blocks carried over from the original prototype */
+  h2 { font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; max-width:22ch; margin-bottom:6px; }
+  .sub { max-width:30ch; }
+  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:32ch; margin-top:22px; }
+  .def { font-size:clamp(1.05rem,2vw,1.45rem); line-height:1.5; max-width:34ch; margin:18px 0 24px; padding:16px 20px; }
+
   .problem { font-size:clamp(1.3rem,2.8vw,2.2rem); line-height:1.5; font-weight:400; max-width:26ch; border-left:6px solid var(--navy); padding-left:26px; margin-bottom:8px; }
   .doingword { transition:all 0.25s ease; }
   .problem.active .doingword { color:var(--pink); font-weight:700; box-shadow:inset 0 -0.35em 0 rgba(234,0,138,0.16); }
-  .frag { opacity:0; transform:translateY(14px); transition:opacity 0.35s ease, transform 0.35s ease; }
-  .frag.shown { opacity:1; transform:none; }
-  .note { font-size:clamp(1.05rem,2vw,1.5rem); line-height:1.5; max-width:32ch; margin-top:22px; }
-  .def { font-size:clamp(1.05rem,2vw,1.45rem); line-height:1.5; max-width:34ch; margin:18px 0 24px; padding:16px 20px; background:rgba(27,31,69,0.05); border-left:5px solid var(--pink); }
+
   .qlist { list-style:none; max-width:34ch; margin-top:6px; }
   .qlist li { font-size:clamp(1.05rem,2vw,1.45rem); padding:8px 0 8px 30px; position:relative; }
   .qlist li::before { content:"?"; position:absolute; left:0; color:var(--pink); font-weight:800; }
+
   .cards { display:flex; flex-direction:column; gap:14px; margin-top:14px; }
   .card { font-size:clamp(1.15rem,2.2vw,1.7rem); font-weight:600; background:#fff; border:2px solid var(--navy); padding:16px 22px; max-width:32ch; }
   .card .tag { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:6px; }
+
   table.vars { border-collapse:collapse; width:100%; max-width:62ch; margin-top:14px; }
   table.vars th, table.vars td { border:1px solid var(--navy); padding:12px 14px; text-align:left; font-size:clamp(0.88rem,1.7vw,1.2rem); vertical-align:top; line-height:1.35; }
   table.vars th { background:var(--navy); color:#fff; font-weight:700; font-size:0.74rem; letter-spacing:0.08em; text-transform:uppercase; }
   table.vars td.name { font-family:"SF Mono","Consolas",monospace; color:var(--pink); font-weight:700; }
   tr.frag { transform:none !important; }
   td.const.active { background:rgba(234,0,138,0.12); color:var(--pink); font-weight:700; }
-  .choice { display:flex; gap:22px; margin-top:30px; flex-wrap:wrap; max-width:64ch; }
-  .opt { flex:1; min-width:260px; border:2px solid var(--navy); padding:22px 24px; }
-  .opt.go { background:var(--navy); color:#fff; }
-  .opt .tag { display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--pink); margin-bottom:10px; }
-  .opt h3 { font-size:clamp(1.3rem,2.4vw,1.8rem); font-weight:800; line-height:1.1; margin-bottom:8px; }
+
+  .choice { gap:22px; margin-top:30px; max-width:64ch; }
+  .opt { min-width:260px; padding:22px 24px; }
+  .opt h3 { font-size:clamp(1.3rem,2.4vw,1.8rem); margin-bottom:8px; }
   .opt p { font-size:clamp(1rem,1.9vw,1.3rem); line-height:1.4; }
-  .hint { position:fixed; bottom:18px; right:24px; font-size:0.82rem; color:var(--navy); opacity:0.55; z-index:5; transition:opacity 0.6s ease; }
-  .hint kbd { border:1.5px solid var(--navy); padding:1px 7px; font-family:inherit; font-weight:700; margin:0 1px; }
-  .hint.fade { opacity:0; }
 </style>
 </head>
-<body>
+<body data-deck="Finding the variables">
+
 <div class="stage">
   <div class="topbar">
     <span class="step-label" id="stepLabel">Finding the variables</span>
@@ -63,7 +48,7 @@
   <div class="body">
 
     <!-- ===== EXAMPLE 1 : LEMONADE STALL ===== -->
-    <section class="slide active" data-label="Finding the variables">
+    <section class="slide" data-label="Finding the variables">
       <div class="bignum">0</div>
       <p class="eyebrow">Modelled example</p>
       <h1>Finding the variables</h1>
@@ -114,7 +99,7 @@
           <tr class="frag"><td>Price of one cup</td><td class="name">price</td><td>2</td><td class="const">No, it always stays $2</td></tr>
         </tbody>
       </table>
-      <p class="note frag" data-target=".slide.active td.const">Notice the last one. The price never changes.</p>
+      <p class="note frag" data-target="td.const">Notice the last one. The price never changes.</p>
     </section>
 
     <section class="slide" data-label="A special kind of variable">
@@ -180,7 +165,7 @@
           <tr class="frag"><td>Energy per jump</td><td class="name">per_jump</td><td>0.2</td><td class="const">No, it always stays 0.2</td></tr>
         </tbody>
       </table>
-      <p class="note frag" data-target=".slide.active td.const">Same pattern. The energy per jump is our constant.</p>
+      <p class="note frag" data-target="td.const">Same pattern. The energy per jump is our constant.</p>
     </section>
 
     <section class="slide" data-label="Your turn">
@@ -193,39 +178,27 @@
   </div>
 </div>
 
-<div class="hint" id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen</div>
-
+<script src="slide-engine.js"></script>
 <script>
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  const dotsWrap = document.getElementById('dots');
-  const stepLabel = document.getElementById('stepLabel');
-  let s = 0, f = 0;
-  slides.forEach(() => { const d = document.createElement('span'); d.className='dot'; dotsWrap.appendChild(d); });
-  const dots = Array.from(document.querySelectorAll('.dot'));
-  function fragsIn(slide){ return slide.querySelectorAll('.frag'); }
-  function render(){
-    slides.forEach((sl,i)=>sl.classList.toggle('active', i===s));
-    const slide = slides[s];
-    const frags = fragsIn(slide);
-    frags.forEach((el,i)=>{
-      const on = i < f;
-      el.classList.toggle('shown', on);
-      const tgt = el.dataset.target;
-      if(tgt){ const node = slide.querySelector(tgt); if(node) node.classList.toggle('active', on); }
-    });
-    dots.forEach((d,i)=>d.classList.toggle('active', i===s));
-    stepLabel.innerHTML = slide.dataset.label;
-  }
-  function next(){ const frags=fragsIn(slides[s]); if(f<frags.length){f++;} else if(s<slides.length-1){s++;f=0;} render(); }
-  function prev(){ if(f>0){f--;} else if(s>0){s--;f=fragsIn(slides[s]).length;} render(); }
-  document.addEventListener('keydown',(e)=>{
-    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
-    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
-    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-  });
-  document.addEventListener('click', next);
-  setTimeout(()=>document.getElementById('hint').classList.add('fade'), 5000);
-  render();
+  /* highlights driven by whichever fragments are shown */
+  (function () {
+    function sync() {
+      document.querySelectorAll('.slide').forEach(function (slide) {
+        slide.querySelectorAll('.frag[data-target]').forEach(function (el) {
+          var node = slide.querySelector(el.dataset.target);
+          if (node) node.classList.toggle('active', el.classList.contains('shown'));
+        });
+      });
+    }
+    var mo = new MutationObserver(run);
+    function run() {
+      mo.disconnect();
+      try { sync(); } finally {
+        mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+      }
+    }
+    run();
+  })();
 </script>
 </body>
 </html>

@@ -297,8 +297,14 @@ bodyWrap.insertAdjacentHTML('beforeend', `
         if (box) box.classList.toggle('lit', phase >= 1);
       });
     }
-    new MutationObserver(sync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
-    sync();
+    var mo = new MutationObserver(run);
+    function run() {
+      mo.disconnect();
+      try { sync(); } finally {
+        mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+      }
+    }
+    run();
   })();
 </script>
 </body>
