@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finding the Variables</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1b1f45;
+  --pink:#ea008a;
+  --blue:#1a4ea6;
+  --teal:#1a6e6e;
+  --white:#fff;
+  --paper:#f2f2f0;
+  --line:#e0e0dd;
+  --grey:#8b8b93;
+  --correct:#16a34a;
+  --incorrect:#dc2626;
+}
+*{box-sizing:border-box;}
+body{
+  font-family:'Barlow','Helvetica Neue',Helvetica,Arial,sans-serif;
+  margin:0;padding:0;background:var(--paper);color:var(--navy);
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{width:100%;max-width:1000px;padding:32px 28px 60px;}
+
+.masthead{display:flex;align-items:baseline;gap:16px;border-bottom:3px solid var(--navy);padding-bottom:10px;}
+.masthead h1{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;margin:0;}
+.masthead h1 span{color:var(--pink);}
+.masthead .syntax{margin-left:auto;font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:var(--grey);white-space:nowrap;}
+
+.progress{display:flex;gap:6px;margin:18px 0 26px;}
+.pip{flex:1;height:6px;background:var(--line);border:none;padding:0;cursor:pointer;transition:background .15s;}
+.pip:hover{background:#c8c8c4;}
+.pip.done{background:var(--correct);}
+.pip.current{background:var(--pink);}
+
+.card{background:var(--white);border:1px solid var(--line);border-top:4px solid var(--navy);}
+.card-head{display:flex;align-items:center;gap:16px;padding:20px 28px 0;flex-wrap:wrap;}
+.counter{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:.16em;color:var(--grey);}
+.card-head h2{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;margin:0;}
+.chip{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--pink);padding:4px 10px;}
+
+.brief{margin:16px 28px 0;padding:14px 20px;border-left:5px solid var(--navy);background:#f7f7f6;font-size:19px;line-height:1.55;max-width:70ch;}
+.brief b{color:var(--pink);}
+.steps{display:flex;gap:8px;margin:18px 28px 0;}
+.step-tag{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border:2px solid var(--line);color:var(--grey);}
+.step-tag.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.step-tag.done{border-color:var(--correct);color:var(--correct);}
+.note{margin:14px 28px 0;font-size:16px;color:var(--grey);line-height:1.5;}
+
+.stage{padding:20px 28px 6px;}
+.section-label{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--pink);margin:16px 0 10px;}
+.pool-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);margin:16px 0 6px;}
+
+.slots-col{display:flex;flex-direction:column;gap:10px;max-width:560px;}
+.slot{border:2px dashed #b9b9c4;background:#fbfbfa;min-height:48px;border-radius:5px;display:flex;align-items:center;padding:4px;transition:border-color .15s,background .15s;cursor:pointer;}
+.slot.over{border-color:var(--pink);border-style:solid;background:rgba(234,0,138,.12);}
+.slot.filled{border-style:solid;border-color:transparent;background:transparent;padding:0;}
+.slot.correct{border:3px solid var(--correct)!important;background:rgba(22,163,74,.12)!important;}
+.slot.incorrect{border:3px solid var(--incorrect)!important;background:rgba(220,38,38,.12)!important;animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}50%{transform:translateX(5px);}75%{transform:translateX(-3px);}}
+
+/* table */
+.vtable{display:flex;flex-direction:column;border:2px solid var(--navy);}
+.vrow{display:flex;border-bottom:1px solid var(--line);}
+.vrow:last-child{border-bottom:none;}
+.vrow.head{background:var(--navy);color:#fff;}
+.vcell{flex:1 1 0;padding:10px 12px;border-right:1px solid var(--line);display:flex;align-items:center;}
+.vrow.head .vcell{border-right-color:rgba(255,255,255,.2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;}
+.vcell:last-child{border-right:none;}
+.vcell.store{flex:1.2 1 0;background:#f7f7f6;font-size:17px;font-weight:700;line-height:1.3;}
+.vrow.head .vcell.store{background:transparent;}
+.vcell .slot{width:100%;}
+
+.pool{display:flex;flex-wrap:wrap;gap:9px;padding:10px;border:1px dashed var(--line);background:#fafaf9;min-height:58px;}
+.pool.over{background:#f7f0f6;border-color:var(--pink);}
+
+.tile{font-size:16px;font-weight:700;line-height:1.25;color:#fff;background:var(--navy);padding:9px 13px;border-radius:5px;cursor:grab;user-select:none;max-width:100%;box-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s,opacity .15s;}
+.tile:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(0,0,0,.2);}
+.tile.dragging{opacity:.35;}
+.tile.t-name{background:var(--blue);font-family:'Courier New',monospace;font-size:17px;}
+.tile.t-value{background:var(--teal);font-family:'Courier New',monospace;font-size:17px;}
+.tile.t-change{background:var(--pink);font-size:15px;}
+.slot .tile{box-shadow:none;border-radius:4px;width:100%;}
+.slot .tile:hover{transform:none;box-shadow:none;}
+
+.hint{display:none;margin:16px 0 0;padding:12px 16px;background:#fffbeb;border-left:4px solid #f59e0b;font-size:16px;line-height:1.55;color:#78350f;}
+.hint p{margin:0 0 6px;}
+.hint p:last-child{margin:0;}
+
+.card-foot{display:flex;align-items:center;gap:14px;padding:18px 28px;border-top:1px solid var(--line);background:#fafaf9;margin-top:22px;flex-wrap:wrap;}
+button{font-family:'Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+.btn-primary{font-size:20px;font-weight:800;background:var(--navy);color:#fff;border:none;padding:12px 34px;transition:background .15s;}
+.btn-primary:hover{background:#2e3472;}
+.btn-primary.ready{background:var(--pink);}
+.btn-primary.ready:hover{background:#c5006e;}
+.btn-ghost{font-size:17px;font-weight:700;background:none;color:var(--grey);border:2px solid var(--line);padding:11px 20px;}
+.btn-ghost:hover{color:var(--navy);border-color:#bbb;}
+.btn-ghost.right{margin-left:auto;}
+.feedback{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.f-ok{color:var(--correct);}
+.f-no{color:var(--incorrect);}
+
+.score{display:none;flex-direction:column;align-items:center;gap:16px;text-align:center;background:var(--navy);border-top:6px solid var(--pink);padding:44px 40px;}
+.score .label{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--pink);margin:0;}
+.score .num{font-family:'Barlow Condensed',sans-serif;font-size:84px;font-weight:900;color:#fff;line-height:.9;}
+.score .rule{width:56px;height:3px;background:var(--pink);}
+.score p.msg{color:rgba(255,255,255,.78);font-size:18px;max-width:460px;margin:0;line-height:1.55;}
+
+@media (max-width:760px){
+  .wrap{padding:22px 16px 48px;}
+  .masthead .syntax{display:none;}
+  .vrow{flex-wrap:wrap;}
+  .vrow.head{display:none;}
+  .vcell{flex:1 1 100%;border-right:none;border-bottom:1px solid var(--line);}
+  .vcell:before{content:attr(data-label);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);margin-right:10px;}
+  .vcell.store:before{content:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Finding the <span>Variables</span></h1>
+    <span class="syntax">remember or work out</span>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card" id="card"></div>
+
+  <div class="score" id="score">
+    <p class="label">Your score</p>
+    <span class="num" id="score-num">0 / 5</span>
+    <div class="rule"></div>
+    <p class="msg">Take a screenshot of this panel and paste it into Stile as evidence of your work.</p>
+    <button class="btn-ghost" onclick="restart()" style="color:#fff;border-color:rgba(255,255,255,.3)">Start again</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   EDIT HERE: one object per problem.
+   vars: each is a variable the program needs
+   notStored: distractors for step 1
+   namePool / valuePool: distractors for step 2
+   ========================================================= */
+const CHANGE_DISTRACTOR = 'No, but it is shown on the screen';
+
+const PROBLEMS = [
+  {
+    title:'Lemonade Stall', tag:'Worked with you',
+    brief:'At the school fete, you are running the lemonade stall. You want the micro:bit to count each <b>cup</b> you sell. When you press button A, it should show how much <b>money</b> you have made. Each cup costs <b>$2</b>.',
+    vars:[
+      {store:'The number of cups sold', name:'cups', value:'0, then goes up', change:'Yes, it goes up by one each sale'},
+      {store:'The money made', name:'money', value:'8', change:'Yes, it is worked out when button A is pressed'},
+      {store:'The price of one cup', name:'price', value:'2', change:'No, it always stays the same'}
+    ],
+    notStored:['The name of the stall','Button A','The school fete'],
+    namePool:['Cups Sold','m','cups_left'],
+    valuePool:['"8"','two dollars','0.2'],
+    hint1:['Look for anything the program has to hold onto or calculate.','A button is how something happens, not something the program stores.','The price is only mentioned once, but the program still needs it to do the maths.'],
+    hint2:['Names use lower case with no spaces.','An example value is a single value, not a sentence or a calculation.','Only one of these three never changes while the program runs.']
+  },
+  {
+    title:'Star Jumps', tag:'Worked with you',
+    brief:'In PE you are doing star jumps. You want the micro:bit to count each star <b>jump</b>. When you press button A, it should show how much <b>energy</b> you have used. Each star jump uses about <b>0.2</b> calories.',
+    vars:[
+      {store:'The number of star jumps', name:'jumps', value:'0, then goes up', change:'Yes, it goes up by one each jump'},
+      {store:'The energy used', name:'energy', value:'4', change:'Yes, it is worked out when button A is pressed'},
+      {store:'The energy used per jump', name:'per_jump', value:'0.2', change:'No, it always stays the same'}
+    ],
+    notStored:['The PE lesson','The micro:bit screen','Button A'],
+    namePool:['Jumps Done','e','jumps_left'],
+    valuePool:['"0.2"','20 calories','2'],
+    hint1:['Same shape as the lemonade stall: a count, a result, and a fixed number.','The screen is where a value is shown, not a value the program stores.','0.2 is given in the problem because the program needs it.'],
+    hint2:['Use an underscore when a name needs two words.','The energy used is worked out from the count, so it changes when button A is pressed.','The energy per jump is the constant here.']
+  },
+  {
+    title:'Water Refill Station', tag:'Your turn',
+    brief:'The Green Team wants to track the refill station. Each time a bottle is filled, someone presses button B. When button A is pressed, the micro:bit should show how many <b>litres</b> have been saved. Each <b>bottle</b> holds <b>0.6</b> litres.',
+    vars:[
+      {store:'The number of bottles filled', name:'bottles', value:'0, then goes up', change:'Yes, it goes up by one each bottle'},
+      {store:'The litres saved', name:'litres', value:'6', change:'Yes, it is worked out when button A is pressed'},
+      {store:'The litres in one bottle', name:'bottle_size', value:'0.6', change:'No, it always stays the same'}
+    ],
+    notStored:['Button B','The Green Team','The refill station'],
+    namePool:['Bottles Filled','b','bottles_left'],
+    valuePool:['"0.6"','six litres','60'],
+    hint1:['Two of these change as the program runs, and one never does.','Buttons and people are not values the program stores.','The size of a bottle is needed for the calculation.'],
+    hint2:['Names have no capitals and no spaces.','The bottle size is fixed at 0.6 litres for every bottle.','An example value should be just the number, with no words or quotation marks.']
+  },
+  {
+    title:'Netball Shooting', tag:'Your turn',
+    brief:'At training you want to track your shooting. Button A records a <b>goal</b>. Button B records a <b>miss</b>. When you shake the micro:bit, it should work out and show your <b>total shots</b>.',
+    vars:[
+      {store:'The number of goals', name:'goals', value:'0, then goes up', change:'Yes, it goes up by one each goal'},
+      {store:'The number of misses', name:'misses', value:'0, then goes up', change:'Yes, it goes up by one each miss'},
+      {store:'The total shots', name:'total_shots', value:'12', change:'Yes, it is worked out when the micro:bit is shaken'}
+    ],
+    notStored:['The shake gesture','The netball court','Button A'],
+    namePool:['Goals Scored','g','shots_left'],
+    valuePool:['"12"','twelve','1.2'],
+    hint1:['Two counts and one result, so three things to store.','Shaking is an event, not a value.','Nothing here stays the same, so this problem has no constant.'],
+    hint2:['Two counts means two separate names.','The total is only worked out when you shake the micro:bit.','This problem has no constant at all, so no row says No.']
+  },
+  {
+    title:'Hot Classroom', tag:'Challenge',
+    brief:'Your class is checking how often the room gets too warm. The micro:bit checks the <b>temperature</b> over and over. Every time it goes above <b>28</b> degrees, that <b>reading</b> is counted. When button A is pressed, it shows how many hot readings there have been.',
+    vars:[
+      {store:'The number of hot readings', name:'hot_readings', value:'0, then goes up', change:'Yes, it goes up by one each hot reading'},
+      {store:'The temperature right now', name:'temp', value:'31', change:'Yes, it changes every time the micro:bit checks'},
+      {store:'The temperature limit', name:'limit', value:'28', change:'No, it always stays the same'}
+    ],
+    notStored:['The classroom','Button A','The air conditioner'],
+    namePool:['Hot Readings','t','cool_readings'],
+    valuePool:['"28"','28 degrees','280'],
+    hint1:['The reading itself is stored, because the program has to compare it to the limit.','The limit of 28 is a value the program needs too.','A room and a button are not values.'],
+    hint2:['The current reading changes constantly, not just when a button is pressed.','The limit is the constant here.','Example values are plain numbers with no units and no quotation marks.']
+  }
+];
+
+const TOTAL = PROBLEMS.length;
+let index = 0;
+let stage = 1;
+let solved = new Array(TOTAL).fill(false);
+let dragged = null;
+
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function renderProgress(){
+  const p = document.getElementById('progress');
+  p.innerHTML = '';
+  for(let i=0;i<TOTAL;i++){
+    const b = document.createElement('button');
+    b.className = 'pip' + (solved[i] ? ' done' : '') + (i === index ? ' current' : '');
+    b.title = 'Problem ' + (i+1);
+    b.onclick = () => { index = i; stage = 1; render(); };
+    p.appendChild(b);
+  }
+}
+
+function shell(q, stageHTML, footHTML){
+  return `
+    <div class="card-head">
+      <span class="counter">${String(index+1).padStart(2,'0')} / ${String(TOTAL).padStart(2,'0')}</span>
+      <h2>${q.title}</h2>
+      <span class="chip">${q.tag}</span>
+    </div>
+    <p class="brief">${q.brief}</p>
+    <div class="steps">
+      <span class="step-tag ${stage===1?'active':'done'}">Step 1 &middot; What is stored</span>
+      <span class="step-tag ${stage===2?'active':''}">Step 2 &middot; The four questions</span>
+    </div>
+    ${stageHTML}
+    <div class="card-foot">
+      <button class="btn-primary" id="action-btn">Check</button>
+      <span class="feedback" id="feedback"></span>
+      ${footHTML}
+    </div>`;
+}
+
+function render(){
+  const q = PROBLEMS[index];
+  const card = document.getElementById('card');
+  document.getElementById('score').style.display = 'none';
+  card.style.display = '';
+  stage === 1 ? renderStage1(q, card) : renderStage2(q, card);
+  renderProgress();
+}
+
+/* ---------- STAGE 1 ---------- */
+function renderStage1(q, card){
+  let slotsHTML = '';
+  q.vars.forEach((v, i) => { slotsHTML += `<div class="slot" data-type="store" data-i="${i}"></div>`; });
+
+  const stageHTML = `
+    <p class="note">A variable is something the program needs to remember or work out. Drag across everything that has to be stored. Some of the cards are not values at all.</p>
+    <div class="stage">
+      <p class="section-label">What the program remembers or works out</p>
+      <div class="slots-col">${slotsHTML}</div>
+      <p class="pool-label">Cards</p>
+      <div class="pool" id="pool-store"></div>
+      <div class="hint" id="hint"></div>
+    </div>`;
+
+  card.innerHTML = shell(q, stageHTML, index > 0 ? '<button class="btn-ghost right" onclick="goBack()">Back</button>' : '');
+
+  const items = q.vars.map(v => v.store).concat(q.notStored);
+  fillPool('pool-store', shuffle(items), 'store');
+  wireUp(card, ['pool-store']);
+  document.getElementById('action-btn').onclick = check;
+}
+
+/* ---------- STAGE 2 ---------- */
+function renderStage2(q, card){
+  let rowsHTML = `
+    <div class="vrow head">
+      <div class="vcell store">What it stores</div>
+      <div class="vcell">Variable name</div>
+      <div class="vcell">Example value</div>
+      <div class="vcell">Does it change?</div>
+    </div>`;
+  q.vars.forEach((v, i) => {
+    rowsHTML += `
+      <div class="vrow">
+        <div class="vcell store">${v.store}</div>
+        <div class="vcell" data-label="Name"><div class="slot" data-type="name" data-i="${i}"></div></div>
+        <div class="vcell" data-label="Example value"><div class="slot" data-type="value" data-i="${i}"></div></div>
+        <div class="vcell" data-label="Does it change?"><div class="slot" data-type="change" data-i="${i}"></div></div>
+      </div>`;
+  });
+
+  const stageHTML = `
+    <p class="note">Now ask the four questions for each one. Fill in the name, an example value, and whether it changes.</p>
+    <div class="stage">
+      <div class="vtable">${rowsHTML}</div>
+      <p class="pool-label">Variable names</p>
+      <div class="pool" id="pool-name"></div>
+      <p class="pool-label">Example values</p>
+      <div class="pool" id="pool-value"></div>
+      <p class="pool-label">Does it change?</p>
+      <div class="pool" id="pool-change"></div>
+      <div class="hint" id="hint"></div>
+    </div>`;
+
+  card.innerHTML = shell(q, stageHTML, '<button class="btn-ghost right" onclick="backToStage1()">Back a step</button>');
+
+  fillPool('pool-name', shuffle(q.vars.map(v => v.name).concat(q.namePool)), 'name');
+  fillPool('pool-value', shuffle(q.vars.map(v => v.value).concat(q.valuePool)), 'value');
+  fillPool('pool-change', shuffle(q.vars.map(v => v.change).concat([CHANGE_DISTRACTOR])), 'change');
+  wireUp(card, ['pool-name','pool-value','pool-change']);
+  document.getElementById('action-btn').onclick = check;
+}
+
+/* ---------- shared wiring ---------- */
+function wireUp(card, poolIds){
+  card.querySelectorAll('.slot').forEach(s => {
+    s.addEventListener('dragover', overOn);
+    s.addEventListener('dragleave', overOff);
+    s.addEventListener('drop', dropSlot);
+    s.addEventListener('click', () => {
+      const t = s.querySelector('.tile');
+      if(t) returnTile(t);
+    });
+  });
+  poolIds.forEach(id => {
+    const p = document.getElementById(id);
+    if(!p) return;
+    p.addEventListener('dragover', overOn);
+    p.addEventListener('dragleave', overOff);
+    p.addEventListener('drop', e => {
+      e.preventDefault(); p.classList.remove('over');
+      if(dragged) returnTile(dragged);
+    });
+  });
+}
+
+function fillPool(id, values, type){
+  const p = document.getElementById(id);
+  if(!p) return;
+  values.forEach(v => p.appendChild(makeTile(v, type)));
+}
+
+function makeTile(v, type){
+  const t = document.createElement('span');
+  t.className = 'tile t-' + type;
+  t.textContent = v;
+  t.dataset.value = v;
+  t.dataset.type = type;
+  t.draggable = true;
+  t.addEventListener('dragstart', e => {
+    dragged = t; e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => t.classList.add('dragging'), 0);
+  });
+  t.addEventListener('dragend', () => { t.classList.remove('dragging'); dragged = null; });
+  t.addEventListener('click', () => {
+    if(t.parentElement.classList.contains('slot')) return;
+    const next = [...document.querySelectorAll('.slot')]
+      .find(s => s.dataset.type === type && !s.querySelector('.tile'));
+    if(next) placeTile(next, t);
+  });
+  return t;
+}
+
+function overOn(e){ e.preventDefault(); e.currentTarget.classList.add('over'); }
+function overOff(e){ e.currentTarget.classList.remove('over'); }
+function dropSlot(e){
+  e.preventDefault(); e.stopPropagation();
+  const s = e.currentTarget;
+  s.classList.remove('over');
+  if(dragged) placeTile(s, dragged);
+}
+function homePool(type){ return document.getElementById('pool-' + type); }
+
+function placeTile(slot, tile){
+  if(slot.dataset.type !== tile.dataset.type) return;
+  const existing = slot.querySelector('.tile');
+  if(existing) homePool(existing.dataset.type).appendChild(existing);
+  const prev = tile.parentElement;
+  if(prev && prev.classList.contains('slot')) prev.classList.remove('filled','correct','incorrect');
+  slot.classList.remove('correct','incorrect');
+  slot.appendChild(tile);
+  slot.classList.add('filled');
+  clearFeedback();
+}
+
+function returnTile(tile){
+  const prev = tile.parentElement;
+  if(prev && prev.classList.contains('slot')) prev.classList.remove('filled','correct','incorrect');
+  homePool(tile.dataset.type).appendChild(tile);
+  clearFeedback();
+}
+
+function clearFeedback(){
+  const f = document.getElementById('feedback');
+  if(f){ f.textContent = ''; f.className = 'feedback'; }
+  const h = document.getElementById('hint');
+  if(h){ h.style.display = 'none'; h.innerHTML = ''; }
+  const btn = document.getElementById('action-btn');
+  if(btn && btn.dataset.mode !== 'next'){ btn.textContent = 'Check'; btn.classList.remove('ready'); }
+}
+
+/* ---------- checking ---------- */
+function check(){
+  const btn = document.getElementById('action-btn');
+  if(btn.dataset.mode === 'next'){ advance(); return; }
+
+  const q = PROBLEMS[index];
+  const f = document.getElementById('feedback');
+  const h = document.getElementById('hint');
+  const slots = [...document.querySelectorAll('.slot')];
+
+  if(slots.some(s => !s.querySelector('.tile'))){
+    f.textContent = 'Fill every slot first';
+    f.className = 'feedback f-no';
+    return;
+  }
+
+  let all = true;
+
+  if(stage === 1){
+    const correct = q.vars.map(v => v.store);
+    const seen = [];
+    slots.forEach(s => {
+      const val = s.querySelector('.tile').dataset.value;
+      s.classList.remove('correct','incorrect');
+      if(correct.includes(val) && !seen.includes(val)){ seen.push(val); s.classList.add('correct'); }
+      else { s.classList.add('incorrect'); all = false; }
+    });
+  }else{
+    slots.forEach(s => {
+      const i = +s.dataset.i;
+      const type = s.dataset.type;
+      const val = s.querySelector('.tile').dataset.value;
+      s.classList.remove('correct','incorrect');
+      if(val === q.vars[i][type]){ s.classList.add('correct'); }
+      else { s.classList.add('incorrect'); all = false; }
+    });
+  }
+
+  if(all){
+    if(stage === 1){
+      f.textContent = 'All found';
+      f.className = 'feedback f-ok';
+      btn.dataset.mode = 'next';
+      btn.classList.add('ready');
+      btn.textContent = 'Next step';
+    }else{
+      solved[index] = true;
+      f.textContent = 'All correct';
+      f.className = 'feedback f-ok';
+      btn.dataset.mode = 'next';
+      btn.classList.add('ready');
+      btn.textContent = index === TOTAL - 1 ? 'See score' : 'Next problem';
+      renderProgress();
+    }
+  }else{
+    f.textContent = 'Not quite';
+    f.className = 'feedback f-no';
+    const hints = stage === 1 ? q.hint1 : q.hint2;
+    h.innerHTML = hints.map(x => '<p>' + x + '</p>').join('');
+    h.style.display = 'block';
+  }
+}
+
+function advance(){
+  if(stage === 1){ stage = 2; render(); return; }
+  if(index === TOTAL - 1){ showScore(); return; }
+  index++; stage = 1; render();
+}
+function goBack(){ if(index > 0){ index--; stage = 1; render(); } }
+function backToStage1(){ stage = 1; render(); }
+
+function showScore(){
+  document.getElementById('card').style.display = 'none';
+  const s = document.getElementById('score');
+  s.style.display = 'flex';
+  document.getElementById('score-num').textContent = solved.filter(Boolean).length + ' / ' + TOTAL;
+  renderProgress();
+}
+
+function restart(){
+  index = 0; stage = 1;
+  solved = new Array(TOTAL).fill(false);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
