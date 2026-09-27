@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steps to metres</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --white: #ffffff;
+        --off-white: #f5f5f5;
+        --light-grey: #e8e8e8;
+        --mid-grey: #9a9a9a;
+        --blank: #f0f3f6;
+        --ease: cubic-bezier(.2,.8,.2,1);
+        --mono: 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif;
+        margin: 0; background: #eaeaea; color: var(--navy);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .viewport { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .stage {
+        width: 1280px; height: 720px; background: var(--white); border-top: 6px solid var(--navy);
+        position: relative; padding: 36px 64px 0 64px; transform-origin: center center; flex-shrink: 0; overflow: hidden;
+    }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--mid-grey); }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption {
+        position: absolute; left: 64px; right: 64px; bottom: 30px;
+        font-size: 27px; font-weight: 500; line-height: 1.35;
+        display: flex; align-items: center; gap: 16px; min-height: 60px;
+    }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption b { font-weight: 800; color: var(--pink); }
+    .caption.in { animation: capIn .45s var(--ease); }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; }
+
+    .hide { opacity: 0; transform: translateY(14px); }
+    .rev { transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .35s, color .35s, border-color .35s; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .hint { margin-top: 22px; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    .pulse { animation: pulse .55s var(--ease); }
+    @keyframes pulse { 40% { transform: scale(1.12); } }
+    .mono { font-family: var(--mono); font-weight: 800; }
+
+    /* journey */
+    .jny { display: flex; align-items: stretch; width: 1152px; height: 116px; }
+    .place { width: 200px; flex-shrink: 0; background: var(--navy); color: #fff; padding: 14px 20px; display: flex; flex-direction: column; justify-content: center; border-radius: 6px; }
+    .place .tg { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pink); }
+    .place .nm { font-size: 26px; font-weight: 800; line-height: 1.1; margin-top: 2px; }
+    .path { flex: 1; position: relative; }
+    .path::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dashed #c9ccd6; }
+    .fp { position: absolute; top: 50%; width: 60px; margin-left: -30px; transition: opacity .25s; }
+    .fp.a { transform: translateY(-120%); }
+    .fp.b { transform: translateY(20%); }
+    .fp.off { opacity: 0; }
+    .shoe { display: block; width: 100%; height: auto; }
+    .shoe path { fill: var(--navy); }
+    .shoe.pk path { fill: var(--pink); }
+    .fp.b .shoe { transform: scaleY(-1); }
+    .mb svg { transform-origin: 50% 60%; }
+    .mb.shaking svg { animation: shake .2s linear infinite; }
+    @keyframes shake { 25% { transform: translateX(-5px) rotate(-3deg); } 75% { transform: translateX(5px) rotate(3deg); } }
+
+    /* micro:bit */
+    .mbrow { display: flex; align-items: center; gap: 44px; }
+    .mb svg { display: block; width: 300px; height: auto; }
+    .mb .board { fill: var(--navy); }
+    .mb .edge { fill: #c9ccd6; }
+    .mb .pad { fill: #9a9fb4; }
+    .mb .led { fill: #343a70; transition: fill .12s; }
+    .mb .led.on { fill: var(--pink); }
+    .mb .bh { fill: #3a3f6b; }
+    .mb .bt { fill: #e8e8e8; transition: fill .12s; }
+    .mb .bt.down { fill: var(--pink); }
+    .mb .bl { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; fill: #fff; text-anchor: middle; }
+    .mb .logo { fill: none; stroke: #fff; stroke-width: 3; }
+    .mb .logod { fill: #fff; }
+    .rd { border: 3px solid var(--navy); border-radius: 8px; padding: 14px 30px; width: 300px; text-align: center; }
+    .rd .dlbl { transition: color .3s; }
+    .rd .rv { font-family: var(--mono); font-size: 72px; font-weight: 800; color: var(--pink); line-height: 1.15; font-variant-numeric: tabular-nums; display: inline-block; }
+    .stack { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+
+    /* task */
+    .task { font-size: 30px; line-height: 1.45; font-weight: 500; max-width: 1000px; border-left: 6px solid var(--navy); padding-left: 28px; }
+    .task .dw { transition: color .3s, box-shadow .3s; }
+    .task.on .dw { color: var(--pink); font-weight: 700; box-shadow: inset 0 -0.35em 0 rgba(234,0,138,0.16); }
+    .conv { display: flex; align-items: center; gap: 26px; margin-top: 50px; }
+    .chip { border-radius: 8px; padding: 14px 28px; text-align: center; min-width: 230px; }
+    .chip .dlbl { color: inherit; opacity: .75; }
+    .chip .cv { font-family: var(--mono); font-size: 44px; font-weight: 800; line-height: 1.15; }
+    .chip.have { background: var(--navy); color: #fff; }
+    .chip.want { background: var(--pink); color: #fff; }
+    .chip.q { border: 3px dashed var(--mid-grey); color: var(--navy); min-width: 200px; }
+    .chip.q .cv { color: var(--pink); }
+    .ar { font-family: var(--mono); font-size: 44px; font-weight: 800; color: var(--mid-grey); }
+
+    /* ruler */
+    .rul { position: relative; width: 1000px; height: 250px; }
+    .rul .base { position: absolute; left: 0; right: 0; top: 170px; border-top: 4px solid var(--navy); }
+    .rul .tick { position: absolute; top: 170px; width: 2px; background: var(--navy); }
+    .rul .tl { position: absolute; top: 212px; font-family: var(--mono); font-size: 22px; font-weight: 700; transform: translateX(-50%); white-space: nowrap; }
+    .sfill { position: absolute; left: 0; top: 96px; height: 72px; width: 0; background: rgba(234,0,138,.12); border: 3px solid var(--pink); border-bottom: none;
+        display: flex; align-items: center; padding-left: 18px; overflow: hidden; white-space: nowrap; transition: width 1.2s var(--ease); }
+    .sfill.go { width: 670px; }
+    .sfill span, .shalf span { font-family: var(--mono); font-size: 26px; font-weight: 800; color: var(--pink); }
+    .shalf { position: absolute; left: 670px; top: 96px; height: 72px; width: 330px; border: 3px dashed var(--navy); border-bottom: none; border-left: none;
+        display: flex; align-items: center; justify-content: center; }
+    .shalf span { color: var(--navy); }
+    .rul .fp { top: 40px; margin-left: -30px; transform: none; }
+    .bigfact { font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 900; margin-top: 10px; }
+    .bigfact .pk { color: var(--pink); }
+
+    /* bars and methods */
+    .bars { width: 1000px; display: flex; flex-direction: column; gap: 16px; }
+    .brow { display: flex; align-items: center; gap: 20px; }
+    .brow .lab { width: 150px; text-align: right; font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mid-grey); flex-shrink: 0; }
+    .btrack { flex: 1; height: 54px; background: var(--blank); position: relative; }
+    .bseg { position: absolute; left: 0; top: 0; bottom: 0; width: 0; display: flex; align-items: center; overflow: hidden; white-space: nowrap; transition: width 1s var(--ease); }
+    .bseg span { font-family: var(--mono); font-size: 26px; font-weight: 800; color: #fff; padding: 0 18px; }
+    .bseg.nv { background: var(--navy); }
+    .bseg.pk { background: var(--pink); }
+    .mcards { display: flex; gap: 30px; margin-top: 34px; }
+    .mcard { width: 485px; border: 3px solid var(--navy); border-radius: 8px; padding: 18px 28px; }
+    .mcard.pink { border-color: var(--pink); }
+    .mcard .mh { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 900; line-height: 1; margin: 4px 0 10px; }
+    .calc { font-family: var(--mono); font-size: 40px; font-weight: 800; white-space: nowrap; }
+    .calc b { color: var(--pink); }
+
+    /* strides */
+    .strides { display: flex; flex-direction: column; gap: 26px; width: 1080px; }
+    .srw { display: flex; align-items: center; gap: 24px; }
+    .srw .lab { width: 200px; flex-shrink: 0; }
+    .srw .lab .pt { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; line-height: 1; }
+    .srw .lab .pd { font-size: 20px; font-weight: 600; color: var(--mid-grey); margin-top: 4px; }
+    .strack { position: relative; flex: 1; height: 90px; border-bottom: 3px dashed #c9ccd6; }
+    .strack .fp { width: 52px; margin-left: -26px; }
+    .strack .fp.a { top: 6px; transform: none; }
+    .strack .fp.b { top: 46px; transform: none; }
+    .avg { display: flex; align-items: center; gap: 22px; margin-top: 30px; border: 3px solid var(--pink); border-radius: 8px; padding: 14px 28px; }
+    .avg .calc { font-size: 44px; }
+    .avg .aw { font-size: 26px; font-weight: 600; max-width: 520px; }
+
+    /* final */
+    .frow { display: flex; align-items: center; gap: 44px; margin-top: 36px; }
+    .fcalc { display: flex; flex-direction: column; gap: 14px; }
+    .fcalc .mcard { width: 470px; padding: 14px 24px; }
+    .fcalc .calc { font-size: 36px; }
+    .hint.corner { position: absolute; top: -10px; right: 0; margin: 0; }
+
+    /* summary */
+    .srows { display: flex; flex-direction: column; gap: 14px; width: 1040px; }
+    .srow { display: flex; align-items: stretch; border-top: 5px solid var(--navy); box-shadow: 0 0 0 1px var(--light-grey); background: #fff; }
+    .srow .sc { width: 330px; flex-shrink: 0; background: var(--off-white); display: flex; align-items: center; padding: 0 22px;
+        font-family: var(--mono); font-size: 28px; font-weight: 800; color: var(--navy); white-space: nowrap; }
+    .srow .sc b { color: var(--pink); }
+    .srow .stx { padding: 14px 26px; font-size: 28px; font-weight: 700; line-height: 1.25; }
+    .srow .k { color: var(--pink); }
+
+    /* controls */
+    .controls { display: flex; align-items: center; gap: 10px; padding: 14px 0 18px 0; font-family: 'Barlow Condensed', sans-serif; }
+    .controls button {
+        font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: 9px 16px; cursor: pointer;
+    }
+    .controls button.alt { background: var(--white); color: var(--navy); }
+    .controls button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .dots { display: flex; gap: 8px; margin: 0 10px; }
+    .dots button { width: 14px; height: 14px; padding: 0; border-radius: 50%; background: #c9ccd6; }
+    .dots button.cur { background: var(--pink); }
+    .steplbl { font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid-grey); margin-left: 6px; min-width: 110px; }
+    .ink { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; z-index: 5; touch-action: none; }
+    .ink.active { pointer-events: auto; cursor: crosshair; }
+    .controls button#pen.on { background: var(--pink); color: var(--white); }
+    .controls .swatch { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 3px solid var(--white); box-shadow: 0 0 0 1px #c9ccd6; }
+    .controls .swatch.cur { box-shadow: 0 0 0 3px var(--navy); }
+    .sep { width: 1.5px; height: 28px; background: #c9ccd6; margin: 0 6px; }
+    .stage.instant *, .stage.instant *::before { transition: none !important; animation: none !important; }
+
+    .controls kbd, .showui kbd { display: inline-block; margin-left: 7px; padding: 0 5px; min-width: 18px; text-align: center; border: 1.5px solid currentColor; border-radius: 4px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; line-height: 16px; opacity: .6; vertical-align: 1px; }
+
+    /* floating timer */
+    .ftimer { position: fixed; z-index: 20; left: 24px; top: 24px; width: 250px; background: #fff; border-top: 6px solid var(--navy); border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(27,31,69,.25), 0 0 0 1px rgba(27,31,69,.08); padding: 0 16px 16px; font-family: 'Barlow Condensed', sans-serif; color: var(--navy); user-select: none; }
+    .ftimer[hidden] { display: none; }
+    .fth { display: flex; justify-content: space-between; align-items: center; height: 40px; cursor: grab; touch-action: none; }
+    .fth:active { cursor: grabbing; }
+    .fth span { font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .fth button { width: 30px; height: 30px; border: none; background: none; color: var(--navy); cursor: pointer; border-radius: 6px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .fth button:hover { background: var(--light-grey); }
+    .fth svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+    .ftring { position: relative; width: 150px; height: 150px; margin: 2px auto 12px; }
+    .ftring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+    .ftring .tb { fill: none; stroke: var(--light-grey); stroke-width: 8; }
+    .ftring .tf { fill: none; stroke: var(--pink); stroke-width: 8; stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .25s linear; }
+    .ftv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .ftimer.done .ftring { animation: ftflash .6s ease-in-out 6 alternate; }
+    .ftimer.done .ftv { color: var(--pink); }
+    @keyframes ftflash { to { transform: scale(1.06); opacity: .55; } }
+    .ftrow { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+    .ftrow button { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border: 2px solid var(--navy);
+        background: #fff; color: var(--navy); border-radius: 6px; padding: 6px 0; cursor: pointer; }
+    .ftrow button.pri { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .ftrow button:focus-visible, .fth button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .ftimer.big { width: 400px; }
+    .ftimer.big .ftring { width: 280px; height: 280px; }
+    .ftimer.big .ftv { font-size: 88px; }
+    .ftimer.big .ftrow button { font-size: 19px; padding: 8px 0; }
+
+    /* tools, hide UI, export */
+    .controls { flex-wrap: wrap; justify-content: center; gap: 10px 26px; padding: 12px 20px 16px; width: 100%; }
+    .grp { display: flex; align-items: center; gap: 10px; }
+    .controls button#eraser.on, .controls button#timerbtn.on { background: var(--pink); color: var(--white); }
+    .ink.erase { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ccircle cx='15' cy='15' r='13' fill='white' fill-opacity='.55' stroke='%231b1f45' stroke-width='2'/%3E%3C/svg%3E") 15 15, cell; }
+    body.noui .controls { display: none; }
+    body.nosubs .caption { visibility: hidden; }
+    .showui {
+        display: none; position: fixed; right: 14px; bottom: 14px; z-index: 10;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer;
+        opacity: 0; transition: opacity .2s;
+    }
+    body.noui .showui { display: block; }
+    .showui:hover, .showui:focus-visible { opacity: 1; }
+    #print { display: none; }
+    @media print {
+        @page { size: 1280px 720px; margin: 0; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        html, body { height: auto; overflow: visible; display: block; margin: 0; background: #fff; }
+        body > .viewport, body > .controls, .showui, .ftimer { display: none !important; }
+        #print { display: block; }
+        #print .stage { transform: none !important; margin: 0 !important; break-after: page; page-break-after: always; }
+        #print .stage:last-child { break-after: auto; page-break-after: auto; }
+        #print *, #print *::before { animation: none !important; transition: none !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .rev, .sfill, .bseg, .fp { transition: none !important; }
+        .caption.in, .pulse, .mb svg { animation: none !important; }
+    }
+</style>
+</head>
+<body>
+
+<div class="viewport">
+    <div class="stage" id="stage">
+        <div class="top">
+            <div><h1 class="sheet-title" id="title"></h1></div>
+            <div class="counter" id="counter"></div>
+        </div>
+        <div class="content" id="content"></div>
+        <div class="caption" id="caption"></div>
+        <div class="progress" id="progress"></div>
+        <canvas class="ink" id="ink" width="2560" height="1440"></canvas>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="grp">
+        <button class="alt" id="back" aria-label="Previous scene">Back<kbd>&larr;</kbd></button>
+        <button class="alt" id="replay" aria-label="Replay scene">Replay<kbd>R</kbd></button>
+        <button id="next" aria-label="Next scene">Next<kbd>&rarr;</kbd></button>
+        <div class="dots" id="dots"></div>
+        <button class="alt" id="auto"><span class="bl">Autoplay: Off</span><kbd>Space</kbd></button>
+        <span class="steplbl" id="steplbl"></span>
+    </div>
+    <div class="grp">
+        <button class="alt" id="pen" aria-pressed="false">Pen<kbd>P</kbd></button>
+        <button class="swatch cur" data-c="#ea008a" style="background:#ea008a" aria-label="Pink pen"></button>
+        <button class="swatch" data-c="#1b1f45" style="background:#1b1f45" aria-label="Navy pen"></button>
+        <button class="swatch" data-c="#111111" style="background:#111111" aria-label="Black pen"></button>
+        <button class="swatch" data-c="#0a7bd6" style="background:#0a7bd6" aria-label="Blue pen"></button>
+        <button class="swatch" data-c="#12a150" style="background:#12a150" aria-label="Green pen"></button>
+        <button class="swatch" data-c="#f28c00" style="background:#f28c00" aria-label="Orange pen"></button>
+        <button class="alt" id="eraser" aria-pressed="false">Eraser<kbd>E</kbd></button>
+        <button class="alt" id="clear">Clear<kbd>C</kbd></button>
+    </div>
+    <div class="grp">
+        <button class="alt" id="pdf">Export PDF</button>
+        <button class="alt" id="timerbtn" aria-pressed="false">Timer<kbd>T</kbd></button>
+        <button class="alt" id="subs" aria-pressed="true"><span class="bl">Subtitles: On</span><kbd>S</kbd></button>
+        <button class="alt" id="hideui">Hide UI<kbd>U</kbd></button>
+    </div>
+</div>
+<button class="showui" id="showui">Show UI<kbd>U</kbd></button>
+<div class="ftimer" id="ftimer" hidden role="dialog" aria-label="Timer">
+    <div class="fth" id="fth"><span>Timer</span><div>
+        <button id="ftsize" aria-label="Toggle timer size"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
+        <button id="ftclose" aria-label="Close timer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+    <div class="ftring"><svg viewBox="0 0 100 100"><circle class="tb" cx="50" cy="50" r="44"/><circle class="tf" id="ftf" cx="50" cy="50" r="44" pathLength="1"/></svg><div class="ftv" id="ftv">1:00</div></div>
+    <div class="ftrow"><button data-set="30">0:30</button><button data-set="60">1:00</button><button data-set="120">2:00</button><button data-set="180">3:00</button><button data-set="300">5:00</button></div>
+    <div class="ftrow"><button data-adj="-30">&minus;30s</button><button data-adj="30">+30s</button><button data-adj="60">+1 min</button></div>
+    <div class="ftrow"><button class="pri" id="ftstart">Start</button><button id="ftreset">Reset</button></div>
+</div>
+<div id="print"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), caption = $('#caption'), titleEl = $('#title'), counter = $('#counter'), progress = $('#progress');
+let timers = [], events = [], beats = [], idx = 0, beat = 0, autoplay = false;
+let segFrom = 0, segTo = 0, segStart = 0;
+let ptimers = [], cleanups = [];
+const stage = document.getElementById('stage');
+
+function at(ms, fn) { events.push({ t: ms, fn, done: false }); }
+function beatAt(ms, html) { beats.push(ms); at(ms, () => say(html)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function show(e) { e.classList.remove('hide'); }
+function say(html) { caption.innerHTML = '<span>' + html + '</span>'; caption.classList.remove('in'); void caption.offsetWidth; caption.classList.add('in'); }
+function stopInteractive() { ptimers.forEach(clearTimeout); ptimers = []; cleanups.forEach(f => f()); cleanups = []; }
+
+/* ---------- helpers ---------- */
+const quick = () => exporting || stage.classList.contains('instant');
+function pulse(e) { e.classList.remove('pulse'); void e.offsetWidth; if (!quick()) e.classList.add('pulse'); }
+const SHOE = (cls = '') => `<svg class="shoe ${cls}" viewBox="0 0 122 44" aria-hidden="true"><path d="M34 11 L34 33 C28 36 20 36 14 35 C7 34 4 29 4 22 C4 15 7 10 14 9 C20 8 28 8 34 11 Z"/><path fill-rule="evenodd" d="M44 12 C60 5 88 2 104 7 C114 10 118 16 118 22 C118 29 113 35 103 38 C88 42 62 40 44 33 C40 30 40 15 44 12 Z M60 13 h4 v21 h-4 Z M75 11 h4 v25 h-4 Z M90 9 h4 v28 h-4 Z"/></svg>`;
+
+function journey(n) {
+    const j = el('div', 'jny');
+    j.innerHTML = '<div class="place"><span class="tg">Start</span><span class="nm">Eunice Plaza</span></div><div class="path"></div><div class="place"><span class="tg">End</span><span class="nm">S&amp;T building</span></div>';
+    const path = j.querySelector('.path');
+    j.prints = [];
+    for (let i = 0; i < n; i++) {
+        const f = el('div', 'fp off ' + (i % 2 ? 'b' : 'a'), SHOE());
+        f.style.left = `calc(44px + ${((i + 0.5) / n).toFixed(4)} * (100% - 88px))`;
+        path.appendChild(f); j.prints.push(f);
+    }
+    return j;
+}
+
+const LEDS = {
+    walk1: '00100 01110 10101 00100 01010',
+    walk2: '00100 01110 00100 01010 10001',
+    tick:  '00000 00001 00010 10100 01000',
+    off:   '00000 00000 00000 00000 00000'
+};
+function microbit() {
+    const m = el('div', 'mb');
+    let leds = '';
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) leds += `<rect class="led" x="${112 + c * 22}" y="${56 + r * 22}" width="8" height="14" rx="2"/>`;
+    let pads = '';
+    [34, 118, 196, 272].forEach(x => pads += `<rect class="pad" x="${x}" y="214" width="16" height="18" rx="3"/>`);
+    m.innerHTML = `<svg viewBox="0 0 320 240" aria-label="micro:bit">
+        <rect class="edge" x="18" y="196" width="284" height="40" rx="5"/>${pads}
+        <rect class="board" x="0" y="0" width="320" height="210" rx="22"/>
+        <rect class="logo" x="138" y="14" width="44" height="24" rx="12"/><circle class="logod" cx="150" cy="26" r="3.5"/><circle class="logod" cx="170" cy="26" r="3.5"/>
+        ${leds}
+        <text class="bl" x="44" y="72">A</text><rect class="bh" x="16" y="84" width="56" height="56" rx="8"/><circle class="bt ba" cx="44" cy="112" r="17"/>
+        <text class="bl" x="276" y="72">B</text><rect class="bh" x="248" y="84" width="56" height="56" rx="8"/><circle class="bt" cx="276" cy="112" r="17"/>
+        </svg>`;
+    const cells = [...m.querySelectorAll('.led')], ba = m.querySelector('.ba');
+    m.leds = p => { const s = LEDS[p].replace(/ /g, ''); cells.forEach((c, i) => c.classList.toggle('on', s[i] === '1')); };
+    m.pressA = () => { ba.classList.add('down'); if (quick()) { ba.classList.remove('down'); return; } ptimers.push(setTimeout(() => ba.classList.remove('down'), 450)); };
+    m.shake = on => m.classList.toggle('shaking', on);
+    m.leds('off');
+    return m;
+}
+function readout(label, v) {
+    const r = el('div', 'rd', `<div class="dlbl">${label}</div><div class="rv">${v}</div>`);
+    r.lab = r.querySelector('.dlbl'); r.val = r.querySelector('.rv');
+    r.set = (v, lab) => { r.val.textContent = v; if (lab) r.lab.textContent = lab; };
+    return r;
+}
+
+/* ---------- scenes ---------- */
+const scenes = [
+{
+    title: 'How far did you <span>walk</span>?',
+    dur: 15000,
+    run() {
+        const c = el('div', 'stack');
+        const j = journey(12); j.classList.add('rev', 'hide');
+        const row = el('div', 'mbrow rev hide');
+        const mb = microbit(), rd = readout('Steps', '0');
+        row.append(mb, rd); c.append(j, row); content.appendChild(c);
+        beatAt(0, 'You are walking from <b>Eunice Plaza</b> to the main entrance of the <b>S&amp;T building</b>.');
+        at(500, () => show(j));
+        beatAt(4500, 'As you walk, the micro:bit\'s <b>accelerometer</b> feels it move, and it counts each <b>step</b>.');
+        at(4900, () => show(row));
+        for (let i = 0; i < 7; i++) at(5600 + i * 450, () => { show(j.prints[i]); j.prints[i].classList.remove('off'); rd.set(String(i + 1)); });
+        at(5500, () => mb.shake(true)); at(8800, () => mb.shake(false));
+        beatAt(9500, 'When you press <b>button A</b>, it should show roughly how far you have walked, in <b>metres</b>.');
+        at(10300, () => { mb.pressA(); rd.set('? m', 'Distance'); pulse(rd.val); });
+    }
+},
+{
+    title: 'Steps are not <span>metres</span>',
+    dur: 14500,
+    run() {
+        const c = el('div', 'center');
+        const t = el('div', 'task rev hide', 'When you press button A, the micro:bit should <span class="dw">show roughly how far you have walked, in metres</span>.');
+        const cv = el('div', 'conv');
+        const a = el('div', 'chip have rev hide', '<div class="dlbl">What we have</div><div class="cv">steps</div>');
+        const a1 = el('div', 'ar rev hide', '&rarr;'), q = el('div', 'chip q rev hide', '<div class="dlbl">Convert</div><div class="cv">?</div>'), a2 = el('div', 'ar rev hide', '&rarr;');
+        const b = el('div', 'chip want rev hide', '<div class="dlbl">What we want</div><div class="cv">metres</div>');
+        cv.append(a, a1, q, a2, b); c.append(t, cv); content.appendChild(c);
+        beatAt(0, 'The micro:bit can count <b>steps</b> easily.');
+        at(400, () => show(t)); at(1000, () => show(a));
+        beatAt(3800, 'But the task does not ask for steps. It asks for <b>metres</b>.');
+        at(4300, () => t.classList.add('on')); at(4900, () => show(b));
+        beatAt(8500, 'So we need a way to turn a number of steps into a number of metres.');
+        at(9000, () => { show(a1); show(q); show(a2); });
+    }
+},
+{
+    title: 'One <span>step</span>',
+    dur: 15500,
+    run() {
+        const c = el('div', 'center');
+        const r = el('div', 'rul');
+        let t = '<div class="base"></div>';
+        for (let i = 0; i <= 10; i++) {
+            const x = i * 100, h = i % 5 === 0 ? 30 : 16;
+            t += `<div class="tick" style="left:${x - 1}px;height:${h}px"></div>`;
+            if (i % 5 === 0) t += `<div class="tl" style="left:${x}px">${['0 m', '0.5 m', '1 m'][i / 5]}</div>`;
+        }
+        r.innerHTML = t;
+        const f1 = el('div', 'fp', SHOE()), f2 = el('div', 'fp rev hide', SHOE('pk'));
+        f1.style.left = '0px'; f2.style.left = '670px';
+        const fill = el('div', 'sfill', '<span>1 step &asymp; 0.67 m</span>');
+        const half = el('div', 'shalf rev hide', '<span>+ half a step</span>');
+        r.append(fill, half, f1, f2);
+        const fact = el('div', 'bigfact rev hide', '<span class="pk">1.5 steps</span> &asymp; 1 metre');
+        c.append(r, fact); content.appendChild(c);
+        beatAt(0, 'Let\'s start with just <b>one step</b>, measured against one metre.');
+        beatAt(3500, 'One step covers about <b>0.67 metres</b>. That is around two thirds of a metre.');
+        at(4000, () => fill.classList.add('go')); at(4900, () => show(f2));
+        beatAt(8500, 'The gap left over is about half a step.');
+        at(9000, () => show(half));
+        beatAt(11500, 'So it takes about <b>one and a half steps</b> to walk one metre.');
+        at(12000, () => show(fact));
+    }
+},
+{
+    title: 'Two ways to <span>convert</span>',
+    dur: 22000,
+    run() {
+        const c = el('div', 'center');
+        const bars = el('div', 'bars');
+        const mk = (lab, cls, txt) => { const r = el('div', 'brow rev hide', `<div class="lab">${lab}</div><div class="btrack"><div class="bseg ${cls}"><span>${txt}</span></div></div>`); bars.appendChild(r); r.seg = r.querySelector('.bseg'); return r; };
+        const b1 = mk('Steps', 'nv', '50 steps'), b2 = mk('Metres', 'pk', 'about 33 m');
+        const cards = el('div', 'mcards');
+        const m1 = el('div', 'mcard rev hide', '<div class="dlbl">Method 1</div><div class="mh">Divide by 1.5</div><div class="calc">50 &divide; 1.5 = <b>33.3 m</b></div>');
+        const m2 = el('div', 'mcard pink rev hide', '<div class="dlbl">Method 2</div><div class="mh">Multiply by 0.67</div><div class="calc">50 &times; 0.67 = <b>33.5 m</b></div>');
+        cards.append(m1, m2); c.append(bars, cards); content.appendChild(c);
+        beatAt(0, 'Say you took <b>50 steps</b>.');
+        at(400, () => show(b1)); at(800, () => b1.seg.style.width = '100%');
+        beatAt(3500, 'Each step is less than a metre, so there will be <b>fewer metres</b> than steps.');
+        at(4000, () => show(b2)); at(4400, () => b2.seg.style.width = '67%');
+        beatAt(8500, '<b>Method 1:</b> divide the number of steps by 1.5, because 1.5 steps make a metre.');
+        at(9000, () => show(m1));
+        beatAt(13000, '<b>Method 2:</b> multiply the number of steps by 0.67, because each step is 0.67 metres.');
+        at(13500, () => show(m2));
+        beatAt(17500, 'Both give about <b>33 metres</b>. Either method works.');
+        at(18000, () => { pulse(m1.querySelector('b')); pulse(m2.querySelector('b')); });
+    }
+},
+{
+    title: 'Why <span>roughly</span>?',
+    dur: 16500,
+    run() {
+        const c = el('div', 'center');
+        const s = el('div', 'strides');
+        const track = (name, desc, n, pk) => {
+            const r = el('div', 'srw rev hide', `<div class="lab"><div class="pt">${name}</div><div class="pd">${desc}</div></div><div class="strack"></div>`);
+            const tr = r.querySelector('.strack');
+            for (let i = 0; i < n; i++) { const f = el('div', 'fp ' + (i % 2 ? 'b' : 'a'), SHOE(pk ? 'pk' : '')); f.style.left = (i / (n - 1) * 96 + 2) + '%'; tr.appendChild(f); }
+            s.appendChild(r); return r;
+        };
+        const t1 = track('Longer stride', '7 steps', 7, false), t2 = track('Shorter stride', '11 steps', 11, true);
+        const avg = el('div', 'avg rev hide', '<div class="calc"><b>0.67 m</b></div><div class="aw">is an average step, so the answer is a good <b>estimate</b>, not an exact measurement.</div>');
+        c.append(s, avg); content.appendChild(c);
+        beatAt(0, 'Everyone\'s stride is different.');
+        beatAt(2500, 'A taller person usually takes <b>longer steps</b>, so they need fewer of them.');
+        at(3000, () => show(t1));
+        beatAt(6500, 'A shorter person takes <b>shorter steps</b>, so they need more to cover the same distance.');
+        at(7000, () => show(t2));
+        beatAt(11000, '0.67 metres is an average. That is why our answer is only an <b>estimate</b>.');
+        at(11500, () => show(avg));
+    }
+},
+{
+    title: 'Picture <span>it</span>',
+    dur: 21000,
+    run() {
+        const c = el('div', 'stack');
+        const j = journey(12); j.classList.add('rev', 'hide');
+        const row = el('div', 'frow');
+        const mb = microbit(), rd = readout('Steps', '0');
+        const mbw = el('div', 'mbrow rev hide'); mbw.append(mb, rd);
+        const fc = el('div', 'fcalc');
+        const k1 = el('div', 'mcard rev hide', '<div class="calc">60 &divide; 1.5 = <b>40 m</b></div>');
+        const k2 = el('div', 'mcard pink rev hide', '<div class="calc">60 &times; 0.67 = <b>40.2 m</b></div>');
+        fc.append(k1, k2); row.append(mbw, fc);
+        const hint = el('div', 'hint rev hide', 'Pause and work it out'); hint.style.margin = '0';
+        fc.prepend(hint);
+        c.append(j, row); content.append(c);
+        beatAt(0, 'Now picture the whole walk to the <b>S&amp;T building</b>.');
+        at(400, () => { show(j); show(mbw); });
+        at(1000, () => mb.shake(true)); at(5600, () => mb.shake(false));
+        for (let i = 1; i <= 60; i++) at(1000 + i * 75, () => {
+            rd.set(String(i));
+            if (i % 5 === 0) { const f = j.prints[i / 5 - 1]; f.classList.remove('off'); }
+        });
+        beatAt(6000, 'You take <b>60 steps</b>. Roughly how many metres is that?');
+        at(6500, () => show(hint));
+        beatAt(11000, '60 divided by 1.5 is <b>40</b>. You walked about 40 metres.');
+        at(11500, () => show(k1));
+        at(12300, () => { mb.pressA(); rd.set('40 m', 'Distance'); pulse(rd.val); });
+        beatAt(16000, 'Multiplying by 0.67 gives almost the same answer, about <b>40.2 metres</b>.');
+        at(16500, () => show(k2));
+    }
+},
+{
+    title: '<span>Summary</span>',
+    dur: 20500,
+    run() {
+        const c = el('div', 'center');
+        const box = el('div', 'srows');
+        const rows = [
+            ['1 step &asymp; <b>0.67 m</b>', 'One step is about <span class="k">two thirds</span> of a metre.'],
+            ['<b>1.5 steps</b> &asymp; 1 m', 'It takes about one and a half steps to walk a metre.'],
+            ['steps &divide; <b>1.5</b>', 'Divide the steps by 1.5 to get <span class="k">metres</span>.'],
+            ['steps &times; <b>0.67</b>', 'Or multiply the steps by 0.67. Both methods work.'],
+            ['<b>&asymp;</b>', 'The answer is an <span class="k">estimate</span>, because everyone\'s stride is different.']
+        ].map(([cd, t]) => { const r = el('div', 'srow rev hide', `<div class="sc"><span>${cd}</span></div><div class="stx">${t}</div>`); box.appendChild(r); return r; });
+        c.appendChild(box); content.appendChild(c);
+        beatAt(0, 'One step is about <b>0.67 metres</b>.');
+        at(400, () => show(rows[0]));
+        beatAt(3500, 'So about <b>1.5 steps</b> make one metre.');
+        at(4000, () => show(rows[1]));
+        beatAt(7000, 'To turn steps into metres, <b>divide by 1.5</b>.');
+        at(7500, () => show(rows[2]));
+        beatAt(10500, 'Or <b>multiply by 0.67</b>. Both give about the same answer.');
+        at(11000, () => show(rows[3]));
+        beatAt(14500, 'And remember, the answer is an <b>estimate</b>, not an exact measurement.');
+        at(15000, () => show(rows[4]));
+    }
+}
+];
+
+/* ---------- player ---------- */
+const dots = $('#dots');
+scenes.forEach((_, i) => { const d = el('button'); d.setAttribute('aria-label', 'Scene ' + (i + 1)); d.onclick = () => go(i); dots.appendChild(d); });
+
+const stepLbl = $('#steplbl');
+const dur = () => scenes[idx].dur;
+const beatEnd = b => (b + 1 < beats.length ? beats[b + 1] : dur());
+function label() { stepLbl.textContent = `Step ${beat + 1} of ${beats.length}`; }
+
+function build(i) {
+    clearTimers();
+    stopInteractive();
+    const ni = Math.max(0, Math.min(scenes.length - 1, i));
+    if (ni !== idx) { saveInk(); idx = ni; loadInk(); }
+    events = []; beats = [];
+    const sc = scenes[idx];
+    content.innerHTML = ''; caption.innerHTML = '';
+    titleEl.innerHTML = sc.title;
+    counter.innerHTML = `<b>${idx + 1}</b> / ${scenes.length}`;
+    [...dots.children].forEach((d, j) => d.classList.toggle('cur', j === idx));
+    sc.run();
+    beats = [...new Set(beats)].sort((a, b) => a - b);
+}
+
+function jumpTo(to) {
+    stage.classList.add('instant');
+    events.filter(e => !e.done && e.t < to).sort((a, b) => a.t - b.t).forEach(e => { e.done = true; e.fn(); });
+    void stage.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('instant')));
+}
+
+function setProgress(from, to) {
+    progress.style.transition = 'none';
+    progress.style.width = (from / dur() * 100) + '%';
+    void progress.offsetWidth;
+    progress.style.transition = `width ${Math.max(0, to - from)}ms linear`;
+    progress.style.width = (to / dur() * 100) + '%';
+}
+
+function play(from, to, onEnd) {
+    clearTimers();
+    segFrom = from; segTo = to; segStart = performance.now();
+    events.filter(e => !e.done && e.t >= from && e.t < to)
+        .forEach(e => timers.push(setTimeout(() => { e.done = true; e.fn(); }, e.t - from)));
+    beats.forEach((bt, k) => { if (bt > from && bt < to) timers.push(setTimeout(() => { beat = k; label(); }, bt - from)); });
+    if (onEnd) timers.push(setTimeout(onEnd, to - from));
+    setProgress(from, to);
+}
+
+function now() { return Math.min(segTo, segFrom + performance.now() - segStart); }
+
+function startBeat(b) {
+    beat = b; label();
+    jumpTo(beats[b]);
+    if (autoplay) play(beats[b], dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    else play(beats[b], beatEnd(b));
+}
+
+function go(i, b = 0) {
+    build(i);
+    startBeat(b === 'last' ? beats.length - 1 : b);
+}
+
+function next() {
+    if (autoplay) { if (idx < scenes.length - 1) go(idx + 1); return; }
+    clearTimers();
+    if (beat < beats.length - 1) { jumpTo(beatEnd(beat)); startBeat(beat + 1); }
+    else if (idx < scenes.length - 1) go(idx + 1);
+    else { jumpTo(dur()); setProgress(dur(), dur()); }
+}
+
+function back() {
+    if (autoplay) { go(idx - 1); return; }
+    if (beat > 0) go(idx, beat - 1);
+    else if (idx > 0) go(idx - 1, 'last');
+    else go(0);
+}
+
+function toggleAuto() {
+    autoplay = !autoplay;
+    autoBtn.querySelector('.bl').textContent = 'Autoplay: ' + (autoplay ? 'On' : 'Off');
+    const cur = now();
+    clearTimers();
+    if (autoplay) {
+        play(cur, dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    } else {
+        let b = 0; beats.forEach((bt, k) => { if (bt <= cur) b = k; });
+        beat = b; label();
+        jumpTo(beatEnd(b));
+        setProgress(beatEnd(b), beatEnd(b));
+    }
+}
+
+const autoBtn = $('#auto');
+$('#next').onclick = next;
+$('#back').onclick = back;
+$('#replay').onclick = () => go(idx);
+autoBtn.onclick = toggleAuto;
+const typing = e => e.target && e.target.tagName === 'INPUT';
+document.addEventListener('keydown', e => {
+    if (typing(e)) return;
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') back();
+    if (e.key === 'r' || e.key === 'R') go(idx);
+    if (e.key === ' ') { e.preventDefault(); toggleAuto(); }
+});
+
+/* ---------- pen and eraser ---------- */
+const ink = $('#ink'), ctx = ink.getContext('2d'), penBtn = $('#pen'), eraserBtn = $('#eraser');
+let tool = null, penColour = '#ea008a', drawing = false, last = null, inkMarked = false, scaleK = 1, exporting = false;
+const inkStore = {};
+const isTyping = e => e.target && e.target.tagName === 'INPUT';
+ctx.scale(2, 2); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+function setTool(t) {
+    tool = t;
+    ink.classList.toggle('active', !!t);
+    ink.classList.toggle('erase', t === 'eraser');
+    penBtn.classList.toggle('on', t === 'pen'); penBtn.setAttribute('aria-pressed', t === 'pen');
+    eraserBtn.classList.toggle('on', t === 'eraser'); eraserBtn.setAttribute('aria-pressed', t === 'eraser');
+}
+function clearInk() { ctx.clearRect(0, 0, 1280, 720); inkMarked = false; }
+function saveInk() {
+    if (!inkMarked) { delete inkStore[idx]; return; }
+    const c = document.createElement('canvas'); c.width = ink.width; c.height = ink.height;
+    c.getContext('2d').drawImage(ink, 0, 0);
+    inkStore[idx] = c;
+}
+function loadInk() {
+    clearInk();
+    const c = inkStore[idx]; if (!c) return;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(c, 0, 0); ctx.restore();
+    inkMarked = true;
+}
+function brush() {
+    const er = tool === 'eraser';
+    ctx.globalCompositeOperation = er ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = ctx.fillStyle = er ? '#000' : penColour;
+    ctx.lineWidth = er ? 26 / scaleK : 5;
+}
+function pt(e) { const r = ink.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 1280, y: (e.clientY - r.top) / r.height * 720 }; }
+ink.addEventListener('pointerdown', e => {
+    if (!tool) return;
+    drawing = true; last = pt(e); ink.setPointerCapture(e.pointerId); brush();
+    if (tool === 'pen') inkMarked = true;
+    ctx.beginPath(); ctx.arc(last.x, last.y, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill();
+});
+ink.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    const p = pt(e), mid = { x: (last.x + p.x) / 2, y: (last.y + p.y) / 2 };
+    ctx.beginPath(); ctx.moveTo(last.midX ?? last.x, last.midY ?? last.y); ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y); ctx.stroke();
+    last = { x: p.x, y: p.y, midX: mid.x, midY: mid.y };
+});
+['pointerup', 'pointercancel'].forEach(t => ink.addEventListener(t, () => {
+    if (drawing && last && last.midX !== undefined) { ctx.beginPath(); ctx.moveTo(last.midX, last.midY); ctx.lineTo(last.x, last.y); ctx.stroke(); }
+    drawing = false; ctx.globalCompositeOperation = 'source-over';
+}));
+penBtn.onclick = () => setTool(tool === 'pen' ? null : 'pen');
+eraserBtn.onclick = () => setTool(tool === 'eraser' ? null : 'eraser');
+$('#clear').onclick = clearInk;
+document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
+    penColour = b.dataset.c; setTool('pen');
+    document.querySelectorAll('.swatch').forEach(x => x.classList.toggle('cur', x === b));
+});
+
+/* ---------- hide UI ---------- */
+function setUI(hidden) { document.body.classList.toggle('noui', hidden); if (document.activeElement) document.activeElement.blur(); fit(); }
+$('#hideui').onclick = () => setUI(true);
+$('#showui').onclick = () => setUI(false);
+
+/* ---------- subtitles ---------- */
+const subsBtn = $('#subs');
+function toggleSubs() {
+    const off = document.body.classList.toggle('nosubs');
+    subsBtn.querySelector('.bl').textContent = 'Subtitles: ' + (off ? 'Off' : 'On');
+    subsBtn.setAttribute('aria-pressed', !off);
+    subsBtn.blur();
+}
+subsBtn.onclick = toggleSubs;
+
+
+/* ---------- floating timer ---------- */
+const ftEl = $('#ftimer'), ftV = $('#ftv'), ftF = $('#ftf'), ftStart = $('#ftstart'), ftBtn = $('#timerbtn');
+const FT = { total: 60, left: 60, iv: null, end: 0 };
+const ftFmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+function ftDraw() { ftV.textContent = ftFmt(Math.ceil(FT.left)); ftF.style.strokeDashoffset = (1 - FT.left / FT.total).toFixed(4); }
+function ftStop() { clearInterval(FT.iv); FT.iv = null; ftStart.textContent = 'Start'; }
+function ftBeep() {
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [0, .35, .7].forEach(t => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ac.destination);
+            g.gain.setValueAtTime(.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, ac.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + t + .25);
+            o.start(ac.currentTime + t); o.stop(ac.currentTime + t + .3); });
+    } catch (e) {}
+}
+function ftTick() {
+    FT.left = Math.max(0, (FT.end - performance.now()) / 1000);
+    ftDraw();
+    if (FT.left <= 0) { ftStop(); ftEl.classList.add('done'); ftBeep(); }
+}
+function ftSet(sec) { ftStop(); ftEl.classList.remove('done'); FT.total = FT.left = sec; ftDraw(); }
+function ftToggleRun() {
+    if (FT.iv) { ftTick(); ftStop(); return; }
+    if (FT.left <= 0) ftSet(FT.total);
+    ftEl.classList.remove('done');
+    FT.end = performance.now() + FT.left * 1000;
+    FT.iv = setInterval(ftTick, 200); ftStart.textContent = 'Pause';
+}
+function ftAdj(d) {
+    const nl = Math.max(10, Math.round(FT.left) + d);
+    const diff = nl - FT.left;
+    FT.left = nl; FT.total = Math.max(nl, FT.total + d, 10);
+    if (FT.iv) FT.end += diff * 1000;
+    ftEl.classList.remove('done'); ftDraw();
+}
+function ftShow(on) {
+    ftEl.hidden = !on; ftBtn.setAttribute('aria-pressed', on); ftBtn.classList.toggle('on', on);
+    if (!on) ftStop();
+}
+ftEl.querySelectorAll('[data-set]').forEach(b => b.onclick = () => ftSet(+b.dataset.set));
+ftEl.querySelectorAll('[data-adj]').forEach(b => b.onclick = () => ftAdj(+b.dataset.adj));
+ftStart.onclick = ftToggleRun;
+$('#ftreset').onclick = () => ftSet(FT.total);
+$('#ftclose').onclick = () => ftShow(false);
+$('#ftsize').onclick = () => { ftEl.classList.toggle('big'); ftClamp(); };
+ftBtn.onclick = () => ftShow(ftEl.hidden);
+ftEl.addEventListener('click', e => { if (e.target.closest('button')) e.target.closest('button').blur(); });
+function ftClamp() {
+    const r = ftEl.getBoundingClientRect();
+    ftEl.style.left = Math.max(0, Math.min(window.innerWidth - r.width, r.left)) + 'px';
+    ftEl.style.top = Math.max(0, Math.min(window.innerHeight - r.height, r.top)) + 'px';
+}
+(() => {
+    const h = $('#fth'); let dx = 0, dy = 0, drag = false;
+    h.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; drag = true; const r = ftEl.getBoundingClientRect(); dx = e.clientX - r.left; dy = e.clientY - r.top; h.setPointerCapture(e.pointerId); });
+    h.addEventListener('pointermove', e => { if (!drag) return; ftEl.style.left = (e.clientX - dx) + 'px'; ftEl.style.top = (e.clientY - dy) + 'px'; ftClamp(); });
+    ['pointerup', 'pointercancel'].forEach(t => h.addEventListener(t, () => drag = false));
+    window.addEventListener('resize', () => { if (!ftEl.hidden) ftClamp(); });
+})();
+ftDraw();
+
+/* ---------- export PDF ---------- */
+const printBox = $('#print');
+async function exportPDF() {
+    const keepIdx = idx, keepBeat = beat;
+    exporting = true;
+    printBox.innerHTML = '';
+    const imgs = [];
+    for (let i = 0; i < scenes.length; i++) {
+        build(i);
+        events.slice().sort((a, b) => a.t - b.t).forEach(e => { if (!e.done) { e.done = true; e.fn(); } });
+        progress.style.transition = 'none'; progress.style.width = '100%';
+        stage.querySelectorAll('input').forEach(n => n.setAttribute('value', n.value));
+        const page = stage.cloneNode(true);
+        page.removeAttribute('id'); page.removeAttribute('style'); page.classList.remove('instant');
+        page.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+        const cv = page.querySelector('canvas.ink');
+        if (inkMarked) { const img = new Image(); img.className = 'ink'; img.alt = ''; img.src = ink.toDataURL(); cv.replaceWith(img); imgs.push(img); }
+        else cv.remove();
+        printBox.appendChild(page);
+    }
+    exporting = false;
+    go(keepIdx, keepBeat);
+    await Promise.all(imgs.map(im => im.decode().catch(() => {})));
+    window.print();
+}
+$('#pdf').onclick = exportPDF;
+window.addEventListener('afterprint', () => { printBox.innerHTML = ''; });
+
+document.addEventListener('keydown', e => {
+    if (isTyping(e)) return;
+    if (e.key === 'p' || e.key === 'P') setTool(tool === 'pen' ? null : 'pen');
+    if (e.key === 'e' || e.key === 'E') setTool(tool === 'eraser' ? null : 'eraser');
+    if (e.key === 'c' || e.key === 'C') clearInk();
+    if (e.key === 's' || e.key === 'S') toggleSubs();
+    if (e.key === 't' || e.key === 'T') ftShow(ftEl.hidden);
+    if (e.key === 'u' || e.key === 'U') setUI(!document.body.classList.contains('noui'));
+    if (e.key === 'Escape') setTool(null);
+});
+
+const controlsEl = document.querySelector('.controls');
+function fit() {
+    const st = $('#stage'), noui = document.body.classList.contains('noui');
+    const vw = window.innerWidth - (noui ? 0 : 40), vh = window.innerHeight - (noui ? 0 : controlsEl.offsetHeight + 20);
+    const k = Math.min(vw / 1280, vh / 720);
+    scaleK = k;
+    st.style.transform = `scale(${k})`;
+    st.style.margin = `${(720 * k - 720) / 2}px ${(1280 * k - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); go(0); });
+</script>
+
+</body>
+</html>
