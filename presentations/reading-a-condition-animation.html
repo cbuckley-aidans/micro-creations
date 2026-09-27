@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Introducing if / else</title>
+<title>Reading a condition</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
@@ -55,37 +55,6 @@
     .hrow { display: flex; align-items: center; gap: 48px; }
     .vcol { display: flex; flex-direction: column; align-items: center; gap: 18px; }
 
-    /* bulb */
-    .bulb { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .bulb svg { display: block; width: 100%; height: auto; overflow: visible; transition: filter .2s; }
-    .bulb .glass { fill: #fff; stroke: var(--navy); stroke-width: 5; stroke-linejoin: round; transition: fill .12s, stroke .12s; }
-    .bulb .fil { fill: none; stroke: var(--navy); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; transition: stroke .12s; }
-    .bulb .base { fill: var(--navy); }
-    .bulb .rays line { stroke: var(--pink); stroke-width: 6; stroke-linecap: round; opacity: 0; transition: opacity .12s; }
-    .bulb.on .glass { fill: var(--pink); stroke: var(--pink); }
-    .bulb.on .fil { stroke: #fff; }
-    .bulb.on .rays line { opacity: 1; }
-    .bulb.on svg { filter: drop-shadow(0 0 22px rgba(234,0,138,.35)); }
-    .state { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: #c3c6d0; }
-    .state span { color: #c3c6d0; transition: color .15s; }
-    .state .lit { color: var(--navy); }
-    .state .s1.lit { color: var(--pink); }
-
-    /* sky */
-    .sky { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .sky svg { display: block; width: 100%; height: auto; }
-    .sky .skbg { fill: var(--blank); stroke: var(--navy); stroke-width: 5; transition: fill .4s; }
-    .sky.dark .skbg { fill: var(--navy); }
-    .sky .sun circle { fill: #fff; stroke: var(--navy); stroke-width: 5; }
-    .sky .sun line { stroke: var(--navy); stroke-width: 5; stroke-linecap: round; }
-    .sky .sun, .sky .moon { transition: opacity .4s; }
-    .sky .moon { opacity: 0; }
-    .sky.dark .sun { opacity: 0; }
-    .sky.dark .moon { opacity: 1; }
-    .sky .mf, .sky .star { fill: #fff; }
-    .sky .mc { fill: var(--navy); }
-    .qlbl { font-size: 34px; font-weight: 700; }
-
     /* chips */
     .chip { display: inline-flex; align-items: center; justify-content: center; min-width: 130px; height: 50px; padding: 0 20px; border: 3px solid #c3c6d0; border-radius: 8px;
         font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #c3c6d0; background: #fff;
@@ -93,21 +62,6 @@
     .chip.t { background: var(--pink); border-color: var(--pink); color: #fff; }
     .chip.f { background: var(--navy); border-color: var(--navy); color: #fff; }
     .chip.x { border-color: var(--mid-grey); color: var(--mid-grey); }
-
-    /* sequence track */
-    .trk { display: block; overflow: visible; }
-    .trk text { font-family: 'Barlow Condensed', sans-serif; }
-    .trk .rl { font-size: 22px; font-weight: 800; letter-spacing: .14em; fill: var(--mid-grey); }
-    .trk .nd rect, .trk .nd polygon { fill: #fff; stroke: var(--navy); stroke-width: 4; stroke-linejoin: round; transition: fill .25s, stroke .25s; }
-    .trk .nd text { font-size: 32px; font-weight: 900; fill: var(--navy); text-anchor: middle; dominant-baseline: central; transition: fill .25s; }
-    .trk .nd.on rect, .trk .nd.on polygon { fill: var(--pink); stroke: var(--pink); }
-    .trk .nd.on text { fill: #fff; }
-    .trk .seg line, .trk .seg path { stroke: var(--navy); stroke-width: 4; fill: none; transition: stroke .25s; }
-    .trk .seg polygon { fill: var(--navy); transition: fill .25s; }
-    .trk .seg.on line, .trk .seg.on path { stroke: var(--pink); }
-    .trk .seg.on polygon { fill: var(--pink); }
-    .trk .bra { transition: opacity .45s var(--ease); }
-    .trk .bra.dim { opacity: .22; }
 
     /* flowchart */
     .fc { display: block; overflow: visible; }
@@ -131,24 +85,6 @@
     .fc .tag line { stroke: var(--navy); stroke-width: 3; }
     .fc .tag polygon { fill: var(--navy); }
 
-    /* condition cards */
-    .cards { display: flex; gap: 32px; }
-    .ccard { width: 340px; border: 3px solid var(--navy); border-radius: 8px; padding: 22px 26px 26px; }
-    .ccard .cq { font-size: 32px; font-weight: 700; line-height: 1.2; min-height: 80px; margin: 6px 0 18px; }
-    .ccard .ca { font-size: 24px; font-weight: 600; margin: 4px 0 22px; }
-    .ccard .chip { font-size: 24px; padding: 0 16px; white-space: nowrap; }
-
-    /* problem */
-    .prob { font-size: 46px; font-weight: 500; line-height: 2.3; max-width: 1000px; border-left: 8px solid var(--navy); padding-left: 36px; }
-    .mark { position: relative; white-space: nowrap; font-weight: 500; transition: opacity .45s var(--ease), transform .45s var(--ease), box-shadow .35s, color .35s; }
-    .mark::after { content: attr(data-tag); position: absolute; left: 0; top: 100%; margin-top: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800;
-        letter-spacing: .14em; text-transform: uppercase; line-height: 1; white-space: nowrap; opacity: 0; transition: opacity .35s; }
-    .mark.on::after { opacity: 1; }
-    .mark.mc.on { color: var(--pink); box-shadow: inset 0 -0.18em 0 rgba(234,0,138,.22); }
-    .mark.mt.on, .mark.mf.on { box-shadow: inset 0 -0.18em 0 rgba(27,31,69,.16); }
-    .mark.mc::after { color: var(--pink); }
-    .mark.mt::after, .mark.mf::after { color: var(--navy); }
-
     /* step 1 */
     .s7 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 38px; height: 100%; }
     .qbig { font-size: 40px; font-weight: 700; }
@@ -166,43 +102,6 @@
         font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; padding: 0; }
     .sbtn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 
-    /* code panels */
-    .cpanel { border: 3px solid var(--navy); border-radius: 8px; background: #fff; width: 100%; }
-    .phead { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey);
-        padding: 10px 22px; border-bottom: 2px solid var(--light-grey); }
-    .cbody { padding: 14px 0; }
-    .cl { position: relative; white-space: pre; font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 46px; height: 46px; padding: 0 22px 0 16px;
-        border-left: 6px solid transparent; transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .25s, border-color .25s; }
-    .cl .gn { display: inline-block; width: 38px; color: #c3c6d0; font-weight: 500; }
-    .cl.act { background: rgba(234,0,138,.10); border-left-color: var(--pink); }
-    .cl.skip { opacity: .28; }
-    .kw { color: var(--pink); font-weight: 700; }
-    .st { color: #5b6192; }
-    .nm { font-weight: 700; }
-    .ph { color: var(--mid-grey); font-style: italic; }
-    .cpanel.lg .cl { font-size: 36px; line-height: 66px; height: 66px; padding-right: 36px; }
-    .cpanel.lg .gn { width: 50px; }
-    .colon, .ind { border-radius: 4px; transition: background-color .3s, color .3s; }
-    .colon.on { background: var(--pink); color: #fff; }
-    .ind { display: inline-block; }
-    .ind.on { background: rgba(234,0,138,.16); box-shadow: inset 4px 0 0 var(--pink); }
-    .ctag { position: absolute; left: calc(100% + 30px); top: 0; height: 100%; display: flex; align-items: center; gap: 14px; white-space: nowrap;
-        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--navy); }
-    .ctag::before { content: ''; width: 30px; height: 4px; background: currentColor; }
-    .ctag.pk { color: var(--pink); }
-    .ctag.gy { color: var(--mid-grey); }
-    .opanel { background: var(--navy); border: 3px solid var(--navy); border-radius: 8px; color: #fff; width: 100%; }
-    .opanel .phead { color: #9aa0c4; border-bottom-color: rgba(255,255,255,.14); }
-    .obody { font-family: var(--mono); font-size: 28px; font-weight: 500; padding: 18px 22px; min-height: 120px; }
-    .oline { animation: capIn .45s var(--ease); }
-    .runrow { display: flex; gap: 44px; align-items: flex-start; justify-content: center; height: 100%; padding-top: 6px; }
-    .runcol { display: flex; flex-direction: column; gap: 22px; }
-    .ctrl { display: flex; align-items: center; gap: 12px; }
-    .ctrl .dlbl { margin-right: 8px; }
-    .tbox { text-align: left; width: 100%; }
-    .trow { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 6px; }
-    .expr { font-family: var(--mono); font-size: 38px; font-weight: 700; }
-
     /* summary */
     .sumgrid { display: grid; grid-template-columns: repeat(2, 540px); gap: 26px 32px; }
     .dcard { border: 3px solid var(--navy); border-radius: 8px; padding: 22px 30px; }
@@ -210,6 +109,52 @@
     .dex { font-family: 'Barlow Condensed', sans-serif; font-size: 48px; font-weight: 900; margin: 4px 0 6px 0; line-height: 1; }
     .dhow { font-size: 24px; font-weight: 600; }
     .dcard.pink .dhow { color: var(--pink); }
+
+    /* reading a condition */
+    .fc .qn, .fc .qv { transition: opacity .35s; }
+    .fc .qv { opacity: 0; fill: var(--pink); }
+    .fc .qg.sub .qn { opacity: 0; }
+    .fc .qg.sub .qv { opacity: 1; }
+    .fc .ver rect { fill: #fff; stroke: #c3c6d0; stroke-width: 3; transition: fill .25s, stroke .25s; }
+    .fc .ver text { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: .1em; fill: #c3c6d0; text-anchor: middle; dominant-baseline: central; }
+    .fc .ver.t rect { fill: var(--pink); stroke: var(--pink); }
+    .fc .ver.f rect { fill: var(--navy); stroke: var(--navy); }
+    .fc .ver.t text, .fc .ver.f text { fill: #fff; }
+    .vbox { border: 3px solid var(--navy); border-radius: 8px; width: 170px; overflow: hidden; margin-bottom: 14px; transition: opacity .45s var(--ease), transform .45s var(--ease), border-color .3s; }
+    .vbox .vl { background: var(--navy); color: #fff; font-family: var(--mono); font-size: 20px; font-weight: 700; text-align: center; padding: 6px; transition: background-color .3s; }
+    .vbox .vv { font-family: var(--mono); font-size: 50px; font-weight: 700; text-align: center; padding: 2px 0 6px; line-height: 1.2; }
+    .vbox.lit { border-color: var(--pink); }
+    .vbox.lit .vl { background: var(--pink); }
+    .vbox.lit .vv { color: var(--pink); animation: pop .42s ease; }
+    @keyframes pop { 40% { transform: scale(1.14); } }
+    .wrow { display: flex; gap: 56px; align-items: center; justify-content: center; height: 100%; }
+    .wleft { display: flex; flex-direction: column; align-items: center; width: 560px; }
+    .wright { width: 500px; }
+    .ctx { font-size: 34px; font-weight: 800; margin-bottom: 4px; }
+    .ctxq { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--mid-grey); margin-bottom: 24px; }
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+    .srow { display: flex; gap: 18px; align-items: flex-start; }
+    .sn { width: 46px; height: 46px; border: 3px solid #c3c6d0; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; color: #c3c6d0; transition: background-color .25s, border-color .25s, color .25s; }
+    .srow.cur .sn { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .srow.done .sn { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .sl { font-size: 24px; font-weight: 600; color: #b3b6c2; line-height: 46px; transition: color .25s; }
+    .srow.cur .sl, .srow.done .sl { color: var(--navy); }
+    .sr { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--pink); min-height: 32px; line-height: 32px; }
+    .sr .act { font-family: 'Barlow', sans-serif; font-size: 27px; font-weight: 800; }
+    .sr .fv { color: var(--navy); }
+    .mcards { display: flex; gap: 26px; }
+    .mcard { width: 258px; border: 3px solid var(--navy); border-radius: 8px; padding: 20px 24px 24px; min-height: 230px; }
+    .mcard .mn { font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 900; color: var(--pink); line-height: 1; margin-bottom: 14px; }
+    .mcard .mt { font-size: 27px; font-weight: 700; line-height: 1.25; }
+    .ogrid { display: grid; grid-template-columns: repeat(3, 340px); gap: 22px 32px; }
+    .ocard { border: 3px solid var(--navy); border-radius: 8px; padding: 16px 24px 20px; }
+    .ohead { display: flex; align-items: center; gap: 14px; min-height: 50px; margin-bottom: 12px; }
+    .ocard .osym { font-family: var(--mono); font-size: 44px; font-weight: 700; color: var(--pink); line-height: 1; width: 70px; flex-shrink: 0; }
+    .ocard .dlbl { font-size: 19px; line-height: 1.15; }
+    .ocode { display: inline-block; background: var(--navy); color: #fff; font-family: var(--mono); font-size: 22px; font-weight: 700; padding: 6px 14px; border-radius: 4px; }
+    .otrue { font-size: 22px; font-weight: 600; margin-top: 10px; line-height: 1.25; }
+    .otrue b { color: var(--pink); font-weight: 800; }
 
     /* controls */
     .controls { display: flex; align-items: center; gap: 10px; padding: 14px 0 18px 0; font-family: 'Barlow Condensed', sans-serif; }
@@ -366,44 +311,6 @@ function show(e) { e.classList.remove('hide'); }
 function say(html) { caption.innerHTML = '<span>' + html + '</span>'; caption.classList.remove('in'); void caption.offsetWidth; caption.classList.add('in'); }
 function stopInteractive() { ptimers.forEach(clearTimeout); ptimers = []; cleanups.forEach(f => f()); cleanups = []; }
 
-/* ---------- light bulb ---------- */
-function bulb(w, cls = '') {
-    const b = el('div', 'bulb' + (cls ? ' ' + cls : ''));
-    const rays = [-180, -150, -120, -90, -60, -30, 0].map(a => {
-        const r = a * Math.PI / 180;
-        return `<line x1="${(80 + Math.cos(r) * 60).toFixed(1)}" y1="${(78 + Math.sin(r) * 60).toFixed(1)}" x2="${(80 + Math.cos(r) * 76).toFixed(1)}" y2="${(78 + Math.sin(r) * 76).toFixed(1)}"/>`;
-    }).join('');
-    b.innerHTML = `<svg viewBox="0 0 160 200" aria-hidden="true"><g class="rays">${rays}</g>
-        <path class="glass" d="M80 30 C53 30 32 51 32 78 C32 96 42 107 51 118 C57 125 59 131 59 140 L101 140 C101 131 103 125 109 118 C118 107 128 96 128 78 C128 51 107 30 80 30 Z"/>
-        <path class="fil" d="M68 140 L68 104 Q74 90 80 104 Q86 90 92 104 L92 140"/>
-        <rect class="base" x="58" y="146" width="44" height="10" rx="3"/>
-        <rect class="base" x="60" y="160" width="40" height="10" rx="3"/>
-        <rect class="base" x="67" y="174" width="26" height="9" rx="4.5"/></svg>`;
-    b.style.width = w + 'px';
-    b.on = false;
-    b.set = v => { b.on = v; b.classList.toggle('on', v); if (b.cb) b.cb(v); };
-    b.onclick = () => b.set(!b.on);
-    return b;
-}
-
-/* ---------- sky (day / night) ---------- */
-function sky(w, cls = '') {
-    const s = el('div', 'sky' + (cls ? ' ' + cls : ''));
-    const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => {
-        const r = a * Math.PI / 180;
-        return `<line x1="${(100 + Math.cos(r) * 46).toFixed(1)}" y1="${(100 + Math.sin(r) * 46).toFixed(1)}" x2="${(100 + Math.cos(r) * 62).toFixed(1)}" y2="${(100 + Math.sin(r) * 62).toFixed(1)}"/>`;
-    }).join('');
-    s.innerHTML = `<svg viewBox="0 0 200 200" aria-hidden="true"><rect class="skbg" x="2.5" y="2.5" width="195" height="195" rx="10"/>
-        <g class="sun">${rays}<circle cx="100" cy="100" r="30"/></g>
-        <g class="moon"><circle class="mf" cx="100" cy="102" r="40"/><circle class="mc" cx="121" cy="88" r="35"/>
-        <circle class="star" cx="44" cy="50" r="3.5"/><circle class="star" cx="156" cy="150" r="3.5"/><circle class="star" cx="50" cy="156" r="2.5"/><circle class="star" cx="162" cy="44" r="2.5"/></g></svg>`;
-    s.style.width = w + 'px';
-    s.dark = false;
-    s.set = v => { s.dark = v; s.classList.toggle('dark', v); if (s.cb) s.cb(v); };
-    s.onclick = () => s.set(!s.dark);
-    return s;
-}
-
 /* ---------- chips ---------- */
 function setChip(c, v, labels = ['True', 'False']) {
     c.classList.remove('t', 'f', 'n');
@@ -431,8 +338,9 @@ function flow(q, yes, no, o = {}) {
         <line x1="170" y1="90" x2="220" y2="90"/><polygon points="219,82 219,98 234,90"/></g>${tagUp('tt', 210, 'If true')}${tagUp('tf', 610, 'If false')}` : '';
     const w = el('div', 'fcw');
     w.innerHTML = `<svg class="fc" viewBox="${vx} 0 ${vw} ${H}" width="${o.w || vw}" aria-hidden="true">
-        <g class="qg rev hide"><polygon class="dia" points="410,20 585,90 410,160 235,90"/><text class="qt${o.mono ? ' mono' : ''}" x="410" y="90">${q}</text></g>
-        ${br('yes', 210, 'YES', yes)}${br('no', 610, 'NO', no)}${tags}</svg>`;
+        <g class="qg rev hide"><polygon class="dia" points="410,20 585,90 410,160 235,90"/><text class="qt qn${o.mono ? ' mono' : ''}" x="410" y="90">${q}</text>${o.q2 ? `<text class="qt qv${o.mono ? ' mono' : ''}" x="410" y="90">${o.q2}</text>` : ''}</g>
+        ${br('yes', 210, 'YES', yes)}${br('no', 610, 'NO', no)}${tags}
+        ${o.verdict ? '<g class="ver n rev hide"><rect x="350" y="165" width="120" height="34" rx="5"/><text x="410" y="182">?</text></g>' : ''}</svg>`;
     const g = s => w.querySelector(s);
     w.q = g('.qg'); w.yes = g('.br.yes'); w.no = g('.br.no');
     w.tc = g('.tc'); w.tt = g('.tt'); w.tf = g('.tf');
@@ -443,357 +351,163 @@ function flow(q, yes, no, o = {}) {
         w.yes.classList.toggle('off', k === 'no'); w.no.classList.toggle('off', k === 'yes');
     };
     w.pick = v => w.focus(v === null ? null : v ? 'yes' : 'no');
+    w.ver = g('.ver');
+    w.sub = on => w.q.classList.toggle('sub', on);
+    w.verdict = v => { if (!w.ver) return; show(w.ver); w.ver.classList.remove('t', 'f', 'n'); w.ver.classList.add(v === null ? 'n' : v ? 't' : 'f'); w.ver.querySelector('text').textContent = v === null ? '?' : v ? 'TRUE' : 'FALSE'; };
     return w;
 }
 
-/* ---------- code panel ---------- */
-function codePanel(lines, head = 'Your code', cls = '') {
-    const p = el('div', 'cpanel' + (cls ? ' ' + cls : ''));
-    if (head) p.appendChild(el('div', 'phead', head));
-    const body = el('div', 'cbody');
-    p.lines = lines.map((h, i) => { const l = el('div', 'cl', `<span class="gn">${i + 1}</span>${h}`); body.appendChild(l); return l; });
-    p.appendChild(body);
-    p.hl = list => p.lines.forEach((l, i) => l.classList.toggle('act', list.includes(i)));
+/* ---------- variable box ---------- */
+function varBox(name, val, cls = '') {
+    const b = el('div', 'vbox' + (cls ? ' ' + cls : ''), `<div class="vl">${name}</div><div class="vv">${val}</div>`);
+    b.light = () => b.classList.add('lit');
+    return b;
+}
+
+/* ---------- four steps ---------- */
+const STEPS = ['What is inside the variable?', 'Swap the name for its value', 'True or false?', 'Follow the path'];
+function stepsPanel() {
+    const p = el('div', 'steps');
+    p.rows = STEPS.map((t, i) => { const r = el('div', 'srow', `<div class="sn">${i + 1}</div><div><div class="sl">${t}</div><div class="sr"></div></div>`); p.appendChild(r); return r; });
+    p.set = (i, res) => {
+        p.rows.forEach((r, j) => { r.classList.toggle('cur', j === i); r.classList.toggle('done', j < i); });
+        if (res !== undefined) p.rows[i].querySelector('.sr').innerHTML = res;
+    };
     return p;
+}
+
+const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const WORDS = { '>': 'greater than', '<': 'less than', '>=': 'greater than or equal to', '<=': 'less than or equal to', '==': 'equal to', '!=': 'not equal to' };
+
+/* ---------- worked example scene ---------- */
+function worked(n, ex) {
+    const op = H(ex.op), words = WORDS[ex.op];
+    const nameC = `${ex.v} ${op} ${ex.rhs}`, valC = `${ex.val} ${op} ${ex.rhs}`;
+    const act = ex.res ? ex.yes : ex.no;
+    const beatsList = [
+        [`${ex.ctx}. The condition asks: is <b>${ex.v}</b> ${words} <b>${ex.rhs}</b>?`, 'intro'],
+        [`Step 1: what is inside <b>${ex.v}</b> right now? It holds <b>${ex.val}</b>.`, 's1'],
+        [`Step 2: swap the name for its value. The condition becomes <b>${valC}</b>.`, 's2'],
+        ...(ex.extra ? [[ex.extra, 'x']] : []),
+        [`Step 3: ${ex.s3}`, 's3'],
+        [`Step 4: ${ex.res ? 'true follows the <b>yes</b>' : 'false follows the <b>no</b>'} path, so the computer will <b>${act.toLowerCase()}</b>.`, 's4']
+    ];
+    return {
+        title: `Example ${n}: <span>${words}</span>`,
+        dur: beatsList.length * 5000 + 1000,
+        run() {
+            const row = el('div', 'wrow');
+            const left = el('div', 'wleft');
+            const vb = varBox(ex.v, ex.val, 'rev hide');
+            const f = flow(nameC + '?', ex.yes, ex.no, { mono: true, w: 560, q2: valC + '?', verdict: true });
+            left.append(vb, f);
+            const right = el('div', 'wright');
+            const head = el('div', 'rev hide', `<div class="ctx">${ex.ctx}</div><div class="ctxq">if ${nameC}</div>`);
+            const sp = stepsPanel(); const spw = el('div', 'rev hide'); spw.appendChild(sp);
+            right.append(head, spw);
+            row.append(left, right); content.appendChild(row);
+            beatsList.forEach(([cap, k], i) => {
+                const t = i * 5000;
+                beatAt(t, cap);
+                if (k === 'intro') { at(400, () => show(head)); at(700, () => f.all.forEach(show)); at(1000, () => show(vb)); at(1300, () => show(spw)); }
+                if (k === 's1') at(t + 700, () => { vb.light(); sp.set(0, ex.val); });
+                if (k === 's2') at(t + 700, () => { f.sub(true); sp.set(1, valC); });
+                if (k === 's3') at(t + 900, () => { f.verdict(ex.res); sp.set(2, ex.res ? 'True' : '<span class="fv">False</span>'); });
+                if (k === 's4') at(t + 900, () => { f.pick(ex.res); sp.set(3, `<span class="act">${act}</span>`); });
+            });
+        }
+    };
 }
 
 /* ---------- scenes ---------- */
 const scenes = [
 {
-    title: 'Introducing <span>if / else</span>',
+    title: 'Reading a <span>condition</span>',
     dur: 15500,
     run() {
-        const c = el('div', 'center');
-        const nd = (x, y, t) => `<g class="nd"><rect x="${x - 35}" y="${y - 35}" width="70" height="70" rx="6"/><text x="${x}" y="${y}">${t}</text></g>`;
-        const seg = (x1, x2, y) => `<g class="seg"><line x1="${x1}" y1="${y}" x2="${x2 - 14}" y2="${y}"/><polygon points="${x2 - 16},${y - 9} ${x2 - 16},${y + 9} ${x2},${y}"/></g>`;
-        const branch = (y, t) => `<g class="bra"><g class="seg"><path d="M530 310 H580 V${y} H621"/><polygon points="619,${y - 9} 619,${y + 9} 635,${y}"/></g>${nd(670, y, t)}</g>`;
-        const r1 = [nd(70, 80, 1), seg(105, 235, 80), nd(270, 80, 2), seg(305, 435, 80), nd(470, 80, 3), seg(505, 635, 80), nd(670, 80, 4)].join('');
-        const r2 = [nd(70, 310, 1), seg(105, 235, 310), nd(270, 310, 2), seg(305, 410, 310),
-            `<g class="nd"><polygon points="470,258 530,310 470,362 410,310"/><text x="470" y="310">?</text></g>`, branch(245, 'A'), branch(375, 'B')].join('');
-        const svg = el('div', '', `<svg class="trk" viewBox="0 0 740 420" width="740" height="420" aria-hidden="true">
-            <g class="r1 rev hide"><text class="rl" x="35" y="20">EVERY STEP, IN ORDER</text>${r1}</g>
-            <g class="r2 rev hide"><text class="rl" x="35" y="190">MAKING A DECISION</text>${r2}</g></svg>`);
-        c.appendChild(svg); content.appendChild(c);
-        const R1 = svg.querySelector('.r1'), R2 = svg.querySelector('.r2');
-        const s1 = [...R1.querySelectorAll(':scope > g')], s2 = [...R2.querySelectorAll(':scope > g')];
-        const [A, B] = s2.slice(5);
-        beatAt(0, 'So far, our programs have run every step in order, one after another.');
-        at(400, () => show(R1));
-        s1.forEach((g, i) => at(1200 + i * 450, () => g.classList.add('on')));
-        beatAt(5000, 'But sometimes a program needs to <b>make a decision</b> and choose between two paths.');
-        at(5400, () => show(R2));
-        s2.slice(0, 5).forEach((g, i) => at(6000 + i * 450, () => g.classList.add('on')));
-        at(8500, () => { A.querySelectorAll('g').forEach(g => g.classList.add('on')); B.classList.add('dim'); });
-        beatAt(11000, 'In this lesson, we will learn how a computer makes a decision by <b>testing a condition</b>.');
+        const c = el('div', 'wleft'); c.style.margin = '0 auto'; c.style.height = '100%'; c.style.justifyContent = 'center';
+        const f = flow('score &gt;= 10?', 'You win!', 'Try again', { mono: true, w: 620, verdict: true });
+        const vb = varBox('score', '?', 'rev hide');
+        c.append(vb, f); content.appendChild(c);
+        beatAt(0, 'A condition is a true or false question. But how does the computer work out the answer?');
+        at(500, () => f.all.forEach(show));
+        beatAt(5000, 'It depends on what is stored inside the <b>variable</b> at that moment.');
+        at(5500, () => show(vb)); at(6100, () => f.verdict(null));
+        beatAt(10000, 'In this lesson, I will show you how to read a condition and follow the right path, one step at a time.');
     }
 },
 {
-    title: 'Everyday <span>decisions</span>',
+    title: 'The <span>method</span>',
     dur: 23000,
     run() {
         const c = el('div', 'center');
-        const row = el('div', 'hrow');
-        const left = el('div', 'vcol rev hide');
-        const s = sky(240);
-        const q = el('div', 'qlbl', 'Is it dark?');
-        const ch = el('span', 'chip f', 'No');
-        left.append(s, q, ch);
-        const arr = el('div', 'rev hide', arrowSvg(120));
-        const right = el('div', 'vcol rev hide');
-        const b = bulb(170);
-        const st = el('div', 'state', '<span class="s0 lit">Off</span> / <span class="s1">On</span>');
-        right.append(b, st);
-        row.append(left, arr, right); c.appendChild(row); content.appendChild(c);
-        b.cb = v => { st.children[0].classList.toggle('lit', !v); st.children[1].classList.toggle('lit', v); };
-        s.cb = v => { setChip(ch, v, ['Yes', 'No']); ptimers.forEach(clearTimeout); ptimers = []; if (exporting) b.set(v); else ptimers.push(setTimeout(() => b.set(v), 700)); };
-        b.onclick = () => s.set(!s.dark);
-        beatAt(0, 'Every day, you make decisions without even thinking about them.');
-        at(500, () => show(left)); at(900, () => show(arr)); at(1200, () => show(right));
-        beatAt(4000, 'When you walk into a room, you ask yourself a question: <b>is it dark?</b>');
-        beatAt(8000, 'Observe what happens when it gets dark. The answer is <b>yes</b>, so I turn on the light.');
-        at(8800, () => s.set(true));
-        beatAt(13500, 'When it is light again, the answer is <b>no</b>, so I leave the light off.');
-        at(14300, () => s.set(false));
-        beatAt(19000, 'Programs make decisions in exactly the same way.');
+        const row = el('div', 'mcards');
+        const txt = ['What is inside the variable right now?', 'Swap the name for its value.', 'Work out if the condition is true or false.', 'True follows yes. False follows no.'];
+        const cards = txt.map((t, i) => { const k = el('div', 'mcard rev hide', `<div class="mn">${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+        c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'To read any condition, I use the same <b>four steps</b>.');
+        beatAt(3500, 'First, I check what is stored inside the <b>variable</b> right now.');
+        at(4000, () => show(cards[0]));
+        beatAt(7500, 'Second, I <b>swap</b> the variable name for its value.');
+        at(8000, () => show(cards[1]));
+        beatAt(11500, 'Third, I work out if the condition is <b>true</b> or <b>false</b>.');
+        at(12000, () => show(cards[2]));
+        beatAt(15500, 'Finally, I follow the path. True follows <b>yes</b>. False follows <b>no</b>.');
+        at(16000, () => show(cards[3]));
+        beatAt(19500, 'Same four steps, every single time.');
     }
 },
 {
-    title: 'What is a <span>condition</span>?',
-    dur: 25500,
-    run() {
-        const c = el('div', 'center');
-        const fact = el('div', 'fact rev hide', 'A condition is a true or false question');
-        const row = el('div', 'cards');
-        const data = [['Is it dark?', 'True or false', true], ['Is the score 10 or more?', 'True or false', true], ['What time is it?', '3:15 pm, 9:40 am, and so on', false]];
-        const cards = data.map(([q, a, ok]) => {
-            const k = el('div', 'ccard rev hide', `<div class="dlbl">Question</div><div class="cq">${q}</div><div class="dlbl">Possible answers</div><div class="ca">${a}</div>`);
-            k.v = el('span', 'chip rev hide ' + (ok ? 't' : 'x'), ok ? 'Condition' : 'Not a condition');
-            k.appendChild(k.v); row.appendChild(k); return k;
-        });
-        c.append(fact, row); content.appendChild(c);
-        beatAt(0, 'Every decision starts with a <b>condition</b>: a question that can only be answered <b>true</b> or <b>false</b>.');
-        at(500, () => show(fact));
-        beatAt(5000, 'Is it dark? The answer can only be true or false, so this is a condition.');
-        at(5500, () => show(cards[0])); at(6600, () => show(cards[0].v));
-        beatAt(10000, 'Is the score 10 or more? Again, the answer is true or false. This is also a condition.');
-        at(10500, () => show(cards[1])); at(11800, () => show(cards[1].v));
-        beatAt(15500, 'What time is it? The answer is a time, not true or false, so this is <b>not</b> a condition.');
-        at(16000, () => show(cards[2])); at(17400, () => show(cards[2].v));
-        beatAt(21000, 'A computer can only make a decision when the answer is true or false.');
-    }
-},
-{
-    title: 'Drawing a <span>decision</span>',
-    dur: 25000,
-    run() {
-        const c = el('div', 'center');
-        const f = flow('Is it dark?', 'Turn on the light', 'Leave it off', { labels: true });
-        c.appendChild(f); content.appendChild(c);
-        beatAt(0, 'Before we write code, we draw decisions as a <b>flowchart</b>. It shows every path the computer can take.');
-        beatAt(5000, 'A conditional statement has <b>three parts</b>. First, the <b>condition</b>, which goes in the diamond.');
-        at(5600, () => show(f.q)); at(6400, () => show(f.tc));
-        beatAt(10500, 'Second, what happens if the condition is <b>true</b>. We follow the yes path.');
-        at(11000, () => show(f.yes)); at(11800, () => show(f.tt));
-        beatAt(15500, 'Third, what happens if the condition is <b>false</b>. We follow the no path.');
-        at(16000, () => show(f.no)); at(16800, () => show(f.tf));
-        beatAt(20500, 'Condition, true path, false path. Every conditional statement has these three parts.');
-    }
-},
-{
-    title: 'Following the <span>path</span>',
-    dur: 21000,
-    run() {
-        const c = el('div', 'center');
-        const row = el('div', 'hrow');
-        const left = el('div', 'vcol rev hide');
-        const s = sky(200);
-        const ch = el('span', 'chip n', '?');
-        left.append(s, ch);
-        const f = flow('Is it dark?', 'Turn on the light', 'Leave it off');
-        row.append(left, f); c.appendChild(row); content.appendChild(c);
-        s.cb = v => { setChip(ch, v); f.pick(v); };
-        beatAt(0, 'The computer tests the condition, then follows only <b>one</b> path.');
-        at(500, () => show(left)); at(800, () => f.all.forEach(show));
-        beatAt(4000, 'Observe what happens when it is dark. The condition is <b>true</b>, so the computer follows the yes path.');
-        at(5000, () => s.set(true));
-        beatAt(10500, 'Now it is light. The condition is <b>false</b>, so the computer follows the no path.');
-        at(11500, () => s.set(false));
-        beatAt(16500, 'The computer never follows both paths. It always takes exactly one.');
-    }
-},
-{
-    title: 'Modelled <span>example</span>',
+    title: 'Comparison <span>operators</span>',
     dur: 22500,
     run() {
         const c = el('div', 'center');
-        const p = el('div', 'prob rev hide', 'In a game, if <span class="mark mc" data-tag="Condition">the score is 10 or more</span>, <span class="mark mt" data-tag="If true">the player wins</span>. If not, <span class="mark mf" data-tag="If false">the game says try again</span>.');
-        c.appendChild(p); content.appendChild(c);
-        const [m1, m2, m3] = p.querySelectorAll('.mark');
-        beatAt(0, 'Let\u2019s try a modelled example. Here is a problem from a game.');
-        at(500, () => show(p));
-        beatAt(4500, 'First, find the <b>condition</b>. The question is: is the score 10 or more?');
-        at(5200, () => m1.classList.add('on'));
-        beatAt(9500, 'Next, the <b>true</b> path. If the condition is true, the player wins.');
-        at(10200, () => m2.classList.add('on'));
-        beatAt(14000, 'Finally, the <b>false</b> path. If the condition is false, the game says try again.');
-        at(14700, () => m3.classList.add('on'));
-        beatAt(18500, 'Now we can turn this into a flowchart, then into code.');
-    }
-},
-{
-    title: 'Step 1: <span>the condition</span>',
-    dur: 25000,
-    run() {
-        const c = el('div', 's7');
-        const a = el('div', 'hrow');
-        const q = el('div', 'qbig rev hide', 'Is the score 10 or more?');
-        const arr = el('div', 'rev hide', arrowSvg(90));
-        const code = el('div', 'cbox rev hide', 'score <span class="op">&gt;=</span> 10');
-        a.append(q, arr, code);
-        const mean = el('div', 'meaning rev hide', '<span class="op">&gt;=</span>means greater than or equal to');
-        const t = el('div', 'tester rev hide');
-        const minus = el('button', 'sbtn', '&minus;'), plus = el('button', 'sbtn', '+');
-        const box = el('div', 'rbox', '<div class="lbl">score</div><div class="num">4</div>');
-        const res = el('div', 'tres', '<div class="dlbl">score &gt;= 10 is</div>');
-        const ch = el('span', 'chip f', 'False'); res.appendChild(ch);
-        t.append(minus, box, plus, res);
-        c.append(a, mean, t); content.appendChild(c);
-        let v = 4;
-        const set = n => { v = n; box.querySelector('.num').textContent = n; setChip(ch, n >= 10); };
-        minus.onclick = () => { set(Math.max(0, v - 1)); minus.blur(); };
-        plus.onclick = () => { set(Math.min(20, v + 1)); plus.blur(); };
-        beatAt(0, 'Step 1 is to write the condition in code.');
-        at(500, () => show(q));
-        beatAt(3500, 'The question <b>is the score 10 or more?</b> is written in code as <b>score &gt;= 10</b>.');
-        at(4000, () => show(arr)); at(4400, () => show(code));
-        beatAt(8500, 'The symbol <b>&gt;=</b> means greater than or equal to.');
-        at(9000, () => show(mean));
-        beatAt(12500, 'Observe what happens as the score changes. The condition is only <b>true</b> when the score is 10 or more.');
-        at(13000, () => show(t));
-        [[13800, 4], [15300, 9], [16800, 15]].forEach(([ms, n]) => at(ms, () => set(n)));
-        beatAt(20500, 'A score of exactly <b>10</b> is true as well, because 10 is equal to 10.');
-        at(21200, () => set(10));
-    }
-},
-{
-    title: 'Step 2: <span>the flowchart</span>',
-    dur: 17500,
-    run() {
-        const c = el('div', 'center');
-        const f = flow('score &gt;= 10?', 'You win!', 'Try again', { mono: true });
-        c.appendChild(f); content.appendChild(c);
-        beatAt(0, 'Step 2 is to draw the flowchart. The condition goes in the <b>diamond</b>.');
-        at(500, () => show(f.q));
-        beatAt(4500, 'If the score is 10 or more, the condition is <b>true</b>, so the player wins.');
-        at(5000, () => show(f.yes));
-        beatAt(9000, 'If not, the condition is <b>false</b>, so the game says try again.');
-        at(9500, () => show(f.no));
-        beatAt(13500, 'It is the same shape as before: one condition and two paths.');
-    }
-},
-{
-    title: 'Step 3: <span>the code</span>',
-    dur: 26000,
-    run() {
-        const c = el('div', 'center');
-        const row = el('div', 'hrow');
-        const code = codePanel([
-            '<span class="kw">if</span> score &gt;= <span class="nm">10</span>:',
-            '    print(<span class="st">"You win!"</span>)',
-            '<span class="kw">else</span>:',
-            '    print(<span class="st">"Try again"</span>)'
-        ]);
-        const cw = el('div', 'rev hide'); cw.style.width = '520px'; cw.appendChild(code);
-        const f = flow('score &gt;= 10?', 'You win!', 'Try again', { mono: true, w: 560 });
-        row.append(cw, f); c.appendChild(row); content.appendChild(c);
-        beatAt(0, 'Computers do not read flowcharts. Flowcharts help <b>us</b> plan, but the computer follows <b>code</b>.');
-        at(500, () => f.all.forEach(show)); at(1100, () => show(cw));
-        beatAt(5500, 'The condition from the diamond becomes the <b>if</b> line. Notice that it ends with a <b>colon</b>.');
-        at(6000, () => { code.hl([0]); f.focus('q'); });
-        beatAt(11500, 'The true path goes on the next line, <b>indented</b> under if.');
-        at(12000, () => { code.hl([1]); f.focus('yes'); });
-        beatAt(16500, '<b>else</b> means otherwise. The false path is indented under else.');
-        at(17000, () => { code.hl([2, 3]); f.focus('no'); });
-        beatAt(22000, 'Every if / else statement follows this same pattern.');
-        at(22500, () => { code.hl([]); f.focus(null); });
-    }
-},
-{
-    title: 'Running the <span>code</span>',
-    dur: 27000,
-    run() {
-        const row = el('div', 'runrow');
-        const left = el('div', 'runcol'); left.style.width = '540px';
-        const code = codePanel([
-            'score = <span class="nm sv">12</span>',
-            '',
-            '<span class="kw">if</span> score &gt;= <span class="nm">10</span>:',
-            '    print(<span class="st">"You win!"</span>)',
-            '<span class="kw">else</span>:',
-            '    print(<span class="st">"Try again"</span>)'
-        ]);
-        code.classList.add('rev', 'hide');
-        const ctr = el('div', 'ctrl rev hide', '<span class="dlbl">Change score</span>');
-        const minus = el('button', 'sbtn', '&minus;'), plus = el('button', 'sbtn', '+');
-        ctr.append(minus, plus);
-        left.append(code, ctr);
-        const right = el('div', 'runcol'); right.style.width = '470px';
-        const test = el('div', 'rbox tbox rev hide', '<div class="lbl">Condition test</div><div class="trow"><span class="expr"></span></div>');
-        const ch = el('span', 'chip n', '?'); test.querySelector('.trow').appendChild(ch);
-        const outp = el('div', 'opanel rev hide', '<div class="phead">Output</div><div class="obody"></div>');
-        right.append(test, outp);
-        row.append(left, right); content.appendChild(row);
-        const L = code.lines, sv = code.querySelector('.sv'), expr = test.querySelector('.expr'), ob = outp.querySelector('.obody');
-        let v = 12;
-        function state(n, s) {
-            v = n; sv.textContent = n; expr.textContent = n + ' >= 10';
-            L.forEach(l => l.classList.remove('act', 'skip'));
-            setChip(ch, s >= 2 ? n >= 10 : null);
-            ob.innerHTML = '';
-            if (s === 1) L[0].classList.add('act');
-            if (s === 2) L[2].classList.add('act');
-            if (s >= 3) {
-                const t = n >= 10;
-                (t ? [2, 3] : [4, 5]).forEach(i => L[i].classList.add('act'));
-                (t ? [4, 5] : [3]).forEach(i => L[i].classList.add('skip'));
-                ob.appendChild(el('div', 'oline', t ? 'You win!' : 'Try again'));
-            }
-        }
-        function runCode(n) {
-            ptimers.forEach(clearTimeout); ptimers = [];
-            if (exporting) { state(n, 3); return; }
-            state(n, 1);
-            ptimers.push(setTimeout(() => state(n, 2), 900));
-            ptimers.push(setTimeout(() => state(n, 3), 1900));
-        }
-        minus.onclick = () => { runCode(Math.max(0, v - 1)); minus.blur(); };
-        plus.onclick = () => { runCode(Math.min(20, v + 1)); plus.blur(); };
-        state(12, 0);
-        beatAt(0, 'Now let\u2019s run the code. The computer reads from the top, so first it stores <b>12</b> in score.');
-        at(500, () => show(code)); at(800, () => show(test)); at(1100, () => show(outp)); at(1400, () => show(ctr));
-        at(1900, () => state(12, 1));
-        beatAt(6000, 'Next, it tests the condition. Is 12 greater than or equal to 10? <b>True</b>.');
-        at(6800, () => state(12, 2));
-        beatAt(11000, 'The condition is true, so it runs the if path and <b>skips</b> the else path completely.');
-        at(11800, () => state(12, 3));
-        beatAt(16500, 'Observe what happens when I change the score to <b>6</b>. This time the condition is false, so only the else path runs.');
-        at(17300, () => runCode(6));
-        beatAt(23000, 'Whatever the score, only one path ever runs.');
-    }
-},
-{
-    title: 'The shape of <span>if / else</span>',
-    dur: 25500,
-    run() {
-        const c = el('div', 'center');
-        const wrap = el('div', 'rev hide'); wrap.style.marginRight = '260px';
-        const code = codePanel([
-            '<span class="kw">if</span> <span class="ph">condition</span><span class="colon">:</span>',
-            '<span class="ind">    </span><span class="ph">do this</span>',
-            '<span class="kw">else</span><span class="colon">:</span>',
-            '<span class="ind">    </span><span class="ph">do something else</span>'
-        ], '', 'lg');
-        code.style.width = 'auto';
-        wrap.appendChild(code); c.appendChild(wrap); content.appendChild(c);
-        const tags = [['Condition', 'pk'], ['If true', ''], ['Otherwise', 'gy'], ['If false', '']].map(([t, k], i) => {
-            const e = el('span', 'ctag rev hide' + (k ? ' ' + k : ''), t); code.lines[i].appendChild(e); return e;
+        const g = el('div', 'ogrid');
+        const data = [['==', 'Equal to', 'exactly 10'], ['!=', 'Not equal to', 'anything except 10'], ['&gt;', 'Greater than', 'more than 10'],
+            ['&lt;', 'Less than', 'less than 10'], ['&gt;=', 'Greater than or equal to', '10 or more'], ['&lt;=', 'Less than or equal to', '10 or less']];
+        const cards = data.map(([s, n, t]) => {
+            const k = el('div', 'ocard rev hide', `<div class="ohead"><div class="osym">${s}</div><div class="dlbl">${n}</div></div><span class="ocode">score ${s} 10</span><div class="otrue"><b>True</b> when score is ${t}</div>`);
+            g.appendChild(k); return k;
         });
-        const col = code.querySelectorAll('.colon'), ind = code.querySelectorAll('.ind');
-        beatAt(0, 'Every if / else statement has the same shape.');
-        at(500, () => show(wrap));
-        beatAt(3800, 'First, <b>if</b>, then the condition, then a <b>colon</b>.');
-        at(4300, () => show(tags[0])); at(4900, () => col[0].classList.add('on'));
-        beatAt(8500, 'The true path goes underneath, <b>indented</b> by four spaces.');
-        at(9000, () => show(tags[1])); at(9600, () => ind[0].classList.add('on'));
-        beatAt(13000, 'Next, <b>else</b>, which means otherwise, followed by another colon.');
-        at(13500, () => show(tags[2])); at(14100, () => col[1].classList.add('on'));
-        beatAt(17500, 'Finally, the false path, also indented.');
-        at(18000, () => show(tags[3])); at(18600, () => ind[1].classList.add('on'));
-        beatAt(21500, 'Condition, colon, indent. Then else, colon, indent.');
+        c.appendChild(g); content.appendChild(c);
+        beatAt(0, 'Conditions use <b>comparison operators</b> to compare two values.');
+        beatAt(3500, '<b>==</b> asks if two values are equal. <b>!=</b> asks if they are not equal.');
+        at(4000, () => show(cards[0])); at(4600, () => show(cards[1]));
+        beatAt(9000, '<b>&gt;</b> means greater than, and <b>&lt;</b> means less than.');
+        at(9500, () => show(cards[2])); at(10100, () => show(cards[3]));
+        beatAt(14000, 'Adding an equals sign also accepts the value itself. <b>&gt;=</b> and <b>&lt;=</b> are true when the values are equal.');
+        at(14500, () => show(cards[4])); at(15100, () => show(cards[5]));
+        beatAt(19500, 'Now let\u2019s use the four steps with each of these.');
     }
 },
+worked(1, { op: '>', v: 'pages', val: 38, rhs: 30, ctx: 'Reading challenge', yes: 'Unlock a reward', no: 'Keep reading', res: true,
+    s3: 'is 38 greater than 30? <b>Yes</b>, so the condition is <b>true</b>.' }),
+worked(2, { op: '<', v: 'volume', val: 8, rhs: 5, ctx: 'Music app', yes: 'Turn it up', no: 'Keep it the same', res: false,
+    s3: 'is 8 less than 5? <b>No</b>, so this time the condition is <b>false</b>.' }),
+worked(3, { op: '>=', v: 'players', val: 6, rhs: 6, ctx: 'Online game lobby', yes: 'Start the game', no: 'Wait for more', res: true,
+    extra: 'Here is the catch. 6 is not greater than 6, but <b>&gt;=</b> also accepts equal to, so it still counts.',
+    s3: 'is 6 greater than or equal to 6? <b>Yes</b>, so the condition is <b>true</b>.' }),
+worked(4, { op: '==', v: 'lives', val: 0, rhs: 0, ctx: 'Platform game', yes: 'Show game over', no: 'Keep playing', res: true,
+    extra: 'Remember, <b>==</b> asks a question. A single <b>=</b> would store a value in the variable instead.',
+    s3: 'is 0 equal to 0? <b>Yes</b>, so the condition is <b>true</b>.' }),
+worked(5, { op: '!=', v: 'errors', val: 0, rhs: 0, ctx: 'Code checker', yes: 'Show the bug', no: 'Say all clear', res: false,
+    s3: 'is 0 not equal to 0? <b>No</b>, they are equal, so the condition is <b>false</b>.' }),
+worked(6, { op: '<=', v: 'guests', val: 12, rhs: 10, ctx: 'Party planner', yes: 'Use one table', no: 'Add a table', res: false,
+    extra: 'Your turn to call it. Pause the video and decide: is the condition <b>true</b> or <b>false</b>?',
+    s3: 'is 12 less than or equal to 10? <b>No</b>, 12 is more than 10, so the condition is <b>false</b>.' }),
 {
-    title: '<span>Summary</span>',
+    title: 'Your <span>turn</span>',
     dur: 17000,
     run() {
         const c = el('div', 'center');
-        const g = el('div', 'sumgrid');
-        const data = [
-            ['Condition', 'A true or false question that the computer tests.', false],
-            ['If true', 'When the condition is true, the first action runs.', true],
-            ['If false', 'When the condition is false, the other action runs.', true],
-            ['if / else', 'Code that tests a condition, then runs exactly one path.', false]
-        ];
-        const cards = data.map(([t, d, p]) => { const k = el('div', 'dcard rev hide' + (p ? ' pink' : ''), `<div class="dex">${t}</div><div class="dhow">${d}</div>`); g.appendChild(k); return k; });
-        c.appendChild(g); content.appendChild(c);
-        beatAt(0, 'A <b>condition</b> is a true or false question that the computer tests.');
-        at(500, () => show(cards[0]));
-        beatAt(4000, 'If the condition is <b>true</b>, the first action runs.');
-        at(4400, () => show(cards[1]));
-        beatAt(8000, 'If the condition is <b>false</b>, the other action runs.');
-        at(8400, () => show(cards[2]));
-        beatAt(12000, 'In code, we write this as an <b>if / else</b> statement. Only one path ever runs.');
-        at(12400, () => show(cards[3]));
+        const row = el('div', 'mcards');
+        const txt = ['What is inside the variable right now?', 'Swap the name for its value.', 'Work out if the condition is true or false.', 'True follows yes. False follows no.'];
+        const cards = txt.map((t, i) => { const k = el('div', 'mcard rev hide', `<div class="mn">${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+        c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Now it is your turn. For each flowchart, predict which action the computer will take.');
+        cards.forEach((k, i) => at(500 + i * 300, () => show(k)));
+        beatAt(5500, 'Use the same four steps: check the variable, swap in its value, decide true or false, then follow the path.');
+        beatAt(11500, 'Do not worry about being wrong. Making a prediction first helps you learn.');
     }
 }
 ];
