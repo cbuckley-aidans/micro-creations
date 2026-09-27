@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracing if / else</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --white: #ffffff;
+        --off-white: #f5f5f5;
+        --light-grey: #e8e8e8;
+        --mid-grey: #9a9a9a;
+        --blank: #f0f3f6;
+        --mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    [class], .fc text { font-variant-ligatures: none; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif;
+        margin: 0; background: #eaeaea; color: var(--navy);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .viewport { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .stage {
+        width: 1280px; height: 720px; background: var(--white); border-top: 6px solid var(--navy);
+        position: relative; padding: 36px 64px 0 64px; transform-origin: center center; flex-shrink: 0; overflow: hidden;
+    }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--mid-grey); }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption {
+        position: absolute; left: 64px; right: 64px; bottom: 30px;
+        font-size: 27px; font-weight: 500; line-height: 1.35;
+        display: flex; align-items: center; gap: 16px; min-height: 60px;
+    }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption b { font-weight: 800; color: var(--pink); }
+    .caption.in { animation: capIn .45s var(--ease); }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; }
+
+    .hide { opacity: 0; transform: translateY(14px); }
+    .rev { transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .35s, color .35s, border-color .35s; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+    .fact { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mid-grey); margin-bottom: 40px; }
+    .hrow { display: flex; align-items: center; gap: 48px; }
+    .vcol { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+    /* chips */
+    .chip { display: inline-flex; align-items: center; justify-content: center; min-width: 130px; height: 50px; padding: 0 20px; border: 3px solid #c3c6d0; border-radius: 8px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #c3c6d0; background: #fff;
+        transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .2s, color .2s, border-color .2s; }
+    .chip.t { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .chip.f { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .chip.x { border-color: var(--mid-grey); color: var(--mid-grey); }
+
+    /* flowchart */
+    .fc { display: block; overflow: visible; }
+    .fc .hide { transform: none; }
+    .fc text { font-family: 'Barlow', Helvetica, Arial, sans-serif; }
+    .fc .dia { fill: #fff; stroke: var(--pink); stroke-width: 4; stroke-linejoin: round; transition: fill .3s; }
+    .fc .qg.on .dia { fill: #fde3f2; }
+    .fc .qt { font-size: 26px; font-weight: 700; fill: var(--navy); text-anchor: middle; dominant-baseline: central; }
+    .fc .qt.mono { font-family: var(--mono); font-size: 25px; }
+    .fc .base { stroke: var(--navy); stroke-width: 3.5; fill: none; }
+    .fc .ov { stroke: var(--pink); stroke-width: 5; fill: none; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .5s var(--ease); }
+    .fc .ah { fill: var(--navy); transition: fill .2s .45s; }
+    .fc .bx { fill: var(--navy); transition: fill .25s .45s; }
+    .fc .bt { font-size: 24px; font-weight: 700; fill: #fff; text-anchor: middle; dominant-baseline: central; }
+    .fc .yn { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: .08em; fill: var(--pink); }
+    .fc .br.on .ov { stroke-dashoffset: 0; }
+    .fc .br.on .ah, .fc .br.on .bx { fill: var(--pink); }
+    .fc .br.off { opacity: .28; }
+    .fc .tag rect { fill: var(--blank); stroke: #c9ccd6; stroke-width: 2; }
+    .fc .tag text { font-size: 20px; font-weight: 700; fill: var(--navy); text-anchor: middle; dominant-baseline: central; }
+    .fc .tag line { stroke: var(--navy); stroke-width: 3; }
+    .fc .tag polygon { fill: var(--navy); }
+
+    /* step 1 */
+    .s7 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 38px; height: 100%; }
+    .qbig { font-size: 40px; font-weight: 700; }
+    .cbox { font-family: var(--mono); font-size: 46px; font-weight: 700; border: 3px solid var(--navy); border-radius: 8px; padding: 8px 28px; }
+    .op { color: var(--pink); }
+    .meaning { font-size: 30px; font-weight: 600; }
+    .meaning .op { font-family: var(--mono); font-weight: 700; margin-right: 14px; }
+    .tester { display: flex; align-items: center; gap: 18px; }
+    .rbox { border: 3px solid var(--navy); border-radius: 8px; padding: 10px 30px; text-align: center; }
+    .rbox .lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+    .rbox .num { font-family: var(--mono); font-size: 52px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+    .tres { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-left: 50px; }
+    .tres .dlbl { font-family: var(--mono); letter-spacing: 0; text-transform: none; font-size: 22px; font-weight: 700; }
+    .sbtn { width: 56px; height: 56px; border: none; border-radius: 8px; background: var(--navy); color: #fff; cursor: pointer;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; padding: 0; }
+    .sbtn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+
+    /* summary */
+    .sumgrid { display: grid; grid-template-columns: repeat(2, 540px); gap: 26px 32px; }
+    .dcard { border: 3px solid var(--navy); border-radius: 8px; padding: 22px 30px; }
+    .dcard.pink { border-color: var(--pink); }
+    .dex { font-family: 'Barlow Condensed', sans-serif; font-size: 48px; font-weight: 900; margin: 4px 0 6px 0; line-height: 1; }
+    .dhow { font-size: 24px; font-weight: 600; }
+    .dcard.pink .dhow { color: var(--pink); }
+
+    /* reading a condition */
+    .fc .qn, .fc .qv { transition: opacity .35s; }
+    .fc .qv { opacity: 0; fill: var(--pink); }
+    .fc .qg.sub .qn { opacity: 0; }
+    .fc .qg.sub .qv { opacity: 1; }
+    .fc .ver rect { fill: #fff; stroke: #c3c6d0; stroke-width: 3; transition: fill .25s, stroke .25s; }
+    .fc .ver text { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: .1em; fill: #c3c6d0; text-anchor: middle; dominant-baseline: central; }
+    .fc .ver.t rect { fill: var(--pink); stroke: var(--pink); }
+    .fc .ver.f rect { fill: var(--navy); stroke: var(--navy); }
+    .fc .ver.t text, .fc .ver.f text { fill: #fff; }
+    .vbox { border: 3px solid var(--navy); border-radius: 8px; width: 170px; overflow: hidden; margin-bottom: 14px; transition: opacity .45s var(--ease), transform .45s var(--ease), border-color .3s; }
+    .vbox .vl { background: var(--navy); color: #fff; font-family: var(--mono); font-size: 20px; font-weight: 700; text-align: center; padding: 6px; transition: background-color .3s; }
+    .vbox .vv { font-family: var(--mono); font-size: 50px; font-weight: 700; text-align: center; padding: 2px 0 6px; line-height: 1.2; }
+    .vbox.lit { border-color: var(--pink); }
+    .vbox.lit .vl { background: var(--pink); }
+    .vbox.lit .vv { color: var(--pink); animation: pop .42s ease; }
+    @keyframes pop { 40% { transform: scale(1.14); } }
+    .wrow { display: flex; gap: 56px; align-items: center; justify-content: center; height: 100%; }
+    .wleft { display: flex; flex-direction: column; align-items: center; width: 560px; }
+    .wright { width: 500px; }
+    .ctx { font-size: 34px; font-weight: 800; margin-bottom: 4px; }
+    .ctxq { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--mid-grey); margin-bottom: 24px; }
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+    .srow { display: flex; gap: 18px; align-items: flex-start; }
+    .sn { width: 46px; height: 46px; border: 3px solid #c3c6d0; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; color: #c3c6d0; transition: background-color .25s, border-color .25s, color .25s; }
+    .srow.cur .sn { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .srow.done .sn { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .sl { font-size: 24px; font-weight: 600; color: #b3b6c2; line-height: 46px; transition: color .25s; }
+    .srow.cur .sl, .srow.done .sl { color: var(--navy); }
+    .sr { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--pink); min-height: 32px; line-height: 32px; }
+    .sr .act { font-family: 'Barlow', sans-serif; font-size: 27px; font-weight: 800; }
+    .sr .fv { color: var(--navy); }
+    .mcards { display: flex; gap: 26px; }
+    .mcard { width: 258px; border: 3px solid var(--navy); border-radius: 8px; padding: 20px 24px 24px; min-height: 230px; }
+    .mcard .mn { font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 900; color: var(--pink); line-height: 1; margin-bottom: 14px; }
+    .mcard .mt { font-size: 27px; font-weight: 700; line-height: 1.25; }
+    .ogrid { display: grid; grid-template-columns: repeat(3, 340px); gap: 22px 32px; }
+    .ocard { border: 3px solid var(--navy); border-radius: 8px; padding: 16px 24px 20px; }
+    .ohead { display: flex; align-items: center; gap: 14px; min-height: 50px; margin-bottom: 12px; }
+    .ocard .osym { font-family: var(--mono); font-size: 44px; font-weight: 700; color: var(--pink); line-height: 1; width: 70px; flex-shrink: 0; }
+    .ocard .dlbl { font-size: 19px; line-height: 1.15; }
+    .ocode { display: inline-block; background: var(--navy); color: #fff; font-family: var(--mono); font-size: 22px; font-weight: 700; padding: 6px 14px; border-radius: 4px; }
+    .otrue { font-size: 22px; font-weight: 600; margin-top: 10px; line-height: 1.25; }
+    .otrue b { color: var(--pink); font-weight: 800; }
+
+    /* code panels */
+    .cpanel { border: 3px solid var(--navy); border-radius: 8px; background: #fff; width: 100%; }
+    .phead { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey);
+        padding: 10px 22px; border-bottom: 2px solid var(--light-grey); }
+    .cbody { padding: 14px 0; }
+    .cl { position: relative; white-space: pre; font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 46px; height: 46px; padding: 0 22px 0 16px;
+        border-left: 6px solid transparent; transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .25s, border-color .25s; }
+    .cl .gn { display: inline-block; width: 38px; color: #c3c6d0; font-weight: 500; }
+    .cl.act { background: rgba(234,0,138,.10); border-left-color: var(--pink); }
+    .cl.skip { opacity: .28; }
+    .kw { color: var(--pink); font-weight: 700; }
+    .st { color: #5b6192; }
+    .nm { font-weight: 700; }
+    .ph { color: var(--mid-grey); font-style: italic; }
+    .cpanel.lg .cl { font-size: 36px; line-height: 66px; height: 66px; padding-right: 36px; }
+    .cpanel.lg .gn { width: 50px; }
+    .colon, .ind { border-radius: 4px; transition: background-color .3s, color .3s; }
+    .colon.on { background: var(--pink); color: #fff; }
+    .ind { display: inline-block; }
+    .ind.on { background: rgba(234,0,138,.16); box-shadow: inset 4px 0 0 var(--pink); }
+    .ctag { position: absolute; left: calc(100% + 30px); top: 0; height: 100%; display: flex; align-items: center; gap: 14px; white-space: nowrap;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--navy); }
+    .ctag::before { content: ''; width: 30px; height: 4px; background: currentColor; }
+    .ctag.pk { color: var(--pink); }
+    .ctag.gy { color: var(--mid-grey); }
+    .opanel { background: var(--navy); border: 3px solid var(--navy); border-radius: 8px; color: #fff; width: 100%; }
+    .opanel .phead { color: #9aa0c4; border-bottom-color: rgba(255,255,255,.14); }
+    .obody { font-family: var(--mono); font-size: 28px; font-weight: 500; padding: 18px 22px; min-height: 120px; }
+    .oline { animation: capIn .45s var(--ease); }
+    .runrow { display: flex; gap: 44px; align-items: flex-start; justify-content: center; height: 100%; padding-top: 6px; }
+    .runcol { display: flex; flex-direction: column; gap: 22px; }
+    .ctrl { display: flex; align-items: center; gap: 12px; }
+    .ctrl .dlbl { margin-right: 8px; }
+    .tbox { text-align: left; width: 100%; }
+    .trow { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 6px; }
+    .expr { font-family: var(--mono); font-size: 38px; font-weight: 700; }
+
+    /* tracing */
+    .xrow { display: flex; gap: 44px; align-items: center; justify-content: center; height: 100%; }
+    .cpanel.tr .cl { line-height: 54px; height: 54px; }
+    .cl.act .gn, .cl.ran .gn { color: var(--pink); }
+    .vr { position: relative; display: inline-block; transition: box-shadow .3s; }
+    .vr::after { content: attr(data-v); position: absolute; left: 50%; bottom: 82%; transform: translate(-50%, 6px); opacity: 0;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; line-height: 1; color: var(--pink); transition: opacity .35s, transform .35s; }
+    .vr.sub { box-shadow: inset 0 -3px 0 var(--pink); }
+    .vr.sub::after { opacity: 1; transform: translate(-50%, 0); }
+    .cnote { margin-left: 22px; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; letter-spacing: .06em; color: var(--pink); animation: capIn .45s var(--ease); }
+    .cnote.f { color: var(--navy); }
+    .tright { width: 540px; display: flex; flex-direction: column; gap: 20px; }
+    .shead .snm { font-size: 32px; font-weight: 800; line-height: 1.15; margin-top: 4px; }
+    .wbox { text-align: left; }
+    .wbody { min-height: 84px; margin-top: 6px; }
+    .wl { font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 40px; white-space: pre; }
+    .wl b { color: var(--pink); font-weight: 700; }
+    .wl b.f { color: var(--navy); }
+    .wl s { color: var(--mid-grey); }
+    .obody { min-height: 84px; }
+    .pcards { display: flex; flex-direction: column; gap: 16px; width: 480px; }
+    .pcard { border: 3px solid var(--navy); border-radius: 8px; padding: 10px 22px 12px; }
+    .pcard .pv { font-family: var(--mono); font-size: 26px; font-weight: 700; margin-top: 2px; }
+
+    /* controls */
+    .controls { display: flex; align-items: center; gap: 10px; padding: 14px 0 18px 0; font-family: 'Barlow Condensed', sans-serif; }
+    .controls button {
+        font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: 9px 16px; cursor: pointer;
+    }
+    .controls button.alt { background: var(--white); color: var(--navy); }
+    .controls button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .dots { display: flex; gap: 8px; margin: 0 10px; }
+    .dots button { width: 14px; height: 14px; padding: 0; border-radius: 50%; background: #c9ccd6; }
+    .dots button.cur { background: var(--pink); }
+    .steplbl { font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid-grey); margin-left: 6px; min-width: 110px; }
+    .ink { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; z-index: 5; touch-action: none; }
+    .ink.active { pointer-events: auto; cursor: crosshair; }
+    .controls button#pen.on { background: var(--pink); color: var(--white); }
+    .controls .swatch { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 3px solid var(--white); box-shadow: 0 0 0 1px #c9ccd6; }
+    .controls .swatch.cur { box-shadow: 0 0 0 3px var(--navy); }
+    .sep { width: 1.5px; height: 28px; background: #c9ccd6; margin: 0 6px; }
+    .stage.instant *, .stage.instant *::before { transition: none !important; animation: none !important; }
+
+    .controls kbd, .showui kbd { display: inline-block; margin-left: 7px; padding: 0 5px; min-width: 18px; text-align: center; border: 1.5px solid currentColor; border-radius: 4px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; line-height: 16px; opacity: .6; vertical-align: 1px; }
+
+    /* floating timer */
+    .ftimer { position: fixed; z-index: 20; left: 24px; top: 24px; width: 250px; background: #fff; border-top: 6px solid var(--navy); border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(27,31,69,.25), 0 0 0 1px rgba(27,31,69,.08); padding: 0 16px 16px; font-family: 'Barlow Condensed', sans-serif; color: var(--navy); user-select: none; }
+    .ftimer[hidden] { display: none; }
+    .fth { display: flex; justify-content: space-between; align-items: center; height: 40px; cursor: grab; touch-action: none; }
+    .fth:active { cursor: grabbing; }
+    .fth span { font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .fth button { width: 30px; height: 30px; border: none; background: none; color: var(--navy); cursor: pointer; border-radius: 6px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .fth button:hover { background: var(--light-grey); }
+    .fth svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+    .ftring { position: relative; width: 150px; height: 150px; margin: 2px auto 12px; }
+    .ftring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+    .ftring .tb { fill: none; stroke: var(--light-grey); stroke-width: 8; }
+    .ftring .tf { fill: none; stroke: var(--pink); stroke-width: 8; stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .25s linear; }
+    .ftv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .ftimer.done .ftring { animation: ftflash .6s ease-in-out 6 alternate; }
+    .ftimer.done .ftv { color: var(--pink); }
+    @keyframes ftflash { to { transform: scale(1.06); opacity: .55; } }
+    .ftrow { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+    .ftrow button { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border: 2px solid var(--navy);
+        background: #fff; color: var(--navy); border-radius: 6px; padding: 6px 0; cursor: pointer; }
+    .ftrow button.pri { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .ftrow button:focus-visible, .fth button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .ftimer.big { width: 400px; }
+    .ftimer.big .ftring { width: 280px; height: 280px; }
+    .ftimer.big .ftv { font-size: 88px; }
+    .ftimer.big .ftrow button { font-size: 19px; padding: 8px 0; }
+
+    /* tools, hide UI, export */
+    .controls { flex-wrap: wrap; justify-content: center; gap: 10px 26px; padding: 12px 20px 16px; width: 100%; }
+    .grp { display: flex; align-items: center; gap: 10px; }
+    .controls button#eraser.on, .controls button#timerbtn.on { background: var(--pink); color: var(--white); }
+    .ink.erase { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ccircle cx='15' cy='15' r='13' fill='white' fill-opacity='.55' stroke='%231b1f45' stroke-width='2'/%3E%3C/svg%3E") 15 15, cell; }
+    body.noui .controls { display: none; }
+    body.nosubs .caption { visibility: hidden; }
+    .showui {
+        display: none; position: fixed; right: 14px; bottom: 14px; z-index: 10;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer;
+        opacity: 0; transition: opacity .2s;
+    }
+    body.noui .showui { display: block; }
+    .showui:hover, .showui:focus-visible { opacity: 1; }
+    #print { display: none; }
+    @media print {
+        @page { size: 1280px 720px; margin: 0; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        html, body { height: auto; overflow: visible; display: block; margin: 0; background: #fff; }
+        body > .viewport, body > .controls, .showui, .ftimer { display: none !important; }
+        #print { display: block; }
+        #print .stage { transform: none !important; margin: 0 !important; break-after: page; page-break-after: always; }
+        #print .stage:last-child { break-after: auto; page-break-after: auto; }
+        #print *, #print *::before { animation: none !important; transition: none !important; }
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+        .rev, .chip, .cl, .mark { transition: none !important; }
+        .caption.in, .oline { animation: none !important; }
+    }
+</style>
+</head>
+<body>
+
+<div class="viewport">
+    <div class="stage" id="stage">
+        <div class="top">
+            <div><h1 class="sheet-title" id="title"></h1></div>
+            <div class="counter" id="counter"></div>
+        </div>
+        <div class="content" id="content"></div>
+        <div class="caption" id="caption"></div>
+        <div class="progress" id="progress"></div>
+        <canvas class="ink" id="ink" width="2560" height="1440"></canvas>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="grp">
+        <button class="alt" id="back" aria-label="Previous scene">Back<kbd>&larr;</kbd></button>
+        <button class="alt" id="replay" aria-label="Replay scene">Replay<kbd>R</kbd></button>
+        <button id="next" aria-label="Next scene">Next<kbd>&rarr;</kbd></button>
+        <div class="dots" id="dots"></div>
+        <button class="alt" id="auto"><span class="bl">Autoplay: Off</span><kbd>Space</kbd></button>
+        <span class="steplbl" id="steplbl"></span>
+    </div>
+    <div class="grp">
+        <button class="alt" id="pen" aria-pressed="false">Pen<kbd>P</kbd></button>
+        <button class="swatch cur" data-c="#ea008a" style="background:#ea008a" aria-label="Pink pen"></button>
+        <button class="swatch" data-c="#1b1f45" style="background:#1b1f45" aria-label="Navy pen"></button>
+        <button class="swatch" data-c="#111111" style="background:#111111" aria-label="Black pen"></button>
+        <button class="swatch" data-c="#0a7bd6" style="background:#0a7bd6" aria-label="Blue pen"></button>
+        <button class="swatch" data-c="#12a150" style="background:#12a150" aria-label="Green pen"></button>
+        <button class="swatch" data-c="#f28c00" style="background:#f28c00" aria-label="Orange pen"></button>
+        <button class="alt" id="eraser" aria-pressed="false">Eraser<kbd>E</kbd></button>
+        <button class="alt" id="clear">Clear<kbd>C</kbd></button>
+    </div>
+    <div class="grp">
+        <button class="alt" id="pdf">Export PDF</button>
+        <button class="alt" id="timerbtn" aria-pressed="false">Timer<kbd>T</kbd></button>
+        <button class="alt" id="subs" aria-pressed="true"><span class="bl">Subtitles: On</span><kbd>S</kbd></button>
+        <button class="alt" id="hideui">Hide UI<kbd>U</kbd></button>
+    </div>
+</div>
+<button class="showui" id="showui">Show UI<kbd>U</kbd></button>
+<div class="ftimer" id="ftimer" hidden role="dialog" aria-label="Timer">
+    <div class="fth" id="fth"><span>Timer</span><div>
+        <button id="ftsize" aria-label="Toggle timer size"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
+        <button id="ftclose" aria-label="Close timer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+    <div class="ftring"><svg viewBox="0 0 100 100"><circle class="tb" cx="50" cy="50" r="44"/><circle class="tf" id="ftf" cx="50" cy="50" r="44" pathLength="1"/></svg><div class="ftv" id="ftv">1:00</div></div>
+    <div class="ftrow"><button data-set="30">0:30</button><button data-set="60">1:00</button><button data-set="120">2:00</button><button data-set="180">3:00</button><button data-set="300">5:00</button></div>
+    <div class="ftrow"><button data-adj="-30">&minus;30s</button><button data-adj="30">+30s</button><button data-adj="60">+1 min</button></div>
+    <div class="ftrow"><button class="pri" id="ftstart">Start</button><button id="ftreset">Reset</button></div>
+</div>
+<div id="print"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), caption = $('#caption'), titleEl = $('#title'), counter = $('#counter'), progress = $('#progress');
+let timers = [], events = [], beats = [], idx = 0, beat = 0, autoplay = false;
+let segFrom = 0, segTo = 0, segStart = 0;
+let ptimers = [], cleanups = [];
+const stage = document.getElementById('stage');
+
+function at(ms, fn) { events.push({ t: ms, fn, done: false }); }
+function beatAt(ms, html) { beats.push(ms); at(ms, () => say(html)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function show(e) { e.classList.remove('hide'); }
+function say(html) { caption.innerHTML = '<span>' + html + '</span>'; caption.classList.remove('in'); void caption.offsetWidth; caption.classList.add('in'); }
+function stopInteractive() { ptimers.forEach(clearTimeout); ptimers = []; cleanups.forEach(f => f()); cleanups = []; }
+
+/* ---------- chips ---------- */
+function setChip(c, v, labels = ['True', 'False']) {
+    c.classList.remove('t', 'f', 'n');
+    c.classList.add(v === null ? 'n' : v ? 't' : 'f');
+    c.textContent = v === null ? '?' : v ? labels[0] : labels[1];
+}
+function arrowSvg(w = 110) {
+    return `<svg width="${w}" height="30" viewBox="0 0 ${w} 30" aria-hidden="true"><line x1="0" y1="15" x2="${w - 16}" y2="15" stroke="#1b1f45" stroke-width="4"/><polygon points="${w - 20},4 ${w},15 ${w - 20},26" fill="#1b1f45"/></svg>`;
+}
+
+/* ---------- flowchart ---------- */
+function flow(q, yes, no, o = {}) {
+    const L = !!o.labels, H = L ? 412 : 336, vx = L ? 0 : 60, vw = L ? 820 : 700;
+    const br = (side, x, lbl, txt) => {
+        const d = `M410 160 V200 H${x} V236`;
+        const lx = side === 'yes' ? x - 14 : x + 14, anc = side === 'yes' ? 'end' : 'start';
+        return `<g class="br ${side} rev hide"><path class="base" d="${d}"/><path class="ov" pathLength="1" d="${d}"/>
+            <polygon class="ah" points="${x - 11},234 ${x + 11},234 ${x},250"/>
+            <text class="yn" x="${lx}" y="226" text-anchor="${anc}">${lbl}</text>
+            <rect class="bx" x="${x - 125}" y="250" width="250" height="70" rx="4"/><text class="bt" x="${x}" y="285">${txt}</text></g>`;
+    };
+    const tagUp = (cls, x, txt) => `<g class="tag ${cls} rev hide"><line x1="${x}" y1="370" x2="${x}" y2="338"/><polygon points="${x - 8},340 ${x + 8},340 ${x},324"/>
+        <rect x="${x - 75}" y="370" width="150" height="40" rx="3"/><text x="${x}" y="390">${txt}</text></g>`;
+    const tags = L ? `<g class="tag tc rev hide"><rect x="20" y="70" width="150" height="40" rx="3"/><text x="95" y="90">Condition</text>
+        <line x1="170" y1="90" x2="220" y2="90"/><polygon points="219,82 219,98 234,90"/></g>${tagUp('tt', 210, 'If true')}${tagUp('tf', 610, 'If false')}` : '';
+    const w = el('div', 'fcw');
+    w.innerHTML = `<svg class="fc" viewBox="${vx} 0 ${vw} ${H}" width="${o.w || vw}" aria-hidden="true">
+        <g class="qg rev hide"><polygon class="dia" points="410,20 585,90 410,160 235,90"/><text class="qt qn${o.mono ? ' mono' : ''}" x="410" y="90">${q}</text>${o.q2 ? `<text class="qt qv${o.mono ? ' mono' : ''}" x="410" y="90">${o.q2}</text>` : ''}</g>
+        ${br('yes', 210, 'YES', yes)}${br('no', 610, 'NO', no)}${tags}
+        ${o.verdict ? '<g class="ver n rev hide"><rect x="350" y="165" width="120" height="34" rx="5"/><text x="410" y="182">?</text></g>' : ''}</svg>`;
+    const g = s => w.querySelector(s);
+    w.q = g('.qg'); w.yes = g('.br.yes'); w.no = g('.br.no');
+    w.tc = g('.tc'); w.tt = g('.tt'); w.tf = g('.tf');
+    w.all = [w.q, w.yes, w.no];
+    w.focus = k => {
+        w.q.classList.toggle('on', k === 'q');
+        w.yes.classList.toggle('on', k === 'yes'); w.no.classList.toggle('on', k === 'no');
+        w.yes.classList.toggle('off', k === 'no'); w.no.classList.toggle('off', k === 'yes');
+    };
+    w.pick = v => w.focus(v === null ? null : v ? 'yes' : 'no');
+    w.ver = g('.ver');
+    w.sub = on => w.q.classList.toggle('sub', on);
+    w.verdict = v => { if (!w.ver) return; show(w.ver); w.ver.classList.remove('t', 'f', 'n'); w.ver.classList.add(v === null ? 'n' : v ? 't' : 'f'); w.ver.querySelector('text').textContent = v === null ? '?' : v ? 'TRUE' : 'FALSE'; };
+    return w;
+}
+
+/* ---------- code panel ---------- */
+function codePanel(lines, head = 'Your code', cls = '') {
+    const p = el('div', 'cpanel' + (cls ? ' ' + cls : ''));
+    if (head) p.appendChild(el('div', 'phead', head));
+    const body = el('div', 'cbody');
+    p.lines = lines.map((h, i) => { const l = el('div', 'cl', `<span class="gn">${i + 1}</span>${h}`); body.appendChild(l); return l; });
+    p.appendChild(body);
+    p.hl = list => p.lines.forEach((l, i) => l.classList.toggle('act', list.includes(i)));
+    return p;
+}
+
+const pr = s => `print(<span class="st">"${s}"</span>)`;
+const STEPS = ['Find the variable', 'Swap the name for its value', 'True or false?', 'Follow the path'];
+const MSTEPS = ['Find the variable and its value.', 'Swap the name for its value in the condition.', 'Work out if the condition is true or false.', 'Follow the path and write the output.'];
+
+/* ---------- tracer ---------- */
+function tracer(lines) {
+    const row = el('div', 'xrow');
+    const code = codePanel(lines, 'Your code', 'tr');
+    const left = el('div', 'rev hide'); left.style.width = '520px'; left.appendChild(code);
+    const right = el('div', 'tright');
+    const sh = el('div', 'shead rev hide', '<div class="dlbl">Tracing</div><div class="snm">Start at the top</div>');
+    const wb = el('div', 'rbox wbox rev hide', '<div class="lbl">Working out</div><div class="wbody"></div>');
+    const op = el('div', 'opanel rev hide', '<div class="phead">Output</div><div class="obody"></div>');
+    right.append(sh, wb, op); row.append(left, right); content.appendChild(row);
+    const L = code.lines;
+    return {
+        code, L,
+        showAll(t0) { [left, sh, wb, op].forEach((e, i) => at(t0 + i * 300, () => show(e))); },
+        head(a, b) { sh.children[0].textContent = a; sh.children[1].textContent = b; },
+        step(n) { this.head(`Step ${n} of 4`, STEPS[n - 1]); },
+        at(i) { L.forEach(l => { if (l.classList.contains('act')) { l.classList.remove('act'); l.classList.add('ran'); } }); if (i !== null) L[i].classList.add('act'); },
+        sub(i) { L[i].querySelectorAll('.vr').forEach(v => v.classList.add('sub')); },
+        note(i, html, cls = '') { L[i].appendChild(el('span', 'cnote' + (cls ? ' ' + cls : ''), html)); },
+        work(lines) { wb.querySelector('.wbody').innerHTML = lines.map(l => `<div class="wl">${l}</div>`).join(''); },
+        skip(list) { list.forEach(i => L[i].classList.add('skip')); },
+        out(txt) { const ob = op.querySelector('.obody'); ob.innerHTML = ''; ob.appendChild(el('div', 'oline', txt)); }
+    };
+}
+const ARROW = ' \u2192 ';
+
+/* ---------- scenes ---------- */
+const scenes = [
+{
+    title: 'Tracing <span>if / else</span>',
+    dur: 14500,
+    run() {
+        const c = el('div', 'center');
+        const code = codePanel(['cups = <span class="nm">8</span>', '', '<span class="kw">if</span> cups &gt; <span class="nm">5</span>:', '    ' + pr('Great selling!'), '<span class="kw">else</span>:', '    ' + pr('Keep going!')], 'Your code', 'tr');
+        const w = el('div', 'rev hide'); w.style.width = '520px'; w.appendChild(code);
+        c.appendChild(w); content.appendChild(c);
+        const L = code.lines, mark = i => L.forEach((l, j) => l.classList.toggle('act', j === i));
+        beatAt(0, '<b>Tracing</b> means reading code line by line to predict what it will do, without running it.');
+        at(400, () => show(w));
+        at(1600, () => mark(0)); at(2600, () => mark(2)); at(3600, () => { mark(3); L[4].classList.add('skip'); L[5].classList.add('skip'); });
+        beatAt(5500, 'When you trace, you play the role of the <b>computer</b>.');
+        beatAt(9500, 'In this lesson, we will trace if / else statements and show our <b>working out</b> at every step.');
+    }
+},
+{
+    title: 'The four <span>steps</span>',
+    dur: 21000,
+    run() {
+        const c = el('div', 'center');
+        const row = el('div', 'mcards');
+        const cards = MSTEPS.map((t, i) => { const k = el('div', 'mcard rev hide', `<div class="mn">${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+        c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Tracing uses the same four steps we used to read a flowchart.');
+        beatAt(3500, 'First, find the <b>variable</b> and the value it holds.');
+        at(4000, () => show(cards[0]));
+        beatAt(7000, 'Second, <b>swap</b> the variable name for its value in the condition.');
+        at(7500, () => show(cards[1]));
+        beatAt(10500, 'Third, work out if the condition is <b>true</b> or <b>false</b>.');
+        at(11000, () => show(cards[2]));
+        beatAt(14000, 'Finally, follow the path. True runs the <b>if</b> block. False runs the <b>else</b> block.');
+        at(14500, () => show(cards[3]));
+        beatAt(18000, 'Writing each step down is your <b>working out</b>.');
+    }
+},
+{
+    title: 'Find <span>each part</span>',
+    dur: 22000,
+    run() {
+        const row = el('div', 'xrow');
+        const code = codePanel(['age = <span class="nm">16</span>', '', '<span class="kw">if</span> age &gt;= <span class="nm">18</span>:', '    ' + pr('Adult'), '<span class="kw">else</span>:', '    ' + pr('Minor')], 'Your code', 'tr');
+        const left = el('div', 'rev hide'); left.style.width = '480px'; left.appendChild(code);
+        const pc = el('div', 'pcards');
+        const cards = [['The variable', 'age, which holds 16'], ['The condition', 'age &gt;= 18'], ['If true', pr('Adult')], ['If false', pr('Minor')]]
+            .map(([t, v]) => { const k = el('div', 'pcard rev hide', `<div class="dlbl">${t}</div><div class="pv">${v}</div>`); pc.appendChild(k); return k; });
+        row.append(left, pc); content.appendChild(row);
+        beatAt(0, 'Before we trace, can you find each part? Pause the video and try first.');
+        at(400, () => show(left));
+        [['The <b>variable</b> is age, and it holds 16.', [0]], ['The <b>condition</b> is age &gt;= 18.', [2]],
+         ['If the condition is <b>true</b>, the program prints Adult.', [3]], ['If it is <b>false</b>, the program prints Minor.', [5]]]
+            .forEach(([cap, hl], i) => { const t = 5500 + i * 4000; beatAt(t, cap); at(t + 500, () => { show(cards[i]); code.hl(hl); }); });
+        at(21000, () => code.hl([]));
+    }
+},
+{
+    title: 'Example 1: <span>trace it</span>',
+    dur: 29000,
+    run() {
+        const T = tracer(['cups = <span class="nm">8</span>', '', '<span class="kw">if</span> <span class="vr" data-v="8">cups</span> &gt; <span class="nm">5</span>:', '    ' + pr('Great selling!'), '<span class="kw">else</span>:', '    ' + pr('Keep going!')]);
+        beatAt(0, 'This program checks how many cups a caf\u00e9 has sold. Let\u2019s trace it, one line at a time.');
+        T.showAll(400);
+        beatAt(5000, 'Step 1: find the variable. The first line stores <b>8</b> in cups.');
+        at(5700, () => { T.step(1); T.at(0); T.work(['cups = <b>8</b>']); });
+        beatAt(10000, 'Step 2: Python reaches the if line. I swap cups for its value, so the condition becomes <b>8 &gt; 5</b>.');
+        at(10700, () => { T.step(2); T.at(2); T.sub(2); T.work(['cups = 8', 'cups &gt; 5' + ARROW + '<b>8 &gt; 5</b>']); });
+        beatAt(15000, 'Step 3: is 8 greater than 5? <b>Yes</b>, so the condition is <b>true</b>.');
+        at(15700, () => { T.step(3); T.note(2, 'True'); T.work(['cups = 8', 'cups &gt; 5' + ARROW + '8 &gt; 5' + ARROW + '<b>True</b>']); });
+        beatAt(20000, 'Step 4: true runs the <b>if</b> block. The else block is skipped completely.');
+        at(20700, () => { T.step(4); T.at(3); T.skip([4, 5]); T.out('Great selling!'); });
+        beatAt(25000, 'The output is <b>Great selling!</b> Python never even reads the else block.');
+    }
+},
+{
+    title: 'Example 2: <span>new value</span>',
+    dur: 29000,
+    run() {
+        const T = tracer(['cups = <span class="nm">3</span>', '', '<span class="kw">if</span> <span class="vr" data-v="3">cups</span> &gt; <span class="nm">5</span>:', '    ' + pr('Great selling!'), '<span class="kw">else</span>:', '    ' + pr('Keep going!')]);
+        beatAt(0, 'Same code, but this time cups holds <b>3</b>. What do you think will change?');
+        T.showAll(400);
+        beatAt(5000, 'Step 1: find the variable. The first line stores <b>3</b> in cups.');
+        at(5700, () => { T.step(1); T.at(0); T.work(['cups = <b>3</b>']); });
+        beatAt(10000, 'Step 2: at the if line, I swap cups for 3. The condition becomes <b>3 &gt; 5</b>.');
+        at(10700, () => { T.step(2); T.at(2); T.sub(2); T.work(['cups = 3', 'cups &gt; 5' + ARROW + '<b>3 &gt; 5</b>']); });
+        beatAt(15000, 'Step 3: is 3 greater than 5? <b>No</b>, so the condition is <b>false</b>. This changes everything.');
+        at(15700, () => { T.step(3); T.note(2, 'False', 'f'); T.work(['cups = 3', 'cups &gt; 5' + ARROW + '3 &gt; 5' + ARROW + '<b class="f">False</b>']); });
+        beatAt(20000, 'Step 4: false skips the if block, and the <b>else</b> block runs instead.');
+        at(20700, () => { T.step(4); T.skip([3]); T.at(4); });
+        at(21500, () => { T.at(5); T.out('Keep going!'); });
+        beatAt(25000, 'Same code, different output. Only the value of cups changed.');
+    }
+},
+{
+    title: 'Example 3: <span>a value changes</span>',
+    dur: 34000,
+    run() {
+        const T = tracer(['cups = <span class="nm">4</span>', 'cups = cups + <span class="nm">2</span>', '', '<span class="kw">if</span> <span class="vr" data-v="6">cups</span> &gt; <span class="nm">5</span>:', '    ' + pr('Great selling!'), '<span class="kw">else</span>:', '    ' + pr('Keep going!')]);
+        beatAt(0, 'Sometimes a variable changes before the if line. Watch carefully.');
+        T.showAll(400);
+        beatAt(5000, 'Step 1: find the variable. The first line stores <b>4</b> in cups.');
+        at(5700, () => { T.step(1); T.at(0); T.work(['cups = <b>4</b>']); });
+        beatAt(10000, 'The next line takes the current value, 4, adds 2, and stores <b>6</b> back in cups.');
+        at(10700, () => { T.at(1); T.note(1, '4 + 2 = 6'); T.work(['cups = <s>4</s> <b>6</b>']); });
+        beatAt(15000, 'Step 2: at the if line, cups holds 6, not 4. The condition becomes <b>6 &gt; 5</b>.');
+        at(15700, () => { T.step(2); T.at(3); T.sub(3); T.work(['cups = <s>4</s> 6', 'cups &gt; 5' + ARROW + '<b>6 &gt; 5</b>']); });
+        beatAt(20000, 'Step 3: is 6 greater than 5? <b>Yes</b>, so the condition is <b>true</b>.');
+        at(20700, () => { T.step(3); T.note(3, 'True'); T.work(['cups = <s>4</s> 6', 'cups &gt; 5' + ARROW + '6 &gt; 5' + ARROW + '<b>True</b>']); });
+        beatAt(25000, 'Step 4: true runs the if block, and the else block is skipped.');
+        at(25700, () => { T.step(4); T.at(4); T.skip([5, 6]); T.out('Great selling!'); });
+        beatAt(30000, 'Always use the value the variable holds when Python <b>reaches</b> the if line.');
+    }
+},
+{
+    title: 'Your turn: <span>trace it</span>',
+    dur: 25500,
+    run() {
+        const T = tracer(['temp = <span class="nm">40</span>', '', '<span class="kw">if</span> <span class="vr" data-v="40">temp</span> &gt; <span class="nm">37</span>:', '    ' + pr('Too hot!'), '<span class="kw">else</span>:', '    ' + pr('All good.')]);
+        beatAt(0, 'Your turn. Pause the video, trace this code and write down your working out.');
+        T.showAll(400); at(400, () => T.head('Your turn', 'Pause and trace'));
+        beatAt(6500, 'Steps 1 and 2: temp holds <b>40</b>, so the condition becomes <b>40 &gt; 37</b>.');
+        at(7200, () => { T.step(2); T.at(0); T.at(2); T.sub(2); T.work(['temp = 40', 'temp &gt; 37' + ARROW + '<b>40 &gt; 37</b>']); });
+        beatAt(11500, 'Step 3: is 40 greater than 37? <b>Yes</b>, so the condition is <b>true</b>.');
+        at(12200, () => { T.step(3); T.note(2, 'True'); T.work(['temp = 40', 'temp &gt; 37' + ARROW + '40 &gt; 37' + ARROW + '<b>True</b>']); });
+        beatAt(16500, 'Step 4: the if block runs and the else block is skipped. The output is <b>Too hot!</b>');
+        at(17200, () => { T.step(4); T.at(3); T.skip([4, 5]); T.out('Too hot!'); });
+        beatAt(21500, 'How did you go? Check your working out matches.');
+    }
+},
+{
+    title: 'Show your <span>working out</span>',
+    dur: 16000,
+    run() {
+        const c = el('div', 'center');
+        const row = el('div', 'mcards');
+        const cards = MSTEPS.map((t, i) => { const k = el('div', 'mcard rev hide', `<div class="mn">${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+        c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'In the worksheet, trace each program with your pen, just like I did.');
+        cards.forEach((k, i) => at(500 + i * 300, () => show(k)));
+        beatAt(5000, 'Write the value above the variable, then show whether the condition is <b>true</b> or <b>false</b>.');
+        beatAt(10500, 'Finally, write down exactly what the program will <b>print</b>.');
+    }
+}
+];
+
+
+/* ---------- player ---------- */
+const dots = $('#dots');
+scenes.forEach((_, i) => { const d = el('button'); d.setAttribute('aria-label', 'Scene ' + (i + 1)); d.onclick = () => go(i); dots.appendChild(d); });
+
+const stepLbl = $('#steplbl');
+const dur = () => scenes[idx].dur;
+const beatEnd = b => (b + 1 < beats.length ? beats[b + 1] : dur());
+function label() { stepLbl.textContent = `Step ${beat + 1} of ${beats.length}`; }
+
+function build(i) {
+    clearTimers();
+    stopInteractive();
+    const ni = Math.max(0, Math.min(scenes.length - 1, i));
+    if (ni !== idx) { saveInk(); idx = ni; loadInk(); }
+    events = []; beats = [];
+    const sc = scenes[idx];
+    content.innerHTML = ''; caption.innerHTML = '';
+    titleEl.innerHTML = sc.title;
+    counter.innerHTML = `<b>${idx + 1}</b> / ${scenes.length}`;
+    [...dots.children].forEach((d, j) => d.classList.toggle('cur', j === idx));
+    sc.run();
+    beats = [...new Set(beats)].sort((a, b) => a - b);
+}
+
+function jumpTo(to) {
+    stage.classList.add('instant');
+    events.filter(e => !e.done && e.t < to).sort((a, b) => a.t - b.t).forEach(e => { e.done = true; e.fn(); });
+    void stage.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('instant')));
+}
+
+function setProgress(from, to) {
+    progress.style.transition = 'none';
+    progress.style.width = (from / dur() * 100) + '%';
+    void progress.offsetWidth;
+    progress.style.transition = `width ${Math.max(0, to - from)}ms linear`;
+    progress.style.width = (to / dur() * 100) + '%';
+}
+
+function play(from, to, onEnd) {
+    clearTimers();
+    segFrom = from; segTo = to; segStart = performance.now();
+    events.filter(e => !e.done && e.t >= from && e.t < to)
+        .forEach(e => timers.push(setTimeout(() => { e.done = true; e.fn(); }, e.t - from)));
+    beats.forEach((bt, k) => { if (bt > from && bt < to) timers.push(setTimeout(() => { beat = k; label(); }, bt - from)); });
+    if (onEnd) timers.push(setTimeout(onEnd, to - from));
+    setProgress(from, to);
+}
+
+function now() { return Math.min(segTo, segFrom + performance.now() - segStart); }
+
+function startBeat(b) {
+    beat = b; label();
+    jumpTo(beats[b]);
+    if (autoplay) play(beats[b], dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    else play(beats[b], beatEnd(b));
+}
+
+function go(i, b = 0) {
+    build(i);
+    startBeat(b === 'last' ? beats.length - 1 : b);
+}
+
+function next() {
+    if (autoplay) { if (idx < scenes.length - 1) go(idx + 1); return; }
+    clearTimers();
+    if (beat < beats.length - 1) { jumpTo(beatEnd(beat)); startBeat(beat + 1); }
+    else if (idx < scenes.length - 1) go(idx + 1);
+    else { jumpTo(dur()); setProgress(dur(), dur()); }
+}
+
+function back() {
+    if (autoplay) { go(idx - 1); return; }
+    if (beat > 0) go(idx, beat - 1);
+    else if (idx > 0) go(idx - 1, 'last');
+    else go(0);
+}
+
+function toggleAuto() {
+    autoplay = !autoplay;
+    autoBtn.querySelector('.bl').textContent = 'Autoplay: ' + (autoplay ? 'On' : 'Off');
+    const cur = now();
+    clearTimers();
+    if (autoplay) {
+        play(cur, dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    } else {
+        let b = 0; beats.forEach((bt, k) => { if (bt <= cur) b = k; });
+        beat = b; label();
+        jumpTo(beatEnd(b));
+        setProgress(beatEnd(b), beatEnd(b));
+    }
+}
+
+const autoBtn = $('#auto');
+$('#next').onclick = next;
+$('#back').onclick = back;
+$('#replay').onclick = () => go(idx);
+autoBtn.onclick = toggleAuto;
+const typing = e => e.target && e.target.tagName === 'INPUT';
+document.addEventListener('keydown', e => {
+    if (typing(e)) return;
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') back();
+    if (e.key === 'r' || e.key === 'R') go(idx);
+    if (e.key === ' ') { e.preventDefault(); toggleAuto(); }
+});
+
+/* ---------- pen and eraser ---------- */
+const ink = $('#ink'), ctx = ink.getContext('2d'), penBtn = $('#pen'), eraserBtn = $('#eraser');
+let tool = null, penColour = '#ea008a', drawing = false, last = null, inkMarked = false, scaleK = 1, exporting = false;
+const inkStore = {};
+const isTyping = e => e.target && e.target.tagName === 'INPUT';
+ctx.scale(2, 2); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+function setTool(t) {
+    tool = t;
+    ink.classList.toggle('active', !!t);
+    ink.classList.toggle('erase', t === 'eraser');
+    penBtn.classList.toggle('on', t === 'pen'); penBtn.setAttribute('aria-pressed', t === 'pen');
+    eraserBtn.classList.toggle('on', t === 'eraser'); eraserBtn.setAttribute('aria-pressed', t === 'eraser');
+}
+function clearInk() { ctx.clearRect(0, 0, 1280, 720); inkMarked = false; }
+function saveInk() {
+    if (!inkMarked) { delete inkStore[idx]; return; }
+    const c = document.createElement('canvas'); c.width = ink.width; c.height = ink.height;
+    c.getContext('2d').drawImage(ink, 0, 0);
+    inkStore[idx] = c;
+}
+function loadInk() {
+    clearInk();
+    const c = inkStore[idx]; if (!c) return;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(c, 0, 0); ctx.restore();
+    inkMarked = true;
+}
+function brush() {
+    const er = tool === 'eraser';
+    ctx.globalCompositeOperation = er ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = ctx.fillStyle = er ? '#000' : penColour;
+    ctx.lineWidth = er ? 26 / scaleK : 5;
+}
+function pt(e) { const r = ink.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 1280, y: (e.clientY - r.top) / r.height * 720 }; }
+ink.addEventListener('pointerdown', e => {
+    if (!tool) return;
+    drawing = true; last = pt(e); ink.setPointerCapture(e.pointerId); brush();
+    if (tool === 'pen') inkMarked = true;
+    ctx.beginPath(); ctx.arc(last.x, last.y, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill();
+});
+ink.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    const p = pt(e), mid = { x: (last.x + p.x) / 2, y: (last.y + p.y) / 2 };
+    ctx.beginPath(); ctx.moveTo(last.midX ?? last.x, last.midY ?? last.y); ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y); ctx.stroke();
+    last = { x: p.x, y: p.y, midX: mid.x, midY: mid.y };
+});
+['pointerup', 'pointercancel'].forEach(t => ink.addEventListener(t, () => {
+    if (drawing && last && last.midX !== undefined) { ctx.beginPath(); ctx.moveTo(last.midX, last.midY); ctx.lineTo(last.x, last.y); ctx.stroke(); }
+    drawing = false; ctx.globalCompositeOperation = 'source-over';
+}));
+penBtn.onclick = () => setTool(tool === 'pen' ? null : 'pen');
+eraserBtn.onclick = () => setTool(tool === 'eraser' ? null : 'eraser');
+$('#clear').onclick = clearInk;
+document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
+    penColour = b.dataset.c; setTool('pen');
+    document.querySelectorAll('.swatch').forEach(x => x.classList.toggle('cur', x === b));
+});
+
+/* ---------- hide UI ---------- */
+function setUI(hidden) { document.body.classList.toggle('noui', hidden); if (document.activeElement) document.activeElement.blur(); fit(); }
+$('#hideui').onclick = () => setUI(true);
+$('#showui').onclick = () => setUI(false);
+
+/* ---------- subtitles ---------- */
+const subsBtn = $('#subs');
+function toggleSubs() {
+    const off = document.body.classList.toggle('nosubs');
+    subsBtn.querySelector('.bl').textContent = 'Subtitles: ' + (off ? 'Off' : 'On');
+    subsBtn.setAttribute('aria-pressed', !off);
+    subsBtn.blur();
+}
+subsBtn.onclick = toggleSubs;
+
+
+/* ---------- floating timer ---------- */
+const ftEl = $('#ftimer'), ftV = $('#ftv'), ftF = $('#ftf'), ftStart = $('#ftstart'), ftBtn = $('#timerbtn');
+const FT = { total: 60, left: 60, iv: null, end: 0 };
+const ftFmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+function ftDraw() { ftV.textContent = ftFmt(Math.ceil(FT.left)); ftF.style.strokeDashoffset = (1 - FT.left / FT.total).toFixed(4); }
+function ftStop() { clearInterval(FT.iv); FT.iv = null; ftStart.textContent = 'Start'; }
+function ftBeep() {
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [0, .35, .7].forEach(t => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ac.destination);
+            g.gain.setValueAtTime(.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, ac.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + t + .25);
+            o.start(ac.currentTime + t); o.stop(ac.currentTime + t + .3); });
+    } catch (e) {}
+}
+function ftTick() {
+    FT.left = Math.max(0, (FT.end - performance.now()) / 1000);
+    ftDraw();
+    if (FT.left <= 0) { ftStop(); ftEl.classList.add('done'); ftBeep(); }
+}
+function ftSet(sec) { ftStop(); ftEl.classList.remove('done'); FT.total = FT.left = sec; ftDraw(); }
+function ftToggleRun() {
+    if (FT.iv) { ftTick(); ftStop(); return; }
+    if (FT.left <= 0) ftSet(FT.total);
+    ftEl.classList.remove('done');
+    FT.end = performance.now() + FT.left * 1000;
+    FT.iv = setInterval(ftTick, 200); ftStart.textContent = 'Pause';
+}
+function ftAdj(d) {
+    const nl = Math.max(10, Math.round(FT.left) + d);
+    const diff = nl - FT.left;
+    FT.left = nl; FT.total = Math.max(nl, FT.total + d, 10);
+    if (FT.iv) FT.end += diff * 1000;
+    ftEl.classList.remove('done'); ftDraw();
+}
+function ftShow(on) {
+    ftEl.hidden = !on; ftBtn.setAttribute('aria-pressed', on); ftBtn.classList.toggle('on', on);
+    if (!on) ftStop();
+}
+ftEl.querySelectorAll('[data-set]').forEach(b => b.onclick = () => ftSet(+b.dataset.set));
+ftEl.querySelectorAll('[data-adj]').forEach(b => b.onclick = () => ftAdj(+b.dataset.adj));
+ftStart.onclick = ftToggleRun;
+$('#ftreset').onclick = () => ftSet(FT.total);
+$('#ftclose').onclick = () => ftShow(false);
+$('#ftsize').onclick = () => { ftEl.classList.toggle('big'); ftClamp(); };
+ftBtn.onclick = () => ftShow(ftEl.hidden);
+ftEl.addEventListener('click', e => { if (e.target.closest('button')) e.target.closest('button').blur(); });
+function ftClamp() {
+    const r = ftEl.getBoundingClientRect();
+    ftEl.style.left = Math.max(0, Math.min(window.innerWidth - r.width, r.left)) + 'px';
+    ftEl.style.top = Math.max(0, Math.min(window.innerHeight - r.height, r.top)) + 'px';
+}
+(() => {
+    const h = $('#fth'); let dx = 0, dy = 0, drag = false;
+    h.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; drag = true; const r = ftEl.getBoundingClientRect(); dx = e.clientX - r.left; dy = e.clientY - r.top; h.setPointerCapture(e.pointerId); });
+    h.addEventListener('pointermove', e => { if (!drag) return; ftEl.style.left = (e.clientX - dx) + 'px'; ftEl.style.top = (e.clientY - dy) + 'px'; ftClamp(); });
+    ['pointerup', 'pointercancel'].forEach(t => h.addEventListener(t, () => drag = false));
+    window.addEventListener('resize', () => { if (!ftEl.hidden) ftClamp(); });
+})();
+ftDraw();
+
+/* ---------- export PDF ---------- */
+const printBox = $('#print');
+async function exportPDF() {
+    const keepIdx = idx, keepBeat = beat;
+    exporting = true;
+    printBox.innerHTML = '';
+    const imgs = [];
+    for (let i = 0; i < scenes.length; i++) {
+        build(i);
+        events.slice().sort((a, b) => a.t - b.t).forEach(e => { if (!e.done) { e.done = true; e.fn(); } });
+        progress.style.transition = 'none'; progress.style.width = '100%';
+        stage.querySelectorAll('input').forEach(n => n.setAttribute('value', n.value));
+        const page = stage.cloneNode(true);
+        page.removeAttribute('id'); page.removeAttribute('style'); page.classList.remove('instant');
+        page.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+        const cv = page.querySelector('canvas.ink');
+        if (inkMarked) { const img = new Image(); img.className = 'ink'; img.alt = ''; img.src = ink.toDataURL(); cv.replaceWith(img); imgs.push(img); }
+        else cv.remove();
+        printBox.appendChild(page);
+    }
+    exporting = false;
+    go(keepIdx, keepBeat);
+    await Promise.all(imgs.map(im => im.decode().catch(() => {})));
+    window.print();
+}
+$('#pdf').onclick = exportPDF;
+window.addEventListener('afterprint', () => { printBox.innerHTML = ''; });
+
+document.addEventListener('keydown', e => {
+    if (isTyping(e)) return;
+    if (e.key === 'p' || e.key === 'P') setTool(tool === 'pen' ? null : 'pen');
+    if (e.key === 'e' || e.key === 'E') setTool(tool === 'eraser' ? null : 'eraser');
+    if (e.key === 'c' || e.key === 'C') clearInk();
+    if (e.key === 's' || e.key === 'S') toggleSubs();
+    if (e.key === 't' || e.key === 'T') ftShow(ftEl.hidden);
+    if (e.key === 'u' || e.key === 'U') setUI(!document.body.classList.contains('noui'));
+    if (e.key === 'Escape') setTool(null);
+});
+
+const controlsEl = document.querySelector('.controls');
+function fit() {
+    const st = $('#stage'), noui = document.body.classList.contains('noui');
+    const vw = window.innerWidth - (noui ? 0 : 40), vh = window.innerHeight - (noui ? 0 : controlsEl.offsetHeight + 20);
+    const k = Math.min(vw / 1280, vh / 720);
+    scaleK = k;
+    st.style.transform = `scale(${k})`;
+    st.style.margin = `${(720 * k - 720) / 2}px ${(1280 * k - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); go(0); });
+</script>
+
+</body>
+</html>
