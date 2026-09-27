@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finding the variables</title>
+<title>Thinking like a programmer</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
     :root {
@@ -202,9 +202,9 @@
     .jm { width: 440px; }
     .jmr { display: flex; align-items: center; gap: 18px; padding: 13px 0; border-bottom: 2px solid var(--light-grey); transition: opacity .35s, transform .45s var(--ease); }
     .jmr:first-child { border-top: 2px solid var(--light-grey); }
-    .jmb { width: 64px; height: 50px; flex-shrink: 0; border: 3px solid var(--navy); border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    .jmb { width: 64px; min-width: 64px; height: 50px; flex-shrink: 0; border: 3px solid var(--navy); border-radius: 6px; display: flex; align-items: center; justify-content: center;
         font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; transition: background-color .35s, border-color .35s, color .35s; }
-    .jmb.s { font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .jmb.s { width: 76px; white-space: nowrap; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
     .jmt { font-size: 23px; font-weight: 600; line-height: 1.3; }
     .jm.focus .jmr { opacity: .3; }
     .jm.focus .jmr.hl { opacity: 1; }
@@ -233,41 +233,7 @@
     .vbox.bump .vnum { animation: bump .35s var(--ease); }
     @keyframes bump { 40% { transform: scale(1.12); } }
     .vnum { transform-origin: left center; }
-    /* variables deck */
-    .qrow { display: flex; gap: 22px; }
-    .qc { width: 258px; border: 3px solid var(--navy); border-radius: 8px; padding: 18px 24px 22px; transition: border-color .35s, opacity .45s var(--ease), transform .45s var(--ease); }
-    .qc .q { font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 900; color: var(--pink); line-height: 1; }
-    .qc .t { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; line-height: 1.05; margin-top: 8px; }
-    .rcards { display: flex; gap: 30px; }
-    .rcards .ecard { width: 354px; }
-    .rcards .etxt { font-size: 44px; }
-    .vt { width: 1110px; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; transition: border-color .35s; }
-    .vt.em { border-color: var(--pink); }
-    .vr { display: grid; grid-template-columns: 290px 210px 240px 1fr; }
-    .vh > div { background: var(--navy); color: var(--white); padding: 16px 22px; font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
-    .vh > div + div { border-left: 2px solid rgba(255,255,255,.18); }
-    .vb > div { padding: 18px 22px; font-size: 25px; font-weight: 600; line-height: 1.3; border-top: 2px solid var(--light-grey); display: flex; align-items: center; transition: background-color .35s, color .35s; }
-    .vb > div + div { border-left: 2px solid var(--light-grey); }
-    .vb .nm { font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace; color: var(--pink); font-weight: 700; }
-    .vb .cst.on { background: rgba(234,0,138,.12); color: var(--pink); font-weight: 800; }
-    .vbox.xl { width: 380px; padding: 16px 34px 18px; }
-    .vbox.xl .vname { font-size: 30px; }
-    .vbox.xl .vnum { font-size: 150px; line-height: 1; }
-    .vcol.sm { gap: 16px; }
-    .vcol.sm .vbox { padding: 8px 26px 10px; transition: border-color .35s, opacity .45s var(--ease), transform .45s var(--ease); }
-    .vcol.sm .vnum { font-size: 58px; }
-    .vbox .vname { display: flex; justify-content: space-between; align-items: baseline; }
-    .vtag { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pink); opacity: 0; transition: opacity .35s; }
-    .vbox.em { border-color: var(--pink); }
-    .vbox.em .vtag { opacity: 1; }
-    .kcards { display: flex; gap: 32px; }
-    .kcard { width: 480px; border: 3px solid var(--navy); border-radius: 8px; padding: 24px 32px 30px; }
-    .kcard.pink { border-color: var(--pink); }
-    .kcard.pink .dlbl, .kcard.pink h3 { color: var(--pink); }
-    .kcard h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 58px; font-weight: 900; line-height: 1; margin: 8px 0 18px; }
-    .chips { display: flex; gap: 12px; }
-    .chip { font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 26px; font-weight: 700; border: 3px solid var(--navy); border-radius: 6px; padding: 4px 16px; }
-    .kcard.pink .chip { border-color: var(--pink); color: var(--pink); }
+
 </style>
 </head>
 <body>
@@ -340,6 +306,17 @@ function show(e) { e.classList.remove('hide'); }
 function say(html) { caption.innerHTML = '<span>' + html + '</span>'; caption.classList.remove('in'); void caption.offsetWidth; caption.classList.add('in'); }
 function stopInteractive() { ptimers.forEach(clearTimeout); ptimers = []; cleanups.forEach(f => f()); cleanups = []; }
 
+/* ---------- shared visuals ---------- */
+function stepsRow() {
+    const row = el('div', 'steps'), items = [];
+    ['Find the events', 'Find the actions', 'Pair them into jobs'].forEach((t, i) => {
+        if (i) { const a = el('div', 'px2 rev hide', '&rarr;'); row.appendChild(a); items.push(a); }
+        const s = el('div', 'stepc rev hide', `<div class="n">${i + 1}</div><div class="t">${t}</div>`);
+        row.appendChild(s); items.push(s);
+    });
+    return { row, items };
+}
+
 const FONT = {
     '0': ['.##.', '#..#', '#..#', '#..#', '.##.'], '1': ['.#.', '##.', '.#.', '.#.', '###'],
     '2': ['###.', '...#', '.##.', '#...', '####'], '3': ['###.', '...#', '.##.', '...#', '###.'],
@@ -392,219 +369,267 @@ function vbox(name, val, pink) {
 
 const K = s => `<span class="kw">${s}</span>`, N = s => `<span class="num">${s}</span>`, S = s => `<span class="str">${s}</span>`;
 
-
-function qRow() {
-    const row = el('div', 'qrow');
-    const items = ['What does it store?', 'What will I name it?', 'What is an example value?', 'Does it change?'].map(t => {
-        const q = el('div', 'qc rev hide', `<div class="q">?</div><div class="t">${t}</div>`); row.appendChild(q); return q;
-    });
-    return { row, items };
+/* ---------- scene builders ---------- */
+function openerScene(o) {
+    return { title: o.title, dur: o.dur, run() {
+        const c = el('div', 'center'), s = stepsRow();
+        c.appendChild(s.row); content.appendChild(c);
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        s.items.forEach((e, i) => at(o.reveal + i * 350, () => show(e)));
+    } };
 }
 
 function problemScene(o) {
     return { title: 'The <span>problem</span>', dur: o.dur, run() {
         const c = el('div', 'center'), w = el('div', 'pwrap');
         const p = el('p', 'problem rev hide', o.text);
-        w.appendChild(p); c.appendChild(w); content.appendChild(c);
-        const dws = [...p.querySelectorAll('.dw')];
-        beatAt(0, o.caps[0]); at(400, () => show(p));
-        beatAt(o.ts[0], o.caps[1]); dws.forEach((d, i) => at(o.ts[0] + 800 + i * 800, () => d.classList.add('on')));
-        if (o.caps[2]) beatAt(o.ts[1], o.caps[2]);
+        const reads = el('div', 'reads rev hide', '<span class="pill">Read 1</span><span class="pill">Read 2</span>');
+        w.append(p, reads); c.appendChild(w); content.appendChild(c);
+        const dws = [...p.querySelectorAll('.dw')], pills = reads.children, [t0, t1, t2] = o.ts;
+        beatAt(t0, o.caps[0]); at(t0 + 400, () => show(p)); at(t0 + 800, () => show(reads));
+        at(t0 + 1800, () => pills[0].classList.add('on')); at(t0 + 3200, () => pills[1].classList.add('on'));
+        beatAt(t1, o.caps[1]); dws.forEach((d, i) => at(t1 + 700 + i * 650, () => d.classList.add('on')));
+        beatAt(t2, o.caps[2]);
     } };
 }
 
-function rememberScene(o) {
-    return { title: 'Step 1 &middot; What to <span>remember</span>', dur: o.dur, run() {
-        const c = el('div', 'center'), row = el('div', 'rcards');
-        const cards = o.cards.map(([tag, t], i) => { const k = el('div', 'ecard rev hide' + (i === 2 ? ' pink' : ''), `<div class="dlbl">${tag}</div><div class="etxt">${t}</div>`); row.appendChild(k); return k; });
+function eventsScene(o) {
+    return { title: 'Step 1 &middot; Find the <span>events</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), parts = {};
+        if (o.def) { parts.def = el('div', 'def rev hide', 'An <b>event</b> is a trigger. It is something the program reacts to.'); c.appendChild(parts.def); }
+        const row = el('div', 'ecards');
+        o.events.forEach(([t, sub], i) => {
+            parts[i] = el('div', 'ecard rev hide' + (i % 2 ? ' pink' : ''), `<div class="dlbl">Event ${i + 1}</div><div class="etxt">${t}</div>${sub ? `<div class="esub">${sub}</div>` : ''}`);
+            row.appendChild(parts[i]);
+        });
         c.appendChild(row); content.appendChild(c);
         o.caps.forEach(([t, h]) => beatAt(t, h));
-        o.shows.forEach(([t, k]) => at(t, () => show(cards[k])));
+        o.shows.forEach(([t, k]) => at(t, () => show(parts[k])));
     } };
 }
 
-function tableScene(o) {
-    return { title: 'Step 2 &middot; Ask the four <span>questions</span>', dur: o.dur, run() {
+function actionsScene(o) {
+    return { title: 'Step 2 &middot; Find the <span>actions</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), row = el('div', 'acols'), parts = {}, cols = [];
+        let n = 0;
+        o.cols.forEach(([ev, acts], i) => {
+            const col = el('div', 'acol rev hide', `<div class="ahead"><div class="dlbl">When</div><div class="t">${ev}</div></div>`);
+            acts.forEach(a => { const it = el('div', 'aitem rev hide', `<div class="dlbl">Do this</div><div class="t">${a}</div>`); col.appendChild(it); parts['a' + n++] = it; });
+            parts['h' + i] = col; cols.push({ col, many: acts.length > 1 }); row.appendChild(col);
+        });
+        c.appendChild(row); content.appendChild(c);
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        o.shows.forEach(([t, k]) => at(t, () => k === 'em' ? cols.forEach(x => x.many && x.col.classList.add('em')) : show(parts[k])));
+    } };
+}
+
+function jobsScene(o) {
+    return { title: 'Step 3 &middot; Pair them into <span>jobs</span>', dur: o.dur, run() {
         const c = el('div', 'center');
-        const t = el('div', 'vt rev hide', '<div class="vr vh"><div>What it stores</div><div>Variable name</div><div>Example value</div><div>Does it change?</div></div>');
-        const rows = o.rows.map(([a, n, v, ch], i) => {
-            const r = el('div', 'vr vb rev hide', `<div>${a}</div><div class="nm">${n}</div><div>${v}</div><div class="${i === 2 ? 'cst' : ''}">${ch}</div>`);
+        const t = el('div', 'jt rev hide', '<div class="jr jh"><div class="c0">Job</div><div class="c1">When<span>the event</span></div><div class="c2">The program needs to do this<span>the action</span></div></div>');
+        const rows = o.rows.map(([ev, act, muted], i) => {
+            const r = el('div', 'jr jb rev hide', `<div class="c0">${i + 1}</div><div class="c1${muted ? ' muted' : ''}">${ev}</div><div class="c2">${act}</div>`);
             t.appendChild(r); return r;
         });
         c.appendChild(t); content.appendChild(c);
         o.caps.forEach(([tt, h]) => beatAt(tt, h));
-        o.shows.forEach(([tt, k]) => at(tt, () => {
-            if (k === 'h') show(t); else if (k === 'em') t.classList.add('em');
-            else if (k === 'cst') t.querySelector('.cst').classList.add('on'); else show(rows[k]);
-        }));
+        o.shows.forEach(([tt, k]) => at(tt, () => k === 'h' ? show(t) : k === 'em' ? t.classList.add('em') : show(rows[k])));
     } };
 }
 
-function watchScene(o) {
-    return { title: 'Watching the <span>variables</span>', dur: o.dur, run() {
-        const row = el('div', 'testrow'), vc = el('div', 'vcol sm');
-        const [n1, n2, n3] = o.names;
-        const a = vbox(n1, '0'), b = vbox(n2, '&ndash;', true), k = vbox(n3, o.constant);
-        k.querySelector('.vname').insertAdjacentHTML('beforeend', '<span class="vtag">Constant</span>');
-        let n = 0;
-        const dev = device({
-            onB: o.shake ? null : () => { n++; a.set(n); },
-            onShake: o.shake ? () => { n++; a.set(n); } : null,
-            onA() { const r = o.calc(n); b.set(r); dev.scroll(r); }
+function codeScene(o) {
+    return { title: 'From jobs to <span>code</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), w = el('div', 'codewrap');
+        const code = el('div', 'code rev hide'), jm = el('div', 'jm');
+        const lines = o.lines.map(([h, g]) => { const l = el('div', 'cl' + (h ? '' : ' blank'), h); l.g = g; code.appendChild(l); return l; });
+        const jrows = o.jobs.map(([g, t]) => {
+            const r = el('div', 'jmr rev hide', `<div class="jmb${g === 's' ? ' s' : ''}">${g === 's' ? 'Set up' : g}</div><div class="jmt">${t}</div>`);
+            r.g = g; jm.appendChild(r); return r;
         });
-        dev.col.classList.add('rev', 'hide');
-        vc.append(a, b, k); row.append(dev.col, vc);
-        const c = el('div', 'center'); c.appendChild(row); content.appendChild(c);
-        at(400, () => show(dev.col)); [a, b, k].forEach((x, i) => at(700 + i * 200, () => show(x)));
+        w.append(code, jm); c.appendChild(w); content.appendChild(c);
+        const focus = g => {
+            code.classList.toggle('focus', g !== null); jm.classList.toggle('focus', g !== null);
+            lines.forEach(l => l.classList.toggle('hl', l.g === g)); jrows.forEach(r => r.classList.toggle('hl', r.g === g));
+        };
         o.caps.forEach(([t, h]) => beatAt(t, h));
-        o.events.forEach(t => at(t, () => o.shake ? dev.shake() : dev.tap('b')));
-        at(o.pressA, () => dev.tap('a'));
-        at(o.em, () => k.classList.add('em'));
+        at(500, () => show(code));
+        jrows.forEach((r, i) => at(900 + i * 200, () => show(r)));
+        o.focus.forEach(([t, g]) => at(t, () => focus(g)));
     } };
 }
 
 /* ---------- scenes ---------- */
 const scenes = [
-{
-    title: 'Finding the <span>variables</span>',
-    dur: 14500,
-    run() {
-        const c = el('div', 'center'), box = vbox('cups', '0');
-        box.classList.add('xl'); c.appendChild(box); content.appendChild(c);
-        beatAt(0, 'Last time, I broke problems into <b>jobs</b>.');
-        at(500, () => show(box));
-        beatAt(4000, 'This time I ask a different question: what does the program need to <b>remember</b>?');
-        [5200, 6100, 7000].forEach((t, i) => at(t, () => box.set(i + 1)));
-        beatAt(10000, 'I will use the same two problems, so you can focus on the new skill.');
-    }
-},
+openerScene({
+    title: 'Thinking like a <span>programmer</span>', dur: 15500, reveal: 5000,
+    caps: [[0, 'Before I write any code, I plan what my program needs to do.'],
+        [4500, 'I break the problem into small <b>jobs</b>, using three steps.'],
+        [10000, 'I will show you exactly how I work it out, one step at a time.']]
+}),
 problemScene({
-    dur: 15500, ts: [4000, 11000],
-    text: 'At the school fete, you are running the lemonade stall. You want the micro:bit to count each <span class="dw">cup</span> you sell. You will press button B each time you sell a cup. When you press button A, it should show how much <span class="dw">money</span> you have made. Each cup costs <span class="dw">$2</span>.',
-    caps: ['You have seen the lemonade stall before.',
-        'This time I am not looking for jobs. I am looking for anything the program has to <b>remember or work out</b>.',
-        'Things to count, amounts to work out, and fixed numbers are all clues.']
+    dur: 16000, ts: [0, 5000, 11000],
+    text: 'At the school fete, you are running the lemonade stall. You want the micro:bit to <span class="dw">count</span> each cup you <span class="dw">sell</span>. You will <span class="dw">press</span> button B each time you sell a cup. When you <span class="dw">press</span> button A, it should <span class="dw">show</span> how much money you have <span class="dw">made</span>. Each cup costs $2.',
+    caps: ['Here is the problem. Before I write any code, I <b>read it twice</b>.',
+        'Then I look for the <b>doing words</b>.',
+        'Each doing word is a clue about what my program has to do.']
+}),
+eventsScene({
+    dur: 23500, def: true,
+    events: [['Button B is pressed', 'A cup is sold'], ['Button A is pressed', 'Time to check the money']],
+    caps: [[0, 'Step 1. I ask myself: <b>what makes something happen?</b>'],
+        [4500, 'An <b>event</b> is a trigger. It is something that happens that the program reacts to.'],
+        [10000, 'When I sell a cup, I press <b>button B</b>. That is my first event.'],
+        [15000, 'Pressing <b>button A</b> is my second event.'],
+        [19000, 'Two triggers, so <b>two events</b>.']],
+    shows: [[5000, 'def'], [10500, 0], [15500, 1]]
+}),
+actionsScene({
+    dur: 24500,
+    cols: [['Button B is pressed', ['Add one to the number of cups']], ['Button A is pressed', ['Work out the money: cups &times; $2', 'Show the money on the display']]],
+    caps: [[0, 'Step 2. For each event, I ask: <b>what should the program do?</b>'],
+        [5000, 'When button B is pressed, <b>add one</b> to the number of cups.'],
+        [10000, 'When button A is pressed, <b>work out the money</b>. That is the cups times $2.'],
+        [15500, 'Then <b>show the money</b> on the display.'],
+        [19500, 'Notice that one event can lead to <b>more than one action</b>.']],
+    shows: [[500, 'h0'], [800, 'h1'], [5500, 'a0'], [10600, 'a1'], [16000, 'a2'], [20000, 'em']]
+}),
+jobsScene({
+    dur: 27500,
+    rows: [['Button B is pressed', 'Add one to the number of cups'], ['Button A is pressed', 'Work out the money (cups &times; $2)'], ['Straight after job 2', 'Show the money on the display', true]],
+    caps: [[0, 'Step 3. I pair each event with its action. Each pair is one <b>job</b>.'],
+        [4800, '<b>Job 1.</b> When button B is pressed, add one to the number of cups.'],
+        [9500, '<b>Job 2.</b> When button A is pressed, work out the money.'],
+        [14000, '<b>Job 3.</b> Straight after, show the money on the display.'],
+        [18000, 'This is the same table you will fill in for your step counter.'],
+        [22500, 'That is the whole program, planned before I wrote a single line of code.']],
+    shows: [[500, 'h'], [5300, 0], [10000, 1], [14500, 2], [18500, 'em']]
+}),
+codeScene({
+    dur: 27000,
+    lines: [[`${K('from')} microbit ${K('import')} *`, 's'], [`cups = ${N(0)}`, 's'], ['', null], [`${K('while')} True:`, null],
+        [`    ${K('if')} button_b.was_pressed():`, 1], [`        cups = cups + ${N(1)}`, 1], ['', null],
+        [`    ${K('if')} button_a.was_pressed():`, 2], [`        money = cups * ${N(2)}`, 2], [`        display.scroll(money)`, 3]],
+    jobs: [['s', 'Start with 0 cups'], [1, 'B pressed: add one to the cups'], [2, 'A pressed: work out the money'], [3, 'Show the money']],
+    caps: [[0, 'Once the jobs are clear, the code almost writes itself.'],
+        [4500, 'Before any jobs, the program <b>starts the count at 0</b>.'],
+        [9000, '<b>Job 1.</b> When button B is pressed, add one to the cups.'],
+        [13500, '<b>Job 2.</b> When button A is pressed, work out the money.'],
+        [18000, '<b>Job 3.</b> Scroll the money across the display.'],
+        [22000, 'Don\'t worry about the exact words yet. Just notice that <b>each job became a few lines</b>.']],
+    focus: [[5000, 's'], [9500, 1], [14000, 2], [18500, 3], [22500, null]]
 }),
 {
-    title: 'What is a <span>variable</span>?',
-    dur: 23000,
+    title: 'Testing the <span>program</span>',
+    dur: 22500,
     run() {
-        const c = el('div', 'center');
-        const def = el('div', 'def rev hide', 'A <b>variable</b> is something the program needs to remember or work out.');
-        const q = qRow();
-        c.append(def, q.row); content.appendChild(c);
-        beatAt(0, 'A <b>variable</b> is something the program needs to remember or work out.');
-        at(500, () => show(def));
-        beatAt(5000, 'For each variable I find, I ask <b>four questions</b>. What does it store?');
-        at(5600, () => show(q.items[0]));
-        beatAt(9000, 'What will I <b>name</b> it?'); at(9400, () => show(q.items[1]));
-        beatAt(12000, 'What is an <b>example value</b>?'); at(12400, () => show(q.items[2]));
-        beatAt(15000, 'And does it <b>change</b>?'); at(15400, () => show(q.items[3]));
-        beatAt(18500, 'These four questions are the four columns of your variables table.');
+        const row = el('div', 'testrow'), vc = el('div', 'vcol');
+        const cups = vbox('cups', '0'), money = vbox('money', '&ndash;', true);
+        let n = 0;
+        const dev = device({
+            onB() { n++; cups.set(n); },
+            onA() { const m = n * 2; money.set(m); dev.scroll(String(m)); }
+        });
+        dev.col.classList.add('rev', 'hide');
+        vc.append(cups, money); row.append(dev.col, vc);
+        const c = el('div', 'center'); c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Now I test it. Observe what happens when I press <b>button B</b> three times.');
+        at(400, () => show(dev.col)); at(700, () => show(cups)); at(900, () => show(money));
+        [2000, 3000, 4000].forEach(t => at(t, () => dev.tap('b')));
+        beatAt(6000, 'The display stays blank, but the program <b>remembers</b> every cup sold.');
+        beatAt(10500, 'Now I press <b>button A</b>. Three cups times $2 is <b>$6</b>.');
+        at(11500, () => dev.tap('a'));
+        beatAt(16500, 'Anything a program remembers or works out is a <b>variable</b>. Finding them is the next skill you will learn.');
     }
 },
-rememberScene({
-    dur: 17500,
-    cards: [['Remember', 'The number of cups sold'], ['Work out', 'The money made'], ['Fixed number', 'The price of one cup']],
-    caps: [[0, 'Step 1. I ask: <b>what does the program remember or work out?</b>'],
-        [4500, 'It has to remember <b>the number of cups sold</b>.'],
-        [8500, 'It has to work out <b>the money made</b>.'],
-        [12500, 'And it needs <b>the price of one cup</b> to do that maths.']],
-    shows: [[5000, 0], [9000, 1], [13000, 2]]
+openerScene({
+    title: 'Let\'s do <span>one more</span>', dur: 8500, reveal: 3400,
+    caps: [[0, 'Let\'s try one more problem.'], [3000, 'Same <b>three steps</b>. A different problem.']]
 }),
-tableScene({
-    dur: 31000,
-    rows: [['Number of cups sold', 'cups', '0, then goes up', 'Yes, add one each sale'], ['Money made', 'money', '8', 'Yes, worked out when A is pressed'], ['Price of one cup', 'price', '2', 'No, it always stays $2']],
-    caps: [[0, 'Step 2. I ask the four questions for each one.'],
-        [4500, 'The <b>number of cups</b>. I name it cups. It starts at 0 and goes up by one with each sale.'],
-        [11000, 'The <b>money</b>. If I sold 4 cups, it would be 8. It is worked out when button A is pressed.'],
-        [17500, 'The <b>price</b>. It is 2, and it always stays 2.'],
-        [22000, 'Notice the last one. The price <b>never changes</b>.'],
-        [26500, 'This is the same table you will fill in for your step counter.']],
-    shows: [[500, 'h'], [5000, 0], [11500, 1], [18000, 2], [22500, 'cst'], [27000, 'em']]
-}),
-watchScene({
-    dur: 20500, names: ['cups', 'money', 'price'], constant: '2', calc: n => String(n * 2),
-    caps: [[0, 'Observe the three variables as I use the program.'],
-        [4500, 'Each time I press button B, <b>cups</b> changes.'],
-        [9500, 'When I press button A, <b>money</b> is worked out. Four cups times $2 is $8.'],
-        [15500, 'But <b>price</b> never changes. It stays at 2 the whole time.']],
-    events: [5200, 6000, 6800, 7600], pressA: 10500, em: 16000
-}),
-{
-    title: 'A special kind of <span>variable</span>',
-    dur: 19500,
-    run() {
-        const c = el('div', 'center'), row = el('div', 'kcards');
-        const v = el('div', 'kcard rev hide', '<div class="dlbl">Variables</div><h3>Can change</h3><div class="chips"><span class="chip">cups</span><span class="chip">money</span></div>');
-        const k = el('div', 'kcard pink rev hide', '<div class="dlbl">Constant</div><h3>Never changes</h3><div class="chips"><span class="chip">price</span></div>');
-        row.append(v, k); c.appendChild(row); content.appendChild(c);
-        beatAt(0, 'Cups and money can change, so they are <b>variables</b>.');
-        at(500, () => show(v));
-        beatAt(5000, 'The price is set once and never changes. A value like this is called a <b>constant</b>.');
-        at(5500, () => show(k));
-        beatAt(10500, 'We still store it, but it never gets updated.');
-        beatAt(15000, 'Spotting what changes and what stays the same is the real skill here.');
-    }
-},
-{
-    title: 'One <span>more</span>',
-    dur: 8500,
-    run() {
-        const c = el('div', 'center'), q = qRow();
-        c.appendChild(q.row); content.appendChild(c);
-        beatAt(0, 'Let\'s try one more.');
-        beatAt(2800, 'Same <b>four questions</b>. The star jumps problem.');
-        q.items.forEach((e, i) => at(3300 + i * 300, () => show(e)));
-    }
-},
 problemScene({
-    dur: 11000, ts: [3500],
-    text: 'In PE you are doing star jumps while holding a micro:bit. You want the micro:bit to count each star <span class="dw">jump</span>. When you press button A, it should show how much <span class="dw">energy</span> you have used. Each star jump uses about <span class="dw">0.2</span> calories.',
-    caps: ['Here is the star jumps problem again.', 'Again, I look for anything to <b>remember or work out</b>.']
+    dur: 14500, ts: [0, 4500, 10000],
+    text: 'In PE you are doing star jumps while holding a micro:bit. You want the micro:bit to <span class="dw">count</span> each star jump. When you <span class="dw">press</span> button A, it should <span class="dw">show</span> how much energy you have <span class="dw">used</span>. Each star jump uses about 0.2 calories.',
+    caps: ['Here is the new problem. First, I <b>read it twice</b>.',
+        'Then I find the <b>doing words</b>.',
+        'Now I am ready to find the events.']
 }),
-rememberScene({
-    dur: 15000,
-    cards: [['Remember', 'The number of star jumps'], ['Work out', 'The energy used'], ['Fixed number', 'The energy per jump']],
-    caps: [[0, 'Step 1. What does the program <b>remember or work out</b>?'],
-        [4000, 'The <b>number of star jumps</b>.'],
-        [7500, 'The <b>energy used</b>.'],
-        [11000, 'And the <b>energy per jump</b>, which is 0.2.']],
-    shows: [[4400, 0], [7900, 1], [11400, 2]]
+eventsScene({
+    dur: 19000, def: false,
+    events: [['The micro:bit is shaken', 'A star jump happens'], ['Button A is pressed', 'Time to check the energy']],
+    caps: [[0, 'Step 1. I ask: <b>what makes something happen?</b>'],
+        [4000, 'The micro:bit can feel each star jump with its <b>accelerometer</b>. Every jump gives it a shake.'],
+        [10000, 'Pressing <b>button A</b> is the second event.'],
+        [14000, 'Your step counter will use the accelerometer in the same way.']],
+    shows: [[4600, 0], [10500, 1]]
 }),
-tableScene({
-    dur: 23500,
-    rows: [['Number of star jumps', 'jumps', '0, then goes up', 'Yes, add one each jump'], ['Energy used', 'energy', '4', 'Yes, worked out when A is pressed'], ['Energy per jump', 'per_jump', '0.2', 'No, it always stays 0.2']],
-    caps: [[0, 'Step 2. The four questions again.'],
-        [3500, '<b>jumps</b> starts at 0 and goes up by one with each star jump.'],
-        [8500, '<b>energy</b> is worked out when button A is pressed. Twenty jumps would be 4.'],
-        [14000, '<b>per_jump</b> is 0.2, and it never changes.'],
-        [18500, 'Same pattern as before. The energy per jump is our <b>constant</b>.']],
-    shows: [[500, 'h'], [4000, 0], [9000, 1], [14500, 2], [19000, 'cst']]
+actionsScene({
+    dur: 18500,
+    cols: [['The micro:bit is shaken', ['Add one to the number of jumps']], ['Button A is pressed', ['Work out the energy: jumps &times; 0.2', 'Show the energy on the display']]],
+    caps: [[0, 'Step 2. For each event: <b>what should the program do?</b>'],
+        [4000, 'When it is shaken, <b>add one</b> to the number of jumps.'],
+        [8500, 'When button A is pressed, <b>work out the energy</b>. That is the jumps times 0.2.'],
+        [14000, 'Then <b>show the energy</b> on the display.']],
+    shows: [[500, 'h0'], [800, 'h1'], [4500, 'a0'], [9100, 'a1'], [14500, 'a2']]
 }),
-watchScene({
-    dur: 19500, names: ['jumps', 'energy', 'per_jump'], constant: '0.2', shake: true,
-    calc: n => (Math.round(n * 2) / 10).toFixed(1),
-    caps: [[0, 'Same again with the star jumps. Observe the three variables.'],
-        [4000, 'Each star jump changes <b>jumps</b>.'],
-        [9000, 'Pressing button A works out the <b>energy</b>. Five jumps times 0.2 is 1.0.'],
-        [15000, 'And <b>per_jump</b> stays at 0.2. It is the constant.']],
-    events: [4600, 5400, 6200, 7000, 7800], pressA: 10000, em: 15500
+jobsScene({
+    dur: 22000,
+    rows: [['The micro:bit is shaken', 'Add one to the number of jumps'], ['Button A is pressed', 'Work out the energy (jumps &times; 0.2)'], ['Straight after job 2', 'Show the energy on the display', true]],
+    caps: [[0, 'Step 3. I pair each event with its action.'],
+        [4000, '<b>Job 1.</b> When the micro:bit is shaken, add one to the number of jumps.'],
+        [8500, '<b>Job 2.</b> When button A is pressed, work out the energy.'],
+        [12500, '<b>Job 3.</b> Straight after, show the energy on the display.'],
+        [16500, 'Same shape as the lemonade stall. <b>Count</b> something, then <b>work something out</b> from it.']],
+    shows: [[500, 'h'], [4500, 0], [9000, 1], [13000, 2], [17000, 'em']]
 }),
+codeScene({
+    dur: 21500,
+    lines: [[`${K('from')} microbit ${K('import')} *`, 's'], [`jumps = ${N(0)}`, 's'], ['', null], [`${K('while')} True:`, null],
+        [`    ${K('if')} accelerometer.was_gesture(${S('"shake"')}):`, 1], [`        jumps = jumps + ${N(1)}`, 1], ['', null],
+        [`    ${K('if')} button_a.was_pressed():`, 2], [`        energy = jumps * ${N(0.2)}`, 2], [`        display.scroll(energy)`, 3]],
+    jobs: [['s', 'Start with 0 jumps'], [1, 'Shaken: add one to the jumps'], [2, 'A pressed: work out the energy'], [3, 'Show the energy']],
+    caps: [[0, 'Here is the code. Watch how each job matches its lines.'],
+        [4500, '<b>Job 1.</b> When the micro:bit is shaken, add one to the jumps.'],
+        [9000, '<b>Job 2.</b> When button A is pressed, work out the energy.'],
+        [13000, '<b>Job 3.</b> Scroll the energy across the display.'],
+        [17000, 'Each job became a few lines, just like before.']],
+    focus: [[5000, 1], [9500, 2], [13500, 3], [17500, null]]
+}),
+{
+    title: 'Testing the <span>program</span>',
+    dur: 16500,
+    run() {
+        const row = el('div', 'testrow'), vc = el('div', 'vcol');
+        const jumps = vbox('jumps', '0'), energy = vbox('energy', '&ndash;', true);
+        let n = 0;
+        const fmt = v => (Math.round(v * 10) / 10).toFixed(1);
+        const dev = device({
+            onShake() { n++; jumps.set(n); },
+            onA() { const e = fmt(n * 0.2); energy.set(e); dev.scroll(e); }
+        });
+        dev.col.classList.add('rev', 'hide');
+        vc.append(jumps, energy); row.append(dev.col, vc);
+        const c = el('div', 'center'); c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Time to test it. Observe what happens when I do <b>five star jumps</b>.');
+        at(400, () => show(dev.col)); at(700, () => show(jumps)); at(900, () => show(energy));
+        [1600, 2500, 3400, 4300, 5200].forEach(t => at(t, () => dev.shake()));
+        beatAt(6500, 'Now I press <b>button A</b>. Five jumps times 0.2 is <b>1.0</b>.');
+        at(7400, () => dev.tap('a'));
+        beatAt(12000, 'The program does exactly what the jobs said it should.');
+    }
+},
 {
     title: 'Your <span>turn</span>',
-    dur: 19500,
+    dur: 20500,
     run() {
         const c = el('div', 'center');
-        const task = el('div', 'task rev hide', '<div class="dlbl">Your task</div><div class="t">The step counter</div><p>Find everything the program has to remember or work out.</p>');
-        const q = qRow();
-        c.append(task, q.row); content.appendChild(c);
-        beatAt(0, 'Now it is your turn. Find the variables in the <b>step counter</b>.');
+        const task = el('div', 'task rev hide', '<div class="dlbl">Your task</div><div class="t">The step counter</div><p>Walk from Eunice Plaza to the main entrance of the S&amp;T building.</p>');
+        const s = stepsRow();
+        c.append(task, s.row); content.appendChild(c);
+        beatAt(0, 'Now it is your turn to plan the <b>step counter</b>.');
         at(400, () => show(task));
-        beatAt(4500, 'Look for anything the program has to <b>remember or work out</b>.');
-        beatAt(8500, 'Then ask the <b>four questions</b> for each one.');
-        q.items.forEach((e, i) => at(9000 + i * 400, () => show(e)));
-        beatAt(14500, 'Fill in <b>every row</b> of your variables table.');
+        beatAt(4500, 'Read the problem twice and look for the <b>doing words</b>.');
+        beatAt(9000, 'Then <b>find the events</b>, <b>find the actions</b>, and <b>pair them into jobs</b>.');
+        s.items.forEach((e, i) => at(9500 + i * 450, () => show(e)));
+        beatAt(15500, 'Fill in <b>every row</b> of your jobs table before you start coding.');
     }
 }
 ];
