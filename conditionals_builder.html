@@ -4,341 +4,287 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Build a conditional statement</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --navy:#1b1f45; --pink:#ea008a; --paper:#f4f4f1; --line:rgba(27,31,69,0.12);
-    --teal:#1f8a70; --blue:#2f3aa0; --green:#1f8a45;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{min-height:100%;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--navy);-webkit-font-smoothing:antialiased;}
-  body{position:relative;}
-  body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;z-index:0;}
-  .stage{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:4vh 5vw 6vh;}
-  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--navy);padding-bottom:14px;flex-wrap:wrap;gap:12px;}
-  .step-label{display:inline-block;background:var(--navy);color:#fff;font-size:0.78rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;padding:7px 14px;}
-  .dots{display:flex;gap:8px;}
-  .dot{width:30px;height:8px;background:var(--line);}
-  .dot.active{background:var(--pink);}
-  .dot.done{background:var(--navy);}
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    [class] { font-variant-ligatures: none; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 30px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 27px; font-weight: 500; line-height: 1.35; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
 
-  .layout{display:flex;gap:clamp(20px,4vw,48px);align-items:flex-start;margin-top:26px;flex-wrap:wrap;}
-  .buildcol{flex:1 1 460px;min-width:300px;}
-  .side{flex:1 1 320px;min-width:280px;}
+    .next { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; transition: opacity .3s, transform .3s var(--ease); }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    .next:focus-visible, .opt:focus-visible, .chip:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
+    .pop-in { animation: capIn .45s var(--ease); }
 
-  .buildwrap{width:100%;max-width:600px;}
-  .build{position:relative;width:600px;height:470px;transform-origin:top left;}
-  .build svg{position:absolute;inset:0;width:600px;height:470px;z-index:0;}
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
 
-  .slot{position:absolute;z-index:1;display:flex;align-items:center;justify-content:center;text-align:center;
-        border:2px dashed #9a9aa6;background:#fff;font-weight:800;line-height:1.15;padding:4px 8px;cursor:pointer;}
-  .slot.empty{color:#b7b7c0;}
-  .slot.empty::after{content:"drop here";font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
-  .slot.fixed{cursor:default;}
-  .slot.filled{border-style:solid;}
-  .slot.dragover{border-color:var(--navy);background:rgba(27,31,69,0.07);}
-  .slot.target{outline:4px solid rgba(234,0,138,0.35);outline-offset:3px;}
-
-  /* slot shapes */
-  #condition{left:208px;top:82px;width:184px;height:54px;font-size:0.98rem;}
-  #condition.filled{background:#fff;color:var(--navy);border-color:transparent;}
-  #trueLabel,#falseLabel{width:92px;height:36px;font-size:0.9rem;}
-  #trueLabel{left:128px;top:204px;}
-  #falseLabel{left:380px;top:204px;}
-  #trueAction,#falseAction{width:172px;height:56px;font-size:0.92rem;}
-  #trueAction{left:88px;top:300px;}
-  #falseAction{left:340px;top:300px;}
-  .slot.filled.lab-true{background:var(--teal);color:#fff;border-color:transparent;}
-  .slot.filled.lab-false{background:var(--blue);color:#fff;border-color:transparent;}
-  .slot.filled.lab-other{background:var(--navy);color:#fff;border-color:transparent;}
-  .slot.filled.act{background:var(--navy);color:#fff;border-color:transparent;}
-  .slot.correct{box-shadow:inset 0 0 0 3px var(--green);}
-  .slot.wrong{box-shadow:inset 0 0 0 3px var(--pink);}
-
-  .bank{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:3px solid var(--navy);background:#fff;padding:16px 18px;margin-top:24px;min-height:74px;}
-  .bank-label{font-size:0.72rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--navy);opacity:0.55;margin-right:4px;}
-  .chip{font-size:1rem;font-weight:800;color:var(--navy);background:#f0f0f2;border:1.5px solid #c7c7cf;padding:11px 18px;cursor:grab;user-select:none;line-height:1;}
-  .chip.selected{outline:4px solid var(--navy);outline-offset:3px;}
-  .chip:focus-visible,.slot:focus-visible{outline:4px solid var(--pink);outline-offset:3px;}
-
-  .roundtag{font-size:0.78rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--pink);}
-  .roundnote{font-size:clamp(1.05rem,2.4vw,1.35rem);font-weight:700;line-height:1.4;margin:8px 0 22px;max-width:34ch;}
-
-  .panel-h{font-size:0.72rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--navy);opacity:0.55;margin-bottom:10px;}
-  .statements{list-style:none;counter-reset:st;border-top:2px solid var(--navy);}
-  .statements li{counter-increment:st;position:relative;padding:16px 14px 16px 52px;border-bottom:1px solid var(--line);font-size:clamp(1rem,2.1vw,1.25rem);line-height:1.4;transition:background .25s ease;}
-  .statements li::before{content:counter(st,decimal-leading-zero);position:absolute;left:14px;top:16px;font-size:1.1rem;font-weight:800;color:var(--pink);}
-  .statements li strong{font-weight:800;}
-  .statements li.active{background:rgba(234,0,138,0.10);}
-  .statements li.locked{background:rgba(31,138,69,0.12);}
-  .statements li.locked::before{color:var(--green);content:"\2713";}
-  .statements li.pulse{animation:pulse .6s ease;}
-  @keyframes pulse{0%{background:rgba(234,0,138,0.28);}100%{background:rgba(234,0,138,0.10);}}
-
-  .controls{display:flex;gap:12px;align-items:center;margin-top:24px;flex-wrap:wrap;}
-  .btn{font-family:inherit;font-size:1rem;font-weight:700;padding:13px 24px;border:2px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer;}
-  .btn.secondary{background:#fff;color:var(--navy);}
-  .btn:disabled{opacity:0.35;cursor:default;}
-  .btn:focus-visible{outline:3px solid var(--pink);outline-offset:2px;}
-  .result{font-size:clamp(1rem,2vw,1.25rem);font-weight:700;min-height:1.4em;margin-top:14px;}
-  .result.ok{color:var(--green);}
-  .result.try{color:var(--pink);}
-  .tip{font-size:0.9rem;opacity:0.7;margin-top:6px;}
-
-  .complete{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(244,244,241,0.97);opacity:0;pointer-events:none;transition:opacity 1.2s ease;padding:8vw;}
-  .complete.show{opacity:1;pointer-events:auto;}
-  .complete .card{max-width:660px;width:100%;background:#fff;border:3px solid var(--navy);padding:clamp(26px,5vw,48px);}
-  .eyebrow-c{color:var(--pink);font-weight:700;letter-spacing:0.18em;text-transform:uppercase;font-size:0.9rem;margin-bottom:18px;}
-  .statements-c{list-style:none;counter-reset:sc;margin-bottom:24px;}
-  .statements-c li{counter-increment:sc;position:relative;padding:13px 0 13px 50px;font-size:clamp(1.05rem,2.4vw,1.45rem);line-height:1.45;border-bottom:1px solid var(--line);}
-  .statements-c li:last-child{border-bottom:none;}
-  .statements-c li::before{content:counter(sc,decimal-leading-zero);position:absolute;left:0;top:13px;font-weight:800;color:var(--pink);font-size:1.1rem;}
-  .statements-c li strong{font-weight:800;}
-  .note-c{font-size:clamp(1rem,2.2vw,1.25rem);line-height:1.5;font-weight:700;background:rgba(27,31,69,0.05);border-left:5px solid var(--pink);padding:16px 20px;}
-
-  @media (prefers-reduced-motion:reduce){.statements li,.statements li.pulse{transition:none;animation:none;}.complete{transition:none;}}
+    /* builder */
+    .brow2 { display: flex; gap: 56px; align-items: center; justify-content: center; height: 100%; }
+    .chart { position: relative; width: 560px; height: 430px; flex-shrink: 0; }
+    .chart svg { position: absolute; inset: 0; overflow: visible; }
+    .chart .dia { fill: #fff; stroke: var(--pink); stroke-width: 4; stroke-linejoin: round; }
+    .chart .ln { stroke: var(--navy); stroke-width: 3.5; fill: none; }
+    .chart .ah { fill: var(--navy); }
+    .slot { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; text-align: center;
+        border: 3px dashed #c3c6d0; border-radius: 8px; background: #fff; font-size: 22px; font-weight: 700; line-height: 1.15; padding: 0 8px; cursor: pointer;
+        transition: border-color .2s, background-color .2s, color .2s; }
+    .slot.cond { width: 250px; height: 60px; }
+    .slot.lab { width: 120px; height: 46px; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; letter-spacing: .06em; }
+    .slot.act { width: 230px; height: 72px; }
+    .slot.hover, .slot.pick { border-color: var(--pink); background: #fdf0f7; }
+    .slot.filled { border-style: solid; border-color: var(--navy); }
+    .slot.act.filled { background: var(--navy); color: #fff; }
+    .slot.lab.filled.t { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .slot.lab.filled.f { background: var(--navy); color: #fff; }
+    .slot.fixed { cursor: default; border-style: solid; }
+    .slot.wrong { border: 3px dashed var(--navy) !important; background: #eef0f6 !important; color: var(--navy) !important; animation: shake .4s; }
+    .slot.right { box-shadow: 0 0 0 4px rgba(234,0,138,.25); }
+    @keyframes shake { 20%, 60% { margin-left: -8px; } 40%, 80% { margin-left: 8px; } }
+    .side { width: 480px; display: flex; flex-direction: column; gap: 22px; }
+    .rnote { font-size: 26px; font-weight: 700; line-height: 1.3; }
+    .bank { display: flex; flex-wrap: wrap; gap: 12px; min-height: 120px; align-content: flex-start; }
+    .chip { font-family: 'Barlow', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 8px;
+        padding: 8px 16px; cursor: grab; touch-action: none; position: relative; z-index: 2; box-shadow: 0 4px 0 #c3c6d0; transition: transform .3s var(--ease); }
+    .chip.drag { transition: none; cursor: grabbing; z-index: 20; border-color: var(--pink); box-shadow: 0 14px 30px rgba(27,31,69,.25); }
+    .chip.sel { border-color: var(--pink); background: #fdf0f7; }
+    .chip:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .rules { display: flex; flex-direction: column; gap: 10px; border-top: 2px solid var(--light-grey); padding-top: 18px; }
+    .rules div { font-size: 21px; font-weight: 600; color: #b3b6c2; transition: color .25s; display: flex; gap: 12px; }
+    .rules div::before { content: ''; width: 8px; height: 8px; margin-top: 10px; background: #c3c6d0; flex-shrink: 0; transition: background-color .25s; }
+    .rules div.on { color: var(--navy); }
+    .rules div.on::before { background: var(--pink); }
+    .rules b { font-weight: 800; }
+    .reset { align-self: flex-start; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: none; border: none; color: var(--mid-grey); cursor: pointer; padding: 0; }
+    .reset:hover { color: var(--navy); }
+    .mcards { display: flex; gap: 28px; }
+    .mcard { width: 340px; border: 3px solid var(--navy); border-radius: 8px; padding: 22px 26px 26px; opacity: 0; transform: translateY(14px); transition: opacity .45s var(--ease), transform .45s var(--ease); }
+    .mcard.show { opacity: 1; transform: none; }
+    .mcard.pink { border-color: var(--pink); }
+    .mcard .mn { font-family: 'Barlow Condensed', sans-serif; font-size: 60px; font-weight: 900; color: var(--pink); line-height: 1; margin-bottom: 12px; }
+    .mcard .mt { font-size: 26px; font-weight: 700; line-height: 1.25; }
+    .mcard .mt b { color: var(--pink); }
 </style>
 </head>
 <body>
-<div class="stage">
-  <div class="topbar">
-    <span class="step-label">Build a conditional statement</span>
-    <div class="dots" id="dots"></div>
-  </div>
-
-  <div class="layout">
-    <div class="buildcol">
-      <div class="buildwrap" id="buildwrap">
-        <div class="build" id="build">
-          <svg viewBox="0 0 600 470" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <marker id="ar" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M0,0 L12,7 L0,14 Z" fill="#1b1f45"/></marker>
-            </defs>
-            <polygon points="300,55 410,109 300,163 190,109" fill="#fff" stroke="#ea008a" stroke-width="3"/>
-            <line x1="300" y1="163" x2="300" y2="186" stroke="#1b1f45" stroke-width="3"/>
-            <line x1="174" y1="186" x2="426" y2="186" stroke="#1b1f45" stroke-width="3"/>
-            <line x1="174" y1="186" x2="174" y2="286" stroke="#1b1f45" stroke-width="3" marker-end="url(#ar)"/>
-            <line x1="426" y1="186" x2="426" y2="286" stroke="#1b1f45" stroke-width="3" marker-end="url(#ar)"/>
-          </svg>
-          <div class="slot empty" id="condition" data-group="0" tabindex="0" aria-label="Condition question"></div>
-          <div class="slot empty" id="trueLabel" data-group="1" tabindex="0" aria-label="True or false label, yes branch"></div>
-          <div class="slot empty" id="falseLabel" data-group="2" tabindex="0" aria-label="True or false label, no branch"></div>
-          <div class="slot empty" id="trueAction" data-group="1" tabindex="0" aria-label="Action when the answer is yes"></div>
-          <div class="slot empty" id="falseAction" data-group="2" tabindex="0" aria-label="Action when the answer is no"></div>
-        </div>
-      </div>
-
-      <div class="bank" id="bank"><span class="bank-label">Pieces</span></div>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Build a <span>conditional</span></h1>
+        <div class="counter" id="counter"></div>
     </div>
-
-    <aside class="side">
-      <p class="roundtag" id="roundtag">Round 1 of 3</p>
-      <p class="roundnote" id="roundnote"></p>
-
-      <p class="panel-h">Keep these in mind</p>
-      <ol class="statements" id="statements">
-        <li data-group="0">A <strong>condition</strong> is a true or false question the computer checks.</li>
-        <li data-group="1">If the condition is <strong>true</strong>, the first action runs.</li>
-        <li data-group="2">If the condition is <strong>false</strong>, the other action runs.</li>
-      </ol>
-
-      <div class="controls">
-        <button class="btn" id="checkBtn">Check the chart</button>
-        <button class="btn secondary" id="resetBtn">Reset round</button>
-        <button class="btn" id="nextBtn" style="display:none;">Next round</button>
-      </div>
-      <p class="result" id="result" role="status" aria-live="polite"></p>
-      <p class="tip">Tap a piece, then tap a slot. Tap a filled slot to send the piece back. You can also drag.</p>
-    </aside>
-  </div>
-
-  <div class="complete" id="complete" role="dialog" aria-label="Activity complete">
-    <div class="card">
-      <p class="eyebrow-c">Activity complete</p>
-      <ol class="statements-c">
-        <li>A <strong>condition</strong> is a true or false question the computer checks.</li>
-        <li>If the condition is <strong>true</strong>, the first action runs.</li>
-        <li>If the condition is <strong>false</strong>, the other action runs.</li>
-      </ol>
-      <p class="note-c">Screenshot this and head back to Stile to paste evidence you completed the activity. Refresh the page if you want to try this activity again.</p>
-    </div>
-  </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Check</button></div>
+    <div class="progress" id="progress"></div>
 </div>
 
 <script>
-  const ROUNDS=[
-    {
-      note:"Most of the chart is built. Drop the three missing pieces into place.",
-      scenario:{condition:"Is it dark?",trueAction:"Turn on the light",falseAction:"Leave it off"},
-      prefilled:{trueLabel:"true",falseLabel:"false"},
-      needed:["condition","trueAction","falseAction"],
-      bank:["Is it dark?","Turn on the light","Leave it off"]
-    },
-    {
-      note:"This time you place the true and false labels as well.",
-      scenario:{condition:"Is it raining?",trueAction:"Take an umbrella",falseAction:"Wear sunglasses"},
-      prefilled:{},
-      needed:["condition","trueLabel","falseLabel","trueAction","falseAction"],
-      bank:["Is it raining?","true","false","Take an umbrella","Wear sunglasses","maybe"]
-    },
-    {
-      note:"Nothing is given. Build the whole chart yourself.",
-      scenario:{condition:"Are you hungry?",trueAction:"Eat a snack",falseAction:"Keep working"},
-      prefilled:{},
-      needed:["condition","trueLabel","falseLabel","trueAction","falseAction"],
-      bank:["Are you hungry?","true","false","Eat a snack","Keep working","perhaps","later"]
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), btn = $('#next'), counter = $('#counter'), progress = $('#progress');
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* =========================================================
+   EDIT HERE: each object is one round.
+   ========================================================= */
+const ROUNDS = [
+    { note: 'Most of the chart is built. Drop the three missing pieces into place.',
+      scenario: { condition: 'Is it dark?', trueAction: 'Turn on the light', falseAction: 'Leave it off' },
+      prefilled: { trueLabel: 'true', falseLabel: 'false' },
+      bank: ['Is it dark?', 'Turn on the light', 'Leave it off'] },
+    { note: 'This time, place the true and false labels as well.',
+      scenario: { condition: 'Is it raining?', trueAction: 'Take an umbrella', falseAction: 'Wear sunglasses' },
+      prefilled: {},
+      bank: ['Is it raining?', 'true', 'false', 'Take an umbrella', 'Wear sunglasses', 'maybe'] },
+    { note: 'Nothing is given. Build the whole chart yourself.',
+      scenario: { condition: 'Are you hungry?', trueAction: 'Eat a snack', falseAction: 'Keep working' },
+      prefilled: {},
+      bank: ['Are you hungry?', 'true', 'false', 'Eat a snack', 'Keep working', 'perhaps', 'later'] }
+];
+const RULES = [
+    'A <b>condition</b> is a true or false question the computer checks.',
+    'If the condition is <b>true</b>, the first action runs.',
+    'If the condition is <b>false</b>, the other action runs.'
+];
+const SLOTS = {
+    condition:   { cls: 'cond', x: 280, y: 90,  g: 0 },
+    trueLabel:   { cls: 'lab',  x: 120, y: 262, g: 1 },
+    falseLabel:  { cls: 'lab',  x: 440, y: 262, g: 2 },
+    trueAction:  { cls: 'act',  x: 120, y: 380, g: 1 },
+    falseAction: { cls: 'act',  x: 440, y: 380, g: 2 }
+};
+const NAMES = Object.keys(SLOTS);
+
+let ri = 0, state = {}, fixed = {}, order = [], selected = null, mode = 'check', tries = 0, firstTry = [];
+let slotEls = {}, bankEl, rulesEl;
+const answer = (n, r) => n === 'trueLabel' ? 'true' : n === 'falseLabel' ? 'false' : r.scenario[n];
+
+function round() {
+    const r = ROUNDS[ri];
+    state = {}; fixed = {}; selected = null; mode = 'check'; tries = 0;
+    NAMES.forEach(n => state[n] = null);
+    Object.entries(r.prefilled).forEach(([n, v]) => { state[n] = v; fixed[n] = true; });
+    order = shuffle(r.bank);
+    counter.innerHTML = `Round <b>${ri + 1}</b> / ${ROUNDS.length}`;
+    progress.style.width = (ri / ROUNDS.length * 100) + '%';
+    content.innerHTML = '';
+    const row = el('div', 'brow2');
+    const chart = el('div', 'chart', `<svg viewBox="0 0 560 430" width="560" height="430" aria-hidden="true">
+        <polygon class="dia" points="280,10 480,90 280,170 80,90"/>
+        <path class="ln" d="M280 170 V200 M120 200 H440 M120 200 V328 M440 200 V328"/>
+        <polygon class="ah" points="110,326 130,326 120,342"/><polygon class="ah" points="430,326 450,326 440,342"/></svg>`);
+    slotEls = {};
+    NAMES.forEach(n => {
+        const s = SLOTS[n], e = el('div', 'slot ' + s.cls);
+        e.style.left = s.x + 'px'; e.style.top = s.y + 'px'; e.tabIndex = 0; e.name = n;
+        e.onclick = () => { if (fixed[n] || mode !== 'check') return; if (selected) place(n, selected); else clear(n); };
+        e.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); e.click(); } };
+        chart.appendChild(e); slotEls[n] = e;
+    });
+    const side = el('div', 'side');
+    side.appendChild(el('div', 'rnote', r.note));
+    bankEl = el('div', 'bank');
+    rulesEl = el('div', 'rules', RULES.map(t => `<div><span>${t}</span></div>`).join(''));
+    const reset = el('button', 'reset', 'Reset round'); reset.onclick = round;
+    side.append(bankEl, rulesEl, reset);
+    row.append(chart, side); content.appendChild(row);
+    say('Drag each piece onto the chart, or tap a piece then tap a slot. Tap a placed piece to send it back.');
+    btn.hidden = false; btn.textContent = 'Check';
+    draw();
+}
+
+function draw() {
+    NAMES.forEach(n => {
+        const e = slotEls[n], v = state[n];
+        e.classList.remove('filled', 'fixed', 't', 'f', 'pick');
+        e.textContent = v || '';
+        if (v) e.classList.add('filled');
+        if (fixed[n]) e.classList.add('fixed');
+        if (v === 'true') e.classList.add('t');
+        if (v === 'false') e.classList.add('f');
+        if (selected && !fixed[n]) e.classList.add('pick');
+    });
+    bankEl.innerHTML = '';
+    const used = new Set(Object.values(state));
+    order.forEach(text => { if (!used.has(text)) bankEl.appendChild(chip(text)); });
+    if (mode === 'check') btn.disabled = NAMES.some(n => !state[n]);
+}
+
+function lightRule(g) { [...rulesEl.children].forEach((d, i) => { if (i === g) d.classList.add('on'); }); }
+function place(n, text) {
+    if (fixed[n]) return;
+    NAMES.forEach(k => { if (state[k] === text && !fixed[k]) state[k] = null; });
+    state[n] = text; selected = null;
+    NAMES.forEach(k => slotEls[k].classList.remove('wrong', 'right'));
+    lightRule(SLOTS[n].g);
+    draw();
+}
+function clear(n) { if (fixed[n] || !state[n]) return; state[n] = null; slotEls[n].classList.remove('wrong'); draw(); }
+
+function chip(text) {
+    const c = el('button', 'chip' + (selected === text ? ' sel' : ''), text);
+    const hit = (x, y) => NAMES.find(n => { const r = slotEls[n].getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    c.addEventListener('pointerdown', e => {
+        if (mode !== 'check') return;
+        e.preventDefault(); c.setPointerCapture(e.pointerId);
+        const sx = e.clientX, sy = e.clientY; let moved = false;
+        c.classList.add('drag');
+        const move = ev => {
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            if (Math.hypot(dx, dy) > 6) moved = true;
+            c.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px)`;
+            const h = hit(ev.clientX, ev.clientY);
+            NAMES.forEach(n => slotEls[n].classList.toggle('hover', n === h && !fixed[n]));
+        };
+        const up = ev => {
+            c.removeEventListener('pointermove', move); c.removeEventListener('pointerup', up); c.removeEventListener('pointercancel', up);
+            c.classList.remove('drag'); NAMES.forEach(n => slotEls[n].classList.remove('hover'));
+            if (!moved) { c.style.transform = ''; selected = selected === text ? null : text; draw(); return; }
+            const h = hit(ev.clientX, ev.clientY);
+            if (h && !fixed[h]) place(h, text); else c.style.transform = '';
+        };
+        c.addEventListener('pointermove', move); c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+    });
+    c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selected = selected === text ? null : text; draw(); } });
+    return c;
+}
+
+function check() {
+    const r = ROUNDS[ri]; tries++;
+    let wrong = 0;
+    NAMES.forEach(n => {
+        const e = slotEls[n]; if (fixed[n]) return;
+        e.classList.remove('wrong', 'right'); void e.offsetWidth;
+        if (state[n] === answer(n, r)) e.classList.add('right'); else { e.classList.add('wrong'); wrong++; }
+    });
+    if (!wrong) {
+        if (tries === 1) firstTry[ri] = true;
+        mode = 'next';
+        [...rulesEl.children].forEach(d => d.classList.add('on'));
+        bankEl.style.visibility = 'hidden';
+        say(`<b>Chart complete.</b> ${ri === ROUNDS.length - 1 ? 'You built it with no help.' : 'Press <b>Next</b> when you are ready.'}`);
+        btn.disabled = false; btn.textContent = ri === ROUNDS.length - 1 ? 'Finish' : 'Next';
+        btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
+    } else {
+        say(`<b>Not quite.</b> ${wrong} ${wrong === 1 ? 'piece is' : 'pieces are'} in the wrong place. Tap a highlighted piece to send it back, then try again.`);
     }
-  ];
-  const SLOT_NAMES=["condition","trueLabel","falseLabel","trueAction","falseAction"];
-  const GROUP={condition:0,trueLabel:1,falseLabel:2,trueAction:1,falseAction:2};
+}
 
-  let ri=0, state={}, fixed={}, bankOrder=[], used=new Set(), selected=null;
+function finish() {
+    content.innerHTML = ''; btn.hidden = true;
+    counter.innerHTML = '<b>Complete</b>'; progress.style.width = '100%';
+    say('Screenshot this screen and paste it into Stile as evidence. Refresh the page to try again.');
+    const c = el('div', 'center');
+    const row = el('div', 'mcards');
+    const cards = RULES.map((t, i) => { const k = el('div', 'mcard' + (i === 0 ? ' pink' : ''), `<div class="mn">0${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+    c.appendChild(row); content.appendChild(c);
+    cards.forEach((k, i) => setTimeout(() => k.classList.add('show'), 300 + i * 300));
+}
 
-  const $=id=>document.getElementById(id);
-  const build=$("build"), wrap=$("buildwrap"), bankEl=$("bank"), result=$("result");
-  const stmts=Array.from(document.querySelectorAll("#statements li"));
+btn.onclick = () => {
+    if (btn.disabled) return;
+    if (mode === 'check') check();
+    else if (ri === ROUNDS.length - 1) finish();
+    else { ri++; round(); }
+};
 
-  // build dots
-  const dotsWrap=$("dots");
-  ROUNDS.forEach(()=>{const d=document.createElement("span");d.className="dot";dotsWrap.appendChild(d);});
-  const dots=Array.from(document.querySelectorAll(".dot"));
-
-  function answerFor(slot){
-    const r=ROUNDS[ri];
-    if(slot==="condition")return r.scenario.condition;
-    if(slot==="trueLabel")return "true";
-    if(slot==="falseLabel")return "false";
-    if(slot==="trueAction")return r.scenario.trueAction;
-    if(slot==="falseAction")return r.scenario.falseAction;
-  }
-  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-
-  function loadRound(){
-    const r=ROUNDS[ri];
-    state={}; fixed={}; used=new Set(); selected=null;
-    SLOT_NAMES.forEach(n=>state[n]=null);
-    Object.keys(r.prefilled).forEach(n=>{state[n]=r.prefilled[n];fixed[n]=true;});
-    bankOrder=shuffle(r.bank);
-    $("roundtag").textContent="Round "+(ri+1)+" of "+ROUNDS.length;
-    $("roundnote").textContent=r.note;
-    dots.forEach((d,i)=>{d.classList.toggle("active",i===ri);d.classList.toggle("done",i<ri);});
-    stmts.forEach(li=>li.classList.remove("active","locked","pulse"));
-    $("nextBtn").style.display="none";
-    $("checkBtn").disabled=false;
-    result.textContent=""; result.className="result";
-    renderSlots(); renderBank();
-  }
-
-  function classifyLabel(t){return t==="true"?"lab-true":t==="false"?"lab-false":"lab-other";}
-
-  function renderSlots(){
-    SLOT_NAMES.forEach(name=>{
-      const el=$(name), val=state[name];
-      el.classList.remove("empty","filled","fixed","correct","wrong","lab-true","lab-false","lab-other","act","target");
-      if(val){
-        el.textContent=val; el.classList.add("filled");
-        if(name==="trueLabel"||name==="falseLabel")el.classList.add(classifyLabel(val));
-        if(name==="trueAction"||name==="falseAction")el.classList.add("act");
-        if(fixed[name])el.classList.add("fixed");
-      }else{
-        el.textContent=""; el.classList.add("empty");
-      }
-    });
-  }
-
-  function renderBank(){
-    bankEl.querySelectorAll(".chip").forEach(c=>c.remove());
-    bankOrder.forEach(text=>{
-      if(used.has(text))return;
-      const chip=document.createElement("button");
-      chip.className="chip"; chip.textContent=text; chip.setAttribute("draggable","true");
-      if(selected===text)chip.classList.add("selected");
-      chip.addEventListener("click",()=>selectChip(text,chip));
-      chip.addEventListener("dragstart",e=>e.dataTransfer.setData("text/plain",text));
-      bankEl.appendChild(chip);
-    });
-  }
-
-  function highlightGroup(g){
-    stmts.forEach(li=>li.classList.remove("active"));
-    const li=stmts[g]; if(li){li.classList.add("active","pulse");setTimeout(()=>li.classList.remove("pulse"),600);}
-  }
-
-  function selectChip(text,chip){
-    if(selected===text){selected=null;renderBank();return;}
-    selected=text; renderBank();
-  }
-
-  function placeInSlot(name,text){
-    if(fixed[name])return;
-    // remove text from any other slot it currently occupies
-    SLOT_NAMES.forEach(n=>{if(state[n]===text&&!fixed[n])state[n]=null;});
-    // if slot held something, free it
-    if(state[name]){used.delete(state[name]);}
-    state[name]=text; used.add(text); selected=null;
-    result.textContent=""; result.className="result";
-    highlightGroup(GROUP[name]);
-    renderSlots(); renderBank();
-  }
-  function clearSlot(name){
-    if(fixed[name]||!state[name])return;
-    used.delete(state[name]); state[name]=null;
-    result.textContent=""; result.className="result";
-    renderSlots(); renderBank();
-  }
-
-  SLOT_NAMES.forEach(name=>{
-    const el=$(name);
-    el.addEventListener("click",()=>{
-      if(fixed[name])return;
-      if(selected)placeInSlot(name,selected);
-      else clearSlot(name);
-    });
-    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();el.click();}});
-    el.addEventListener("dragover",e=>{if(fixed[name])return;e.preventDefault();el.classList.add("dragover");});
-    el.addEventListener("dragleave",()=>el.classList.remove("dragover"));
-    el.addEventListener("drop",e=>{
-      e.preventDefault(); el.classList.remove("dragover"); if(fixed[name])return;
-      const text=e.dataTransfer.getData("text/plain");
-      if(text)placeInSlot(name,text);
-    });
-  });
-
-  $("checkBtn").addEventListener("click",()=>{
-    const r=ROUNDS[ri]; let allRight=true, filled=true;
-    r.needed.forEach(name=>{
-      const el=$(name); el.classList.remove("correct","wrong");
-      if(!state[name]){filled=false;allRight=false;return;}
-      if(state[name]===answerFor(name))el.classList.add("correct");
-      else{el.classList.add("wrong");allRight=false;}
-    });
-    if(!filled){result.textContent="Fill every empty slot first.";result.className="result try";return;}
-    if(allRight){
-      stmts.forEach(li=>{li.classList.remove("active");li.classList.add("locked");});
-      $("checkBtn").disabled=true;
-      if(ri<ROUNDS.length-1){
-        result.textContent="Chart complete. Move on when you\u2019re ready.";result.className="result ok";
-        $("nextBtn").style.display="";
-      }else{
-        result.textContent="You built it with no help. You can assemble a conditional statement.";result.className="result ok";
-        dots[ri].classList.add("done");
-        setTimeout(()=>$("complete").classList.add("show"),550);
-      }
-    }else{
-      result.textContent="Some pieces are in the wrong place. Fix the ones outlined in pink, then check again.";result.className="result try";
-    }
-  });
-
-  $("resetBtn").addEventListener("click",loadRound);
-  $("nextBtn").addEventListener("click",()=>{if(ri<ROUNDS.length-1){ri++;loadRound();}});
-
-  function scaleBuild(){
-    const w=wrap.clientWidth, scale=Math.min(1,w/600);
-    build.style.transform="scale("+scale+")";
-    wrap.style.height=(470*scale)+"px";
-  }
-  window.addEventListener("resize",scaleBuild);
-
-  loadRound(); scaleBuild();
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); round(); });
 </script>
 </body>
 </html>
