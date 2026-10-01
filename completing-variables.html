@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completing Variables</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    [class] { font-variant-ligatures: none; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 30px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 27px; font-weight: 500; line-height: 1.35; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+
+    .next { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; transition: opacity .3s, transform .3s var(--ease); }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    .next:focus-visible, .opt:focus-visible, .chip:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
+    .pop-in { animation: capIn .45s var(--ease); }
+
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* completing variables */
+    .qhead { display: flex; align-items: center; gap: 18px; }
+    .qtitle { font-size: 40px; font-weight: 800; }
+    .tchip { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--pink); border: 3px solid var(--pink); border-radius: 6px; padding: 2px 12px; }
+    .syn { margin-left: auto; font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--mid-grey); }
+    .prompt { font-size: 30px; font-weight: 600; margin-top: 10px; line-height: 1.3; }
+    .codewrap { margin-top: 34px; border: 3px solid var(--navy); border-radius: 8px; padding: 26px 34px; display: flex; align-items: center; gap: 18px; min-height: 124px; flex-wrap: wrap; }
+    .ctext { font-family: var(--mono); font-size: 44px; font-weight: 700; }
+    .blank { min-width: 150px; height: 70px; border: 3px dashed #c3c6d0; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; transition: border-color .2s, background-color .2s; }
+    .blank.sm { min-width: 100px; }
+    .blank.lg { min-width: 260px; }
+    .blank.hover, .blank.next-up { border-color: var(--pink); background: rgba(234,0,138,.06); }
+    .blank.filled { border-style: solid; border-color: var(--navy); }
+    .blank.wrong { border-color: var(--navy); border-style: dashed; background: rgba(27,31,69,.06); animation: shake .4s; }
+    .blank.right { border-color: var(--pink); border-style: solid; background: var(--pink); }
+    .blank.right .tile { background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: none; cursor: default; }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    .pool { margin-top: 30px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; min-height: 76px; border-radius: 8px; transition: background-color .2s; }
+    .pool.hover { background: var(--blank); }
+    .tile { font-family: var(--mono); font-size: 34px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 20px;
+        cursor: grab; touch-action: none; position: relative; z-index: 2; transition: transform .3s var(--ease), box-shadow .2s; box-shadow: 0 4px 0 #c3c6d0; white-space: pre; }
+    .blank .tile { box-shadow: none; border-color: transparent; background: transparent; padding: 4px 14px; }
+    .tile.drag { transition: none; cursor: grabbing; z-index: 20; box-shadow: 0 14px 30px rgba(27,31,69,.25); border-color: var(--pink); }
+    .tile:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .fb { margin-top: 22px; min-height: 40px; font-size: 26px; font-weight: 600; text-align: center; line-height: 1.3; }
+    .fb p { margin: 4px 0; }
+    .fb b { font-weight: 800; color: var(--pink); }
+    .fb.no b { color: var(--navy); }
+    .q { display: flex; flex-direction: column; justify-content: center; height: 100%; padding-bottom: 20px; }
+    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 30px 60px; text-align: center; }
+    .scorecard .big { font-family: 'Barlow Condensed', sans-serif; font-size: 120px; font-weight: 900; color: var(--pink); line-height: 1; }
+    .scorecard .dlbl { margin-top: 8px; }
+    .again { margin-top: 30px; font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 8px 22px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Completing <span>variables</span></h1>
+        <div class="counter" id="counter"></div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Check</button></div>
+    <div class="progress" id="progress"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), btn = $('#next'), counter = $('#counter'), progress = $('#progress');
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+
+/* =========================================================
+   EDIT HERE: each object is one question.
+   parts: strings are fixed code text, objects are blanks.
+   ========================================================= */
+const ACTIVITIES = [
+    { title: 'Player score', type: 'int', prompt: 'A player has a score of 10.',
+      parts: ['score =', { answer: '10', hint: 'Integers are whole numbers: no decimal point and no quotation marks.' }],
+      tiles: ['10', '"10"', '10.0', '100'] },
+    { title: 'City name', type: 'str', prompt: 'Store the city name Brisbane.',
+      parts: ['city =', { answer: '"Brisbane"', hint: 'Text values need quotation marks. Without them, Python reads it as a variable name.' }],
+      tiles: ['"Brisbane"', 'Brisbane', '42', '1.5'] },
+    { title: 'Body temperature', type: 'float', prompt: 'Store a temperature reading of 36.6 degrees.',
+      parts: ['temperature =', { answer: '36.6', hint: 'A float has a decimal point and no quotation marks.' }],
+      tiles: ['36', '"36.6"', '36.6', '366'] },
+    { title: 'Lives remaining', type: 'int', prompt: 'Store 3 lives remaining. This time you need the variable name too.',
+      parts: [{ answer: 'lives', hint: 'The variable name goes on the left of the = sign, with no quotation marks.' }, '=', { answer: '3', hint: '3 is a whole number, so no quotes and no decimal point.' }],
+      tiles: ['lives', '"lives"', '3', '"3"', 'score'] },
+    { title: 'Height', type: 'float', prompt: 'Store a height of 1.75 metres.',
+      parts: [{ answer: 'height', hint: 'Pick the name that matches what is being measured.' }, '=', { answer: '1.75', hint: '1.75 has a decimal point, so it is a float. Watch out for the version in quotes.' }],
+      tiles: ['height', 'weight', '1.75', '"1.75"', '175'] },
+    { title: 'Username', type: 'str', prompt: 'Build the whole line: a username storing the text alex.',
+      parts: [{ answer: 'username', hint: 'The variable name goes on the left.' }, { answer: '=', hint: 'Assignment in Python uses a single = sign.' }, { answer: '"alex"', hint: 'Text values need quotation marks.' }],
+      tiles: ['username', '=', '"alex"', 'name', '+', 'alex'] },
+    { title: 'Item count', type: 'int', prompt: 'Build the whole line: a variable storing a count of 8 items.',
+      parts: [{ answer: 'item_count', hint: 'Two words joined with an underscore, no spaces.' }, { answer: '=', hint: 'Assignment in Python uses a single = sign, not +.' }, { answer: '8', hint: '8 is a whole number, so it needs no quotation marks.' }],
+      tiles: ['item_count', '=', '8', 'count', '+', '"8"'] }
+];
+const TOTAL = ACTIVITIES.length;
+const TYPE = { int: 'int: whole number', str: 'str: text', float: 'float: decimal' };
+let index = 0, firstTry = [], tries = 0;
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const size = v => v.length <= 2 ? 'sm' : v.length <= 7 ? '' : 'lg';
+
+/* ---------- one question ---------- */
+let blanks = [], pool, fb, answers, mode = 'check';
+function render() {
+    content.innerHTML = ''; tries = 0; mode = 'check';
+    const a = ACTIVITIES[index];
+    answers = a.parts.filter(p => typeof p !== 'string');
+    counter.innerHTML = `Question <b>${index + 1}</b> / ${TOTAL}`;
+    progress.style.width = (index / TOTAL * 100) + '%';
+    say(answers.length > 1 ? 'Drag a tile into each blank, then press <b>Check</b>.' : 'Drag the correct tile into the blank, then press <b>Check</b>.');
+    const q = el('div', 'q');
+    q.appendChild(el('div', 'qhead', `<div class="qtitle">${a.title}</div><div class="tchip">${TYPE[a.type]}</div><div class="syn">variable_name = value</div>`));
+    q.appendChild(el('div', 'prompt', a.prompt));
+    const code = el('div', 'codewrap');
+    blanks = [];
+    a.parts.forEach(p => {
+        if (typeof p === 'string') { code.appendChild(el('span', 'ctext', p)); return; }
+        const b = el('div', 'blank ' + size(p.answer)); b.ans = p; blanks.push(b); code.appendChild(b);
+        b.onclick = () => { const t = b.querySelector('.tile'); if (t && !b.classList.contains('right')) toPool(t); };
+    });
+    pool = el('div', 'pool');
+    shuffle(a.tiles).forEach(v => pool.appendChild(tile(v)));
+    fb = el('div', 'fb');
+    q.append(code, pool, fb); content.appendChild(q);
+    btn.hidden = false; btn.textContent = 'Check';
+    update();
+}
+
+function update() {
+    const empty = blanks.filter(b => !b.querySelector('.tile'));
+    blanks.forEach(b => b.classList.toggle('next-up', b === empty[0]));
+    blanks.forEach(b => b.classList.toggle('filled', !!b.querySelector('.tile')));
+    if (mode === 'check') btn.disabled = empty.length > 0;
+}
+function clearMarks() { blanks.forEach(b => b.classList.remove('wrong')); if (fb) { fb.innerHTML = ''; fb.className = 'fb'; } }
+function place(b, t) {
+    if (b.classList.contains('right')) { t.style.transform = ''; return; }
+    const ex = b.querySelector('.tile'); if (ex && ex !== t) pool.appendChild(ex);
+    t.style.transform = ''; b.appendChild(t); clearMarks(); update();
+}
+function toPool(t) { t.style.transform = ''; pool.appendChild(t); clearMarks(); update(); }
+
+function tile(v) {
+    const t = el('span', 'tile', v);
+    t.tabIndex = 0; t.setAttribute('role', 'button');
+    const hit = (x, y) => [...blanks, pool].find(b => { const r = b.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    t.addEventListener('pointerdown', e => {
+        if (t.parentElement.classList.contains('right')) return;
+        e.preventDefault(); e.stopPropagation(); t.setPointerCapture(e.pointerId);
+        const sx = e.clientX, sy = e.clientY; let moved = false;
+        t.classList.add('drag');
+        const move = ev => {
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            if (Math.hypot(dx, dy) > 6) moved = true;
+            t.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px)`;
+            const h = hit(ev.clientX, ev.clientY);
+            [...blanks, pool].forEach(b => b.classList.toggle('hover', b === h));
+        };
+        const up = ev => {
+            t.removeEventListener('pointermove', move); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up);
+            t.classList.remove('drag'); [...blanks, pool].forEach(b => b.classList.remove('hover'));
+            if (!moved) { tap(); return; }
+            const h = hit(ev.clientX, ev.clientY);
+            if (h === pool) toPool(t); else if (h) place(h, t); else t.style.transform = '';
+        };
+        t.addEventListener('pointermove', move); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
+    });
+    const tap = () => {
+        t.style.transform = '';
+        if (t.parentElement !== pool) { toPool(t); return; }
+        const b = blanks.find(x => !x.querySelector('.tile')); if (b) place(b, t);
+    };
+    t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
+    return t;
+}
+
+function check() {
+    tries++;
+    const wrong = [];
+    blanks.forEach(b => {
+        const t = b.querySelector('.tile');
+        b.classList.remove('wrong'); void b.offsetWidth;
+        if (t && t.textContent === b.ans.answer) b.classList.add('right');
+        else { b.classList.add('wrong'); wrong.push(b.ans.hint); }
+    });
+    if (!wrong.length) {
+        if (tries === 1) firstTry[index] = true;
+        fb.className = 'fb pop-in'; fb.innerHTML = '<b>Correct.</b> ' + (tries === 1 ? 'First try.' : 'You got there.');
+        say('Nice work. Press <b>Next</b> when you are ready.');
+        mode = 'next'; btn.disabled = false; btn.textContent = index === TOTAL - 1 ? 'Finish' : 'Next';
+        btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
+        pool.style.visibility = 'hidden';
+    } else {
+        fb.className = 'fb no pop-in';
+        fb.innerHTML = `<p><b>Not quite.</b> ${wrong[0]}</p>`;
+        say(wrong.length > 1 ? `${blanks.length - wrong.length} of ${blanks.length} correct. Fix the highlighted blanks, then press <b>Check</b> again.` : 'Swap the highlighted tile, then press <b>Check</b> again.');
+        update();
+    }
+}
+
+function finish() {
+    content.innerHTML = '';
+    btn.hidden = true;
+    counter.innerHTML = '<b>Complete</b>';
+    progress.style.width = '100%';
+    const n = firstTry.filter(Boolean).length;
+    say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
+    const c = el('div', 'center');
+    const card = el('div', 'scorecard pop-in', `<div class="big">${n} / ${TOTAL}</div><div class="dlbl">Correct on the first try</div>`);
+    const again = el('button', 'again', 'Start again');
+    again.onclick = () => { index = 0; firstTry = []; render(); };
+    c.append(card, again); content.appendChild(c);
+}
+
+btn.onclick = () => {
+    if (btn.disabled) return;
+    if (mode === 'check') check();
+    else if (index === TOTAL - 1) finish();
+    else { index++; render(); }
+};
+
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); render(); });
+</script>
+</body>
+</html>

@@ -1,988 +1,354 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Variables: Named Containers</title>
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variables: Named Containers</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
     :root {
-      --navy:   #1b1f45;
-      --pink:   #ea008a;
-      --white:  #ffffff;
-      --dim:    rgba(255,255,255,0.38);
-      --faint:  rgba(255,255,255,0.1);
-      --pfaint: rgba(234,0,138,0.07);
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-
-    body {
-      background: var(--navy);
-      color: var(--white);
-      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
-      height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
-      cursor: default;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ── HEADER ── */
-    .hdr {
-      display: flex;
-      align-items: stretch;
-      border-bottom: 1px solid var(--faint);
-      position: relative;
-      z-index: 1;
-    }
-
-    .hdr-tag {
-      padding: 14px 22px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--pink);
-      border-right: 1px solid var(--faint);
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .hdr-title {
-      padding: 14px 22px;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      display: flex;
-      align-items: center;
-    }
-
-    /* ── LAYOUT ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 252px 1fr;
-      overflow: hidden;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* ── PRINCIPLES PANEL ── */
-    .panel {
-      border-right: 1px solid var(--faint);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .principle {
-      flex: 1;
-      padding: 26px 22px;
-      border-bottom: 1px solid var(--faint);
-      position: relative;
-      transition: background 0.45s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .principle:last-child { border-bottom: none; }
-
-    .pnum {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--pink);
-      margin-bottom: 9px;
-      opacity: 0.32;
-      transition: opacity 0.45s;
-    }
-
-    .ptext {
-      font-size: 14px;
-      line-height: 1.55;
-      color: var(--dim);
-      transition: color 0.45s;
-    }
-
-    .principle.active { background: var(--pfaint); }
-
-    .principle.active::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
-      background: var(--pink);
-    }
-
-    .principle.active .pnum  { opacity: 1; }
-    .principle.active .ptext { color: var(--white); }
-
-    /* ── STAGE ── */
-    .stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 48px 36px;
-      position: relative;
-    }
-
-    /* ── PHASE INFO ── */
-    .phase-info {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .phase-tag {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--pink);
-      margin-bottom: 8px;
-    }
-
-    .phase-text {
-      font-size: 20px;
-      color: rgba(255,255,255,0.72);
-      line-height: 1.45;
-      transition: opacity 0.22s ease;
-    }
-
-    /* ── BOXES ── */
-    .boxes { display: flex; gap: 28px; margin-bottom: 52px; }
-
-    .bwrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 13px;
-    }
-
-    .box {
-      width: 178px;
-      height: 178px;
-      border: 2px dashed rgba(255,255,255,0.2);
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-    }
-
-    .box::after {
-      content: attr(data-name);
-      position: absolute;
-      top: 11px;
-      left: 13px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.25);
-      pointer-events: none;
-      transition: color 0.3s;
-    }
-
-    .box.hover {
-      border: 2px solid var(--pink);
-      background: rgba(234,0,138,0.07);
-      box-shadow: 0 0 0 4px rgba(234,0,138,0.11), inset 0 0 28px rgba(234,0,138,0.04);
-    }
-
-    .box.filled {
-      border: 2px solid rgba(255,255,255,0.35);
-    }
-
-    .box.filled::after { color: rgba(255,255,255,0.45); }
-
-    .bval {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--white);
-      text-align: center;
-      padding: 6px 10px;
-      display: none;
-    }
-
-    .box.filled .bval { display: block; }
-
-    .blabel {
-      height: 20px;
-      display: flex;
-      align-items: center;
-      gap: 0;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.38);
-    }
-
-    .bassign {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: none;
-      letter-spacing: 0;
-      color: var(--pink);
-      opacity: 0;
-      transform: translateX(-5px);
-      transition: opacity 0.32s ease, transform 0.32s ease;
-    }
-
-    .bassign.show { opacity: 1; transform: none; }
-
-    /* ── CHIPS TRAY ── */
-    .tray {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      min-height: 48px;
-      align-items: center;
-    }
-
-    .chip {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 12px 20px;
-      background: var(--pink);
-      color: var(--white);
-      border-radius: 3px;
-      cursor: grab;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.24s ease;
-      white-space: nowrap;
-    }
-
-    .chip:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 10px 26px rgba(234,0,138,0.5);
-    }
-
-    .chip.used {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transform: scale(0.88) translateY(-4px) !important;
-    }
-
-    .chip.dragging-src {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transform: none !important;
-      transition: none !important;
-    }
-
-    /* ── CHIP TYPE TOOLTIP ── */
-    .chip { position: relative; }
-
-    .chip[data-hint]::after {
-      content: attr(data-hint);
-      position: absolute;
-      bottom: calc(100% + 9px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--white);
-      color: var(--navy);
-      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      padding: 6px 9px;
-      border-radius: 3px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.18s ease;
-    }
-
-    .chip[data-hint]:hover::after { opacity: 1; }
-
-    /* ── TARGET BOX (phase 2 guide) ── */
-    @keyframes targetPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(234,0,138,0); }
-      50%      { box-shadow: 0 0 0 7px rgba(234,0,138,0.12); }
-    }
-
-    .box.target {
-      border: 2px solid var(--pink);
-      animation: targetPulse 1.6s ease-in-out infinite;
-    }
-
-    body.p1 .box.filled { cursor: grab; }
-    body.p1 .box.filled:active { cursor: grabbing; }
-
-    .box.lifting {
-      border: 2px dashed rgba(255,255,255,0.2) !important;
-      box-shadow: none !important;
-    }
-
-    /* ── SOFT NUDGE ── */
-    .nudge {
-      margin: 12px auto 0;
-      max-width: 460px;
-      min-height: 18px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: rgba(255,255,255,0.55);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .nudge.show { opacity: 1; }
-
-    /* ── PREDICT BLOCK ── */
-    .predict {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      max-width: 520px;
-    }
-
-    .predict-q {
-      font-size: 16px;
-      line-height: 1.5;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      text-align: center;
-      color: var(--white);
-    }
-
-    .opts {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .opt {
-      font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--white);
-      background: transparent;
-      border: 1px solid var(--faint);
-      border-radius: 3px;
-      padding: 13px 18px;
-      text-align: left;
-      cursor: pointer;
-      transition: border-color 0.16s, background 0.16s, opacity 0.3s;
-    }
-
-    .opt:hover { border-color: var(--pink); background: var(--pfaint); }
-    .opt.chosen { border-color: var(--pink); background: rgba(234,0,138,0.16); }
-    .opt.locked:not(.chosen) { opacity: 0.34; }
-    .opt:disabled { cursor: default; }
-
-    .predict-after {
-      font-size: 12px;
-      letter-spacing: 0.04em;
-      color: var(--dim);
-      text-align: center;
-      min-height: 16px;
-    }
-
-    /* ── PROGRESS ── */
-    .prog {
-      position: absolute;
-      bottom: 20px;
-      right: 34px;
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--dim);
-    }
-
-    .prog b { color: var(--pink); }
-
-    /* ── GHOST ── */
-    #ghost {
-      position: fixed;
-      pointer-events: none;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 12px 20px;
-      background: var(--pink);
-      color: var(--white);
-      border-radius: 3px;
-      box-shadow: 0 14px 32px rgba(234,0,138,0.55);
-      z-index: 9999;
-      transform: translate(-50%, -50%) rotate(-4deg) scale(1.08);
-      opacity: 0;
-      white-space: nowrap;
-      transition: opacity 0.1s;
-    }
-
-    #ghost.on { opacity: 1; }
-
-    /* ── COMPLETION OVERLAY ── */
-    .completion {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 13, 34, 0.97);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.8s ease;
-    }
-
-    .completion.show {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .comp-inner {
-      width: min(720px, calc(100% - 80px));
-      display: flex;
-      flex-direction: column;
-      gap: 40px;
-    }
-
-    .comp-item {
-      opacity: 0;
-      transform: translateY(22px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .comp-item.reveal {
-      opacity: 1;
-      transform: none;
-    }
-
-    .ci-num {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--pink);
-      margin-bottom: 10px;
-    }
-
-    .ci-text {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.18;
-      color: var(--white);
-    }
-
-    .comp-note {
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--dim);
-      border-top: 1px solid var(--faint);
-      padding-top: 28px;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.55s ease, transform 0.55s ease;
-    }
-
-    .comp-note.reveal {
-      opacity: 1;
-      transform: none;
-    }
-
-    /* ── ANIMATIONS ── */
-    @keyframes snapIn {
-      0%   { opacity: 0; transform: scale(0.52) translateY(-14px); }
-      52%  { opacity: 1; transform: scale(1.15); }
-      74%  { transform: scale(0.95); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    @keyframes flyOut {
-      0%   { opacity: 1; transform: scale(1) translateY(0); }
-      18%  { transform: scale(1.14) translateY(-5px); }
-      100% { opacity: 0; transform: scale(0.58) translateY(-74px); }
-    }
-
-    @keyframes dropIn {
-      0%   { opacity: 0; transform: scale(0.62) translateY(-44px); }
-      58%  { opacity: 1; transform: scale(1.13) translateY(5px); }
-      80%  { transform: scale(0.96); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      18%     { transform: translateX(-7px); }
-      36%     { transform: translateX(7px); }
-      54%     { transform: translateX(-4px); }
-      72%     { transform: translateX(4px); }
-    }
-
-    @keyframes chipAppear {
-      from { opacity: 0; transform: translateY(10px) scale(0.88); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    @keyframes phasePulse {
-      0%   { box-shadow: 0 0 0 0 rgba(234,0,138,0.35); }
-      50%  { box-shadow: 0 0 0 10px rgba(234,0,138,0.1); }
-      100% { box-shadow: 0 0 0 0 rgba(234,0,138,0); }
-    }
-
-    .a-snap   { animation: snapIn    0.44s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-    .a-flyout { animation: flyOut    0.36s ease-in forwards; }
-    .a-dropin { animation: dropIn    0.46s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-    .a-shake  { animation: shake     0.38s ease; }
-    .a-chip   { animation: chipAppear 0.38s ease both; }
-    .a-pulse  { animation: phasePulse 0.65s ease; }
-  </style>
+    * { box-sizing: border-box; }
+    [class] { font-variant-ligatures: none; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 30px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 27px; font-weight: 500; line-height: 1.35; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+
+    .next { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; transition: opacity .3s, transform .3s var(--ease); }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    .next:focus-visible, .opt:focus-visible, .chip:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
+    .pop-in { animation: capIn .45s var(--ease); }
+
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* containers */
+    .boxes { display: flex; gap: 48px; }
+    .bcol { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .vbox { width: 240px; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; background: #fff; transition: border-color .2s, box-shadow .2s, opacity .3s; }
+    .vbox .vl { background: var(--navy); color: #fff; font-family: var(--mono); font-size: 24px; font-weight: 700; text-align: center; padding: 8px; transition: background-color .2s; }
+    .vbox .vv { height: 120px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .vbox .val { font-family: var(--mono); font-size: 40px; font-weight: 700; position: absolute; }
+    .vbox .empty { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #c3c6d0; }
+    .vbox.hover, .vbox.pick { border-color: var(--pink); box-shadow: 0 0 0 5px rgba(234,0,138,.14); }
+    .vbox.hover .vl { background: var(--pink); }
+    .vbox.full .vl { background: var(--navy); }
+    .vbox.target { border-color: var(--pink); animation: pulse 1.6s ease-in-out infinite; }
+    .vbox.target .vl { background: var(--pink); }
+    .vbox.dim { opacity: .35; }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(234,0,138,.14); } }
+    .vbox.shake { animation: shake .4s; }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    .val.snap { animation: snap .45s var(--ease); }
+    @keyframes snap { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+    .val.out { animation: out .4s ease forwards; }
+    @keyframes out { to { transform: translateY(-90px) rotate(-8deg); opacity: 0; } }
+    .val.dropin { animation: dropin .5s var(--ease); }
+    @keyframes dropin { from { transform: translateY(-80px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .cline { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--pink); min-height: 32px; opacity: 0; transition: opacity .35s; white-space: pre; }
+    .cline.show { opacity: 1; }
+
+    /* value chip */
+    .tray { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 46px; min-height: 104px; }
+    .chip { font-family: var(--mono); font-size: 34px; font-weight: 700; background: var(--pink); color: #fff; border-radius: 8px; padding: 10px 28px; cursor: grab;
+        touch-action: none; position: relative; z-index: 2; transition: transform .35s var(--ease), box-shadow .2s, opacity .3s; box-shadow: 0 6px 16px rgba(234,0,138,.25); }
+    .chip.drag { transition: none; cursor: grabbing; box-shadow: 0 16px 34px rgba(234,0,138,.4); z-index: 10; }
+    .chip.sel { outline: 3px solid var(--navy); outline-offset: 4px; }
+    .chip.gone { opacity: 0; pointer-events: none; }
+    .chip.idle { background: #c3c6d0; box-shadow: none; cursor: default; }
+    .ttag { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* feedback */
+    .fb { margin-top: 18px; min-height: 40px; font-size: 26px; font-weight: 600; text-align: center; max-width: 900px; line-height: 1.3; }
+    .fb b { font-weight: 800; }
+    .fb.ok b { color: var(--pink); }
+    .fb.hint { color: var(--navy); }
+    .fb.hint b { color: var(--navy); }
+
+    /* principle banner */
+    .pban { margin-top: 44px; border-left: 8px solid var(--pink); padding: 6px 0 6px 28px; max-width: 900px; }
+    .pban .pt { font-size: 36px; font-weight: 800; line-height: 1.2; margin-top: 4px; }
+    .pban .ps { font-size: 24px; font-weight: 600; margin-top: 6px; }
+
+    /* predict */
+    .prow { display: flex; gap: 70px; align-items: center; justify-content: center; height: 100%; }
+    .pq { font-size: 34px; font-weight: 800; line-height: 1.2; margin-bottom: 24px; max-width: 700px; }
+    .opts { display: flex; flex-direction: column; gap: 14px; width: 700px; }
+    .opt { display: flex; align-items: center; gap: 18px; text-align: left; font-family: 'Barlow', sans-serif; font-size: 25px; font-weight: 600; color: var(--navy);
+        background: #fff; border: 3px solid var(--navy); border-radius: 8px; padding: 14px 20px; cursor: pointer; transition: border-color .2s, background-color .2s, opacity .3s; }
+    .opt .lt { width: 40px; height: 40px; flex-shrink: 0; border-radius: 6px; border: 3px solid var(--navy); display: flex; align-items: center; justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 900; transition: background-color .2s, color .2s, border-color .2s; }
+    .opt:hover { border-color: var(--pink); }
+    .opt.chosen { border-color: var(--pink); background: rgba(234,0,138,.07); }
+    .opt.chosen .lt { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .with99 { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+
+    /* summary */
+    .mcards { display: flex; gap: 28px; }
+    .mcard { width: 340px; border: 3px solid var(--navy); border-radius: 8px; padding: 22px 26px 26px; opacity: 0; transform: translateY(14px); transition: opacity .45s var(--ease), transform .45s var(--ease); }
+    .mcard.show { opacity: 1; transform: none; }
+    .mcard.pink { border-color: var(--pink); }
+    .mcard .mn { font-family: 'Barlow Condensed', sans-serif; font-size: 60px; font-weight: 900; color: var(--pink); line-height: 1; margin-bottom: 12px; }
+    .mcard .mt { font-size: 28px; font-weight: 700; line-height: 1.25; }
+    .endnote { margin-top: 44px; font-size: 26px; font-weight: 600; text-align: center; max-width: 820px; opacity: 0; transition: opacity .5s; }
+    .endnote.show { opacity: 1; }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
 </head>
 <body>
-
-<header class="hdr">
-  <div class="hdr-tag">Lesson 01</div>
-  <h1 class="hdr-title">Variables: Named Containers</h1>
-</header>
-
-<div class="layout">
-
-  <aside class="panel">
-    <div class="principle active" id="p1">
-      <div class="pnum">01</div>
-      <div class="ptext">A variable is a named container</div>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Variables: <span>named containers</span></h1>
+        <div class="counter" id="counter"></div>
     </div>
-    <div class="principle" id="p2">
-      <div class="pnum">02</div>
-      <div class="ptext">The name stays; the value can change</div>
-    </div>
-    <div class="principle" id="p3">
-      <div class="pnum">03</div>
-      <div class="ptext">One name holds one value at a time</div>
-    </div>
-  </aside>
-
-  <main class="stage">
-
-    <div class="phase-info">
-      <div class="phase-tag" id="ptag">Phase 01</div>
-      <div class="phase-text" id="ptext">Drag each value into a named container. Drag one back out to move it.</div>
-      <div class="nudge" id="nudge"></div>
-    </div>
-
-    <div class="boxes">
-      <div class="bwrap">
-        <div class="box" id="b-name" data-name="name">
-          <div class="bval" id="bv-name"></div>
-        </div>
-        <div class="blabel">name<span class="bassign" id="ba-name"></span></div>
-      </div>
-      <div class="bwrap">
-        <div class="box" id="b-age" data-name="age">
-          <div class="bval" id="bv-age"></div>
-        </div>
-        <div class="blabel">age<span class="bassign" id="ba-age"></span></div>
-      </div>
-      <div class="bwrap">
-        <div class="box" id="b-sport" data-name="sport">
-          <div class="bval" id="bv-sport"></div>
-        </div>
-        <div class="blabel">sport<span class="bassign" id="ba-sport"></span></div>
-      </div>
-    </div>
-
-    <div class="tray" id="tray">
-      <div class="chip" data-value='"Mia"' data-hint="text · in quotes">"Mia"</div>
-      <div class="chip" data-value='14' data-hint="number · no quotes">14</div>
-      <div class="chip" data-value='"soccer"' data-hint="text · in quotes">"soccer"</div>
-    </div>
-
-    <div class="predict" id="predict">
-      <div class="predict-q">These containers are full. What happens if you drop a new value onto one?</div>
-      <div class="opts">
-        <button class="opt" type="button">Both values are kept side by side</button>
-        <button class="opt" type="button">The new value replaces the old one</button>
-        <button class="opt" type="button">Nothing happens, the box is already full</button>
-      </div>
-      <div class="predict-after" id="predict-after">Make your prediction, then run it to find out.</div>
-    </div>
-
-    <div class="prog">Filled: <b id="fc">0</b> / 3</div>
-
-  </main>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Next</button></div>
+    <div class="progress" id="progress"></div>
 </div>
-
-<!-- Completion overlay -->
-<div class="completion" id="completion">
-  <div class="comp-inner">
-    <div class="comp-item" id="ci1">
-      <span class="ci-num">01</span>
-      <p class="ci-text">A variable is a named container</p>
-    </div>
-    <div class="comp-item" id="ci2">
-      <span class="ci-num">02</span>
-      <p class="ci-text">The name stays; the value can change</p>
-    </div>
-    <div class="comp-item" id="ci3">
-      <span class="ci-num">03</span>
-      <p class="ci-text">One name holds one value at a time</p>
-    </div>
-    <p class="comp-note" id="comp-note">Head back to Stile to complete the next activity, or refresh the page to repeat this activity again.</p>
-  </div>
-</div>
-
-<div id="ghost"></div>
 
 <script>
-(() => {
-  let phase      = 1;
-  let filled     = 0;
-  let phase1Done = false;
-  let nudgeTimer = null;
-  let dragging   = null;
-  const state    = { name: null, age: null, sport: null };
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), nextBtn = $('#next'), counter = $('#counter'), progress = $('#progress');
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
 
-  const ghost = document.getElementById('ghost');
-  const tray  = document.getElementById('tray');
-  const ptag  = document.getElementById('ptag');
-  const ptext = document.getElementById('ptext');
-  const fc    = document.getElementById('fc');
+/* ---------- state ---------- */
+const KEYS = ['name', 'age', 'sport'];
+const state = { name: null, age: null, sport: null };
+let prediction = null;
+const PRED = [
+    'Both values are kept side by side.',
+    'The new value replaces the old one.',
+    'Nothing happens, because the container is already full.'
+];
+const isText = v => v.charAt(0) === '"';
 
-  bind(tray.querySelectorAll('.chip'));
-  document.body.classList.add('p1');
-  document.querySelectorAll('.box').forEach(b => {
-    b.addEventListener('mousedown', boxDown);
-    b.addEventListener('touchstart', boxTouch, { passive: false });
-  });
-
-  function bind(chips) {
-    chips.forEach(c => {
-      c.addEventListener('mousedown', chipDown);
-      c.addEventListener('touchstart', chipTouch, { passive: false });
+/* ---------- containers ---------- */
+function containers() {
+    const row = el('div', 'boxes');
+    const boxes = {};
+    KEYS.forEach(k => {
+        const col = el('div', 'bcol');
+        const b = el('div', 'vbox', `<div class="vl">${k}</div><div class="vv"></div>`);
+        b.key = k;
+        const line = el('div', 'cline');
+        col.append(b, line); row.appendChild(col);
+        b.line = line;
+        b.render = (anim) => {
+            const vv = b.querySelector('.vv'); vv.innerHTML = '';
+            const v = state[k];
+            b.classList.toggle('full', v !== null);
+            if (v === null) { vv.appendChild(el('span', 'empty', 'Empty')); line.classList.remove('show'); return; }
+            const s = el('span', 'val' + (anim ? ' ' + anim : ''), v); vv.appendChild(s);
+            line.textContent = `${k} = ${v}`; line.classList.add('show');
+        };
+        b.render();
+        boxes[k] = b;
     });
-  }
+    row.boxes = boxes;
+    return row;
+}
+function shake(b) { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
 
-  // ── drag start: from a tray chip ──
-  function chipDown(e) {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    const c = e.currentTarget;
-    beginDrag({ value: c.dataset.value, srcChip: c, srcKey: null }, e.clientX, e.clientY);
-    addMove(false);
-  }
-  function chipTouch(e) {
-    e.preventDefault();
-    const c = e.currentTarget, t = e.touches[0];
-    beginDrag({ value: c.dataset.value, srcChip: c, srcKey: null }, t.clientX, t.clientY);
-    addMove(true);
-  }
-
-  // ── drag start: lifting a value back out of a filled box (phase 1 only) ──
-  function boxDown(e) {
-    if (e.button !== 0) return;
-    const key = e.currentTarget.id.slice(2);
-    if (phase !== 1 || phase1Done || state[key] === null) return;
-    e.preventDefault();
-    liftFromBox(e.currentTarget, key, e.clientX, e.clientY);
-    addMove(false);
-  }
-  function boxTouch(e) {
-    const key = e.currentTarget.id.slice(2);
-    if (phase !== 1 || phase1Done || state[key] === null) return;
-    e.preventDefault();
-    const t = e.touches[0];
-    liftFromBox(e.currentTarget, key, t.clientX, t.clientY);
-    addMove(true);
-  }
-
-  function liftFromBox(box, key, x, y) {
-    beginDrag({ value: state[key], srcChip: null, srcKey: key }, x, y);
-    document.getElementById('bv-' + key).style.visibility = 'hidden';
-    box.classList.add('lifting');
-  }
-
-  function addMove(touch) {
-    if (touch) {
-      window.addEventListener('touchmove', tMove, { passive: false });
-      window.addEventListener('touchend', tEnd);
-    } else {
-      window.addEventListener('mousemove', mMove);
-      window.addEventListener('mouseup', mUp);
-    }
-  }
-
-  function mMove(e) { moveDrag(e.clientX, e.clientY); }
-  function mUp(e)   { endDrag(e.clientX, e.clientY); window.removeEventListener('mousemove', mMove); window.removeEventListener('mouseup', mUp); }
-  function tMove(e) { e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }
-  function tEnd(e)  { const t = e.changedTouches[0]; endDrag(t.clientX, t.clientY); window.removeEventListener('touchmove', tMove); window.removeEventListener('touchend', tEnd); }
-
-  function beginDrag(d, x, y) {
-    dragging = d;
-    ghost.textContent = d.value;
-    ghost.style.left  = x + 'px';
-    ghost.style.top   = y + 'px';
-    if (d.srcChip) d.srcChip.classList.add('dragging-src');
-    document.body.style.cursor = 'grabbing';
-    requestAnimationFrame(() => ghost.classList.add('on'));
-  }
-
-  function moveDrag(x, y) {
-    if (!dragging) return;
-    ghost.style.left = x + 'px';
-    ghost.style.top  = y + 'px';
-    document.querySelectorAll('.box').forEach(b => b.classList.remove('hover'));
-    const t = hitBox(x, y);
-    if (t) t.classList.add('hover');
-  }
-
-  function endDrag(x, y) {
-    if (!dragging) return;
-    ghost.classList.remove('on');
-    document.body.style.cursor = '';
-    document.querySelectorAll('.box').forEach(b => b.classList.remove('hover'));
-    const d = dragging;
-    dragging = null;
-    const target = hitBox(x, y);
-    if (d.srcChip) endChipDrag(d, target);
-    else endBoxDrag(d, target);
-  }
-
-  function hitBox(x, y) {
-    for (const b of document.querySelectorAll('.box')) {
-      const r = b.getBoundingClientRect();
-      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return b;
-    }
-    return null;
-  }
-
-  function shake(box) {
-    box.classList.add('a-shake');
-    box.addEventListener('animationend', () => box.classList.remove('a-shake'), { once: true });
-  }
-
-  // ── a tray chip was dropped ──
-  function endChipDrag(d, box) {
-    d.srcChip.classList.remove('dragging-src');
-    if (!box) return;
-    const key  = box.id.slice(2);
-    const prev = state[key];
-
-    if (phase === 1 && prev !== null) { shake(box); return; }   // can't stack onto a full box yet
-
-    const bv = document.getElementById('bv-' + key);
-    const ba = document.getElementById('ba-' + key);
-    const chip = d.srcChip;
-    chip.classList.add('used');
-    setTimeout(() => chip.remove(), 280);
-
-    if (prev === null) doSnap(box, bv, ba, d.value, key);
-    else doReassign(box, bv, ba, d.value, key);
-  }
-
-  // ── a value lifted from a box was dropped (phase 1) ──
-  function endBoxDrag(d, target) {
-    const key    = d.srcKey;
-    const srcBox = document.getElementById('b-' + key);
-    document.getElementById('bv-' + key).style.visibility = '';
-    srcBox.classList.remove('lifting');
-
-    if (target === srcBox) return;                       // dropped on itself, no change
-    if (!target) { retrieveToTray(key); return; }        // dropped outside, return to tray
-
-    const tgt = target.id.slice(2);
-    if (state[tgt] !== null) { shake(target); return; }  // target already full, refuse
-    moveValue(key, tgt);                                 // relocate into an empty box
-  }
-
-  function hintFor(val) {
-    return val.trim().charAt(0) === '"' ? 'text · in quotes' : 'number · no quotes';
-  }
-
-  function clearBox(key) {
-    const box = document.getElementById('b-' + key);
-    const bv  = document.getElementById('bv-' + key);
-    const ba  = document.getElementById('ba-' + key);
-    box.classList.remove('filled');
-    bv.style.display = 'none';
-    bv.textContent = '';
-    ba.textContent = '';
-    ba.classList.remove('show');
-    state[key] = null;
-  }
-
-  function retrieveToTray(key) {
-    const val = state[key];
-    clearBox(key);
-    filled--;
-    fc.textContent = filled;
-    const c = document.createElement('div');
-    c.className = 'chip a-chip';
-    c.dataset.value = val;
-    c.dataset.hint = hintFor(val);
-    c.textContent = val;
-    tray.appendChild(c);
-    bind([c]);
-  }
-
-  function moveValue(fromKey, toKey) {
-    const val = state[fromKey];
-    clearBox(fromKey);
-    maybeNudge(toKey, val);
-    fillBox(document.getElementById('b-' + toKey),
-            document.getElementById('bv-' + toKey),
-            document.getElementById('ba-' + toKey), val, toKey);
-  }
-
-  function fillBox(box, bv, ba, val, key) {
-    bv.textContent = val;
-    box.classList.add('filled');
-    bv.style.display = 'block';
-    clearA(bv);
-    void bv.offsetWidth;
-    bv.classList.add('a-snap');
-    ba.textContent = '\u00a0= ' + val;
-    setTimeout(() => ba.classList.add('show'), 290);
-    state[key] = val;
-  }
-
-  function doSnap(box, bv, ba, val, key) {
-    maybeNudge(key, val);
-    fillBox(box, bv, ba, val, key);
-    filled++;
-    fc.textContent = filled;
-
-    if (filled === 3 && !phase1Done) {
-      phase1Done = true;
-      document.querySelectorAll('.box').forEach(b => {
-        b.classList.add('a-pulse');
-        b.addEventListener('animationend', () => b.classList.remove('a-pulse'), { once: true });
-      });
-      setTimeout(showPredict, 1100);
-    }
-  }
-
-  function doReassign(box, bv, ba, val, key) {
-    document.querySelectorAll('.box.target').forEach(b => b.classList.remove('target'));
-    activate('p2');                       // the name stays; the value is changing
-
-    clearA(bv);
-    void bv.offsetWidth;
-    bv.classList.add('a-flyout');
-
-    setTimeout(() => {
-      bv.textContent = val;
-      clearA(bv);
-      void bv.offsetWidth;
-      bv.classList.add('a-dropin');
-
-      ba.textContent = '\u00a0= ' + val;
-      ba.classList.remove('show');
-      void ba.offsetWidth;
-      ba.classList.add('show');
-
-      state[key] = val;
-
-      activate('p3');                     // only one value remains
-      setInstruction(null, 'The name stayed. The value changed. One value at a time.');
-      setTimeout(showCompletion, 1100);
-    }, 375);
-  }
-
-  function showPredict() {
-    document.body.classList.remove('p1');
-    tray.style.display = 'none';
-    setInstruction('Phase 02', 'Predict first, then run it.');
-    const pre = document.getElementById('predict');
-    pre.style.display = 'flex';
-    pre.querySelectorAll('.opt').forEach(opt => opt.addEventListener('click', onPredict));
-  }
-
-  function onPredict(e) {
-    document.querySelectorAll('.opt').forEach(o => {
-      o.classList.add('locked');
-      o.disabled = true;
+/* ---------- drag or tap a chip ---------- */
+function chipFor(value, boxes, onDrop) {
+    const chip = el('div', 'chip', value);
+    chip.tabIndex = 0; chip.setAttribute('role', 'button'); chip.setAttribute('aria-label', 'Value ' + value);
+    const list = Object.values(boxes);
+    const hit = (x, y) => list.find(b => { const r = b.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    const setPick = on => { chip.classList.toggle('sel', on); list.forEach(b => b.classList.toggle('pick', on)); };
+    const attempt = b => { setPick(false); const ok = onDrop(b); if (!ok) chip.style.transform = ''; };
+    chip.addEventListener('pointerdown', e => {
+        if (chip.classList.contains('gone') || chip.classList.contains('idle')) return;
+        e.preventDefault(); chip.setPointerCapture(e.pointerId);
+        const sx = e.clientX, sy = e.clientY; let moved = false;
+        chip.classList.add('drag');
+        const move = ev => {
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            if (Math.hypot(dx, dy) > 6) moved = true;
+            chip.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px) scale(1.06)`;
+            const h = hit(ev.clientX, ev.clientY);
+            list.forEach(b => b.classList.toggle('hover', b === h));
+        };
+        const up = ev => {
+            chip.removeEventListener('pointermove', move); chip.removeEventListener('pointerup', up); chip.removeEventListener('pointercancel', up);
+            chip.classList.remove('drag'); list.forEach(b => b.classList.remove('hover'));
+            if (!moved) { chip.style.transform = ''; setPick(!chip.classList.contains('sel')); return; }
+            const b = hit(ev.clientX, ev.clientY);
+            if (b) attempt(b); else chip.style.transform = '';
+        };
+        chip.addEventListener('pointermove', move); chip.addEventListener('pointerup', up); chip.addEventListener('pointercancel', up);
     });
-    e.currentTarget.classList.add('chosen');
-    document.getElementById('predict-after').textContent = 'Good prediction. Now run it and see what really happens.';
-    setTimeout(startPhase2, 1200);
-  }
+    chip.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPick(!chip.classList.contains('sel')); } });
+    list.forEach(b => { b.onclick = () => { if (chip.classList.contains('sel')) attempt(b); }; });
+    return chip;
+}
 
-  function startPhase2() {
-    document.getElementById('predict').style.display = 'none';
-    tray.querySelectorAll('.chip').forEach(c => c.remove());
-    tray.style.display = '';
-    phase = 2;
-    setInstruction('Phase 02', 'Drag 99 onto age, and watch what happens to the value inside.');
-    document.getElementById('b-age').classList.add('target');
+/* ---------- steps ---------- */
+const PLACE = [
+    { v: '"Mia"', key: 'name', type: 'Text, in quotes' },
+    { v: '14', key: 'age', type: 'Number, no quotes' },
+    { v: '"soccer"', key: 'sport', type: 'Text, in quotes' }
+];
+function wrongMsg(v, k) {
+    if (state[k] !== null) return `<b>${k}</b> already holds a value. Choose an empty container.`;
+    if (isText(v) && k === 'age') return `Quotes mean <b>text</b>. age is usually a number, with no quotes. Try another container.`;
+    if (!isText(v)) return `${v} has no quotes, so it is a <b>number</b>. ${k} is usually text. Try another container.`;
+    return `${v} is not a ${k}. Read the label again and try another container.`;
+}
 
-    const c = document.createElement('div');
-    c.className     = 'chip a-chip';
-    c.dataset.value = '99';
-    c.dataset.hint  = 'number · no quotes';
-    c.textContent   = '99';
-    tray.appendChild(c);
-    bind(tray.querySelectorAll('.chip.a-chip'));
-  }
+function placeStep(i) {
+    const p = PLACE[i];
+    return {
+        run() {
+            say(i === 0 ? 'Drag the value into the container where it belongs.' : 'Drag this value into the container where it belongs.');
+            const c = el('div', 'center');
+            const row = containers();
+            const tray = el('div', 'tray');
+            const fb = el('div', 'fb');
+            const chip = chipFor(p.v, row.boxes, b => {
+                if (b.key !== p.key) { shake(b); fb.className = 'fb hint pop-in'; fb.innerHTML = wrongMsg(p.v, b.key); return false; }
+                chip.classList.add('gone'); tray.lastChild.style.visibility = 'hidden';
+                state[p.key] = p.v; b.render('snap');
+                fb.className = 'fb ok pop-in'; fb.innerHTML = `<b>Correct.</b> The container called ${p.key} now holds ${p.v}.`;
+                showNext();
+                return true;
+            });
+            tray.append(chip, el('div', 'ttag', p.type));
+            c.append(row, tray, fb); content.appendChild(c);
+        }
+    };
+}
 
-  function showNudge(text) {
-    const n = document.getElementById('nudge');
-    n.textContent = text;
-    n.classList.add('show');
-    clearTimeout(nudgeTimer);
-    nudgeTimer = setTimeout(() => n.classList.remove('show'), 4400);
-  }
+const steps = [
+    placeStep(0), placeStep(1), placeStep(2),
+    {
+        run() {
+            say('Each container has a <b>name</b> on its label, and holds a <b>value</b> inside.');
+            const c = el('div', 'center');
+            const row = containers();
+            const ban = el('div', 'pban pop-in', '<div class="dlbl">Key idea 1</div><div class="pt">A variable is a named container.</div><div class="ps">The name tells you what is stored inside.</div>');
+            c.append(row, ban); content.appendChild(c);
+            showNext();
+        }
+    },
+    {
+        run() {
+            say('Make a prediction first. There is no wrong answer yet.');
+            const row = el('div', 'prow');
+            const left = el('div', 'with99');
+            const boxes = containers();
+            const age = boxes.boxes.age, col = age.parentNode;
+            const chip = el('div', 'chip idle', '99');
+            left.append(chip, col);
+            const right = el('div');
+            right.appendChild(el('div', 'pq', 'The <span style="font-family:var(--mono)">age</span> container already holds 14. What happens if you put 99 into it?'));
+            const opts = el('div', 'opts');
+            PRED.forEach((t, j) => {
+                const o = el('button', 'opt', `<span class="lt">${'ABC'[j]}</span><span>${t}</span>`);
+                o.type = 'button';
+                o.onclick = () => { prediction = j; opts.querySelectorAll('.opt').forEach(x => x.classList.toggle('chosen', x === o)); nextBtn.disabled = false; nextBtn.textContent = 'Lock it in'; o.blur(); };
+                opts.appendChild(o);
+            });
+            right.appendChild(opts);
+            row.append(left, right); content.appendChild(row);
+            showNext(true, 'Lock it in');
+        }
+    },
+    {
+        run() {
+            say('Now test your prediction. Drag <b>99</b> onto the <b>age</b> container.');
+            const c = el('div', 'center');
+            const row = containers();
+            const B = row.boxes;
+            B.age.classList.add('target');
+            const tray = el('div', 'tray');
+            const fb = el('div', 'fb');
+            const chip = chipFor('99', B, b => {
+                if (b.key !== 'age') { shake(b); fb.className = 'fb hint pop-in'; fb.innerHTML = 'Drop 99 onto the <b>age</b> container.'; return false; }
+                chip.classList.add('gone'); tray.lastChild.style.visibility = 'hidden'; b.classList.remove('target');
+                const old = b.querySelector('.val'); if (old) old.classList.add('out');
+                setTimeout(() => {
+                    state.age = '99'; b.render('dropin');
+                    const right = prediction === 1;
+                    fb.className = 'fb ok pop-in';
+                    fb.innerHTML = (right ? '<b>Your prediction was right.</b> The new value replaced the old one. ' : '<b>Not quite.</b> The new value replaced the old one. ') + '14 is gone for good.';
+                    say('The name stays the same. Only the <b>value</b> changes.');
+                    showNext();
+                }, 420);
+                return true;
+            });
+            tray.append(chip, el('div', 'ttag', 'Number, no quotes'));
+            c.append(row, tray, fb); content.appendChild(c);
+        }
+    },
+    {
+        run() {
+            say('Head back to Stile to complete the next activity, or refresh this page to try again.');
+            const c = el('div', 'center');
+            const row = el('div', 'mcards');
+            const txt = ['A variable is a named container.', 'The name stays; the value can change.', 'One name holds one value at a time.'];
+            const cards = txt.map((t, i) => { const k = el('div', 'mcard' + (i === 1 ? ' pink' : ''), `<div class="mn">0${i + 1}</div><div class="mt">${t}</div>`); row.appendChild(k); return k; });
+            c.appendChild(row); content.appendChild(c);
+            cards.forEach((k, i) => setTimeout(() => k.classList.add('show'), 300 + i * 300));
+        },
+        final: true
+    }
+];
 
-  function maybeNudge(key, val) {
-    const gotText   = val.trim().charAt(0) === '"';
-    const wantsText = (key === 'name' || key === 'sport');
-    if (gotText === wantsText) return;
-    if (wantsText) showNudge('Numbers have no quotes. A name is usually text, which sits inside quotes. Drag it back out if you want to change it.');
-    else showNudge('Quotes mean text. age is usually a number, with no quotes. Drag it back out if you want to change it.');
-  }
+/* ---------- flow ---------- */
+let cur = 0;
+const QCOUNT = steps.length - 1;
+function showNext(disabled = false, label = 'Next') {
+    nextBtn.hidden = false; nextBtn.disabled = disabled; nextBtn.textContent = label;
+    nextBtn.classList.remove('pop-in'); void nextBtn.offsetWidth; nextBtn.classList.add('pop-in');
+    if (!disabled) setTimeout(() => nextBtn.focus({ preventScroll: true }), 50);
+}
+function go(i) {
+    cur = i;
+    content.innerHTML = '';
+    nextBtn.hidden = true;
+    const s = steps[i];
+    counter.innerHTML = s.final ? '<b>Complete</b>' : `Step <b>${i + 1}</b> / ${QCOUNT}`;
+    progress.style.width = (s.final ? 100 : (i / QCOUNT) * 100) + '%';
+    s.run();
+}
+nextBtn.onclick = () => { if (!nextBtn.disabled && cur < steps.length - 1) go(cur + 1); };
 
-  function showCompletion() {
-    const overlay = document.getElementById('completion');
-    overlay.classList.add('show');
-
-    ['ci1', 'ci2', 'ci3'].forEach((id, i) => {
-      setTimeout(() => document.getElementById(id).classList.add('reveal'), 420 + i * 250);
-    });
-
-    setTimeout(() => document.getElementById('comp-note').classList.add('reveal'), 420 + 3 * 250 + 180);
-  }
-
-  function activate(id) { document.getElementById(id).classList.add('active'); }
-
-  function clearA(el) { el.classList.remove('a-snap', 'a-flyout', 'a-dropin'); }
-
-  function setInstruction(tag, text) {
-    ptext.style.opacity = '0';
-    setTimeout(() => {
-      if (tag) ptag.textContent = tag;
-      ptext.textContent = text;
-      ptext.style.opacity = '1';
-    }, 180);
-  }
-
-})();
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); go(0); });
 </script>
 </body>
 </html>
