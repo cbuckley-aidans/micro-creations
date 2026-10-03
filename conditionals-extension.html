@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Extension: Python Variables</title>
+<title>Extension: If / Else</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <script src="https://skulpt.org/js/skulpt.min.js"></script>
@@ -130,7 +130,7 @@ h1 span { color: var(--pink); }
 <body>
 <div class="page">
     <div class="top">
-        <h1>Extension: <span>variables</span></h1>
+        <h1>Extension: <span>if / else</span></h1>
         <div class="counter" title="Buckles earned">
             <img src="buckle.svg" alt="" class="counter-icon">
             <div class="num" id="buckleCount">0</div>
@@ -200,194 +200,190 @@ h1 span { color: var(--pink); }
    code      starter code loaded into the editor
    buckles   buckles awarded on first correct run
    hint      curated hint shown by the Hint button
+   example   { label, code, output, note } shown above the editor
    check(code, output) -> true | "specific feedback string"
    ========================================================================= */
-const PAGE_ID = "variables-extension";
+const PAGE_ID = "conditionals-extension";
+
+const num = (code, name) => parseFloat((code.match(new RegExp("\\b" + name + "\\s*=\\s*(-?[\\d.]+)")) || [])[1]);
+const str = (code, name) => (code.match(new RegExp("\\b" + name + "\\s*=\\s*\"([^\"]*)\"")) || [])[1];
+const lines = out => out.trim().split("\n").map(x => x.trim()).filter(Boolean);
+const hasIfElse = code => /^\s*if\b.*:\s*$/m.test(code) && /^\s*else\s*:\s*$/m.test(code);
 
 const STAGES = [
   {
-    id:"greeting",
-    title:"Join text and a variable",
-    task:'You can join text and a variable with a <code>+</code> sign. Print a greeting that says <code>Hello, Sam</code> using the <code>name</code> variable.',
-    code:'name = "Sam"\n# print a greeting like:  Hello, Sam\n# join the text "Hello, " and the variable name using +\n',
+    id:"from-scratch",
+    title:"Write it from scratch",
+    task:'Write a complete <code>if</code> / <code>else</code> with no help. If <code>steps</code> is 10000 or more, print <code>Goal reached!</code>. Otherwise, print <code>Keep walking</code>.',
+    code:'steps = 12000\n# write a complete if / else below\n',
     buckles:1,
-    hint:'Join them with a plus sign: print("Hello, " + name).',
-    example:{ code:'city = "Perth"\nprint("Welcome to " + city)', output:'Welcome to Perth', note:'The + sign joins text and a variable together into one line.' },
+    hint:'Start with: if steps >= 10000:  Then indent the print on the next line. Do the same for else.',
+    example:{ label:"Remember the shape", code:'if condition:\n    do this\nelse:\n    do something else', note:'Condition, colon, indent. Then else, colon, indent.' },
     check(code, out){
-      const nm = (code.match(/name\s*=\s*"([^"]*)"/)||[])[1] || "";
-      if(!/print\s*\([^)]*\bname\b[^)]*\)/.test(code)) return "Use the name variable inside print().";
-      if(!/\+/.test(code)) return "Join the text and the variable with a + sign.";
-      const o = out.trim();
-      if(!/^hello/i.test(o)) return 'The output should start with "Hello,".';
-      if(nm && !o.includes(nm)) return "The greeting should include the name.";
+      if(!hasIfElse(code)) return "You need an if line and an else line, each ending with a colon.";
+      if(!/>=\s*10000/.test(code)) return "10000 or more means you need >= 10000.";
+      const s = num(code, "steps");
+      const exp = s >= 10000 ? "Goal reached!" : "Keep walking";
+      if(lines(out).join("\n") !== exp) return "With steps = " + s + ", it should print " + exp + " and nothing else.";
       return true;
     }
   },
   {
-    id:"full-name",
-    title:"Join two variables",
-    task:'Print the full name with a space in the middle, by joining <code>first</code> and <code>last</code>.',
-    code:'first = "Ada"\nlast = "Lovelace"\n# print the full name with a space between the two parts\n',
+    id:"not-equal",
+    title:"Use not equal to",
+    task:'Use <code>!=</code> to check the PIN. If <code>pin</code> is not equal to <code>"1234"</code>, print <code>Access denied</code>. Otherwise, print <code>Welcome</code>.',
+    code:'pin = "0000"\n# if pin is not equal to "1234", print Access denied\n# otherwise, print Welcome\n',
     buckles:1,
-    hint:'Use two plus signs and a space: print(first + " " + last).',
-    example:{ code:'day = "Monday"\nmonth = "June"\nprint(day + " " + month)', output:'Monday June', note:'The " " in the middle adds a space between the two words.' },
+    hint:'The condition is pin != "1234". Keep the quote marks, because the PIN is stored as text.',
+    example:{ code:'colour = "red"\nif colour != "blue":\n    print("Not blue")\nelse:\n    print("Blue!")', output:'Not blue', note:'!= means not equal to. It is true when the two values are different.' },
     check(code, out){
-      const fn = (code.match(/first\s*=\s*"([^"]*)"/)||[])[1] || "";
-      const ln = (code.match(/last\s*=\s*"([^"]*)"/)||[])[1] || "";
-      if(!/print\s*\(/.test(code) || !/first/.test(code) || !/last/.test(code)) return "Use both first and last inside print().";
-      if(out.trim() !== (fn + " " + ln)) return 'Put a space between them: first + " " + last.';
+      if(!/!=/.test(code)) return "Use the != operator in your condition.";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      const p = str(code, "pin");
+      const exp = p !== "1234" ? "Access denied" : "Welcome";
+      if(lines(out).join("\n") !== exp) return "With pin = \"" + p + "\", it should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"store-calculation",
-    title:"Store a calculation",
-    task:'A variable can store the result of a calculation. Make a variable called <code>total</code> that adds <code>7</code> and <code>5</code>, then print it.',
-    code:'# create a variable called total that adds 7 and 5\n# then print total\n',
+    id:"boundary",
+    title:"Include the boundary",
+    task:'The player is out when <code>lives</code> is 0 or less. Use <code>&lt;=</code> so it prints <code>Game over</code> when lives is 0 or less, and <code>Keep playing</code> otherwise.',
+    code:'lives = 0\n# Game over when lives is 0 or less\n# otherwise, Keep playing\n',
     buckles:1,
-    hint:"Let Python do the maths: total = 7 + 5, then print(total).",
-    example:{ code:'answer = 10 + 6\nprint(answer)', output:'16', note:'Python works out the sum first, then stores the result in the variable.' },
+    hint:'"0 or less" includes 0 itself, so use lives <= 0.',
+    example:{ code:'stock = 5\nif stock <= 5:\n    print("Order more")\nelse:\n    print("Plenty left")', output:'Order more', note:'<= is true when the value is less than the number, or exactly equal to it.' },
     check(code, out){
-      const m = code.match(/total\s*=\s*(\d+)\s*\+\s*(\d+)/);
-      if(!m) return "Write the sum itself so Python adds it: total = 7 + 5.";
-      if(!/print\s*\(\s*total\s*\)/.test(code)) return "Add a line: print(total).";
-      if(parseFloat(out) !== parseInt(m[1]) + parseInt(m[2])) return "Run it to see the total.";
+      if(!/<=\s*0/.test(code)) return "Use <= 0 so that 0 lives counts as game over.";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      const l = num(code, "lives");
+      const exp = l <= 0 ? "Game over" : "Keep playing";
+      if(lines(out).join("\n") !== exp) return "With lives = " + l + ", it should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"area",
-    title:"Use variables in a calculation",
-    task:'Make a new variable called <code>area</code> by multiplying <code>width</code> by <code>height</code>, then print it.',
-    code:'width = 5\nheight = 3\n# create a variable called area = width times height\n# then print area\n',
+    id:"two-variables",
+    title:"Compare two variables",
+    task:'A condition can compare two variables. If <code>score</code> is greater than <code>high_score</code>, print <code>New high score!</code>. Otherwise, print <code>Try again</code>.',
+    code:'score = 85\nhigh_score = 70\n# compare score with high_score\n',
     buckles:1,
-    hint:"Multiply the two variables: area = width * height.",
-    example:{ code:'apples = 4\nboxes = 2\ntotal = apples * boxes\nprint(total)', output:'8', note:'The * sign means multiply. You can do maths with variables, not just numbers.' },
+    hint:'Put both variable names in the condition: if score > high_score:',
+    example:{ code:'my_age = 12\nfriend_age = 13\nif my_age < friend_age:\n    print("I am younger")\nelse:\n    print("I am not younger")', output:'I am younger', note:'Python swaps each name for its value, then compares: 12 < 13 is true.' },
     check(code, out){
-      const w = parseInt((code.match(/width\s*=\s*(\d+)/)||[])[1]);
-      const h = parseInt((code.match(/height\s*=\s*(\d+)/)||[])[1]);
-      if(!/area\s*=\s*(width\s*\*\s*height|height\s*\*\s*width)/.test(code)) return "Multiply the variables: area = width * height.";
-      if(!/print\s*\(\s*area\s*\)/.test(code)) return "Add a line: print(area).";
-      if(parseFloat(out) !== w * h) return "Run it to see the area.";
+      if(!/if\s+(score\s*>\s*high_score|high_score\s*<\s*score)\s*:/.test(code)) return "Compare the two variables directly: if score > high_score:";
+      if(!hasIfElse(code)) return "You need an else line for the other path.";
+      const exp = num(code, "score") > num(code, "high_score") ? "New high score!" : "Try again";
+      if(lines(out).join("\n") !== exp) return "It should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"update-self",
-    title:"Update a variable using itself",
-    task:'A variable can be updated using its own value. Change <code>score</code> so it becomes <strong>5 more</strong> than it is now, then print it.',
-    code:'score = 10\n# change score so it is 5 bigger than before\n# then print score\n',
+    id:"update-then-decide",
+    title:"Update, then decide",
+    task:'You have 8 coins and earn 5 more. Add a line that increases <code>coins</code> by 5. Then, if coins is 10 or more, print <code>You can buy the hat</code>. Otherwise, print <code>Keep saving</code>.',
+    code:'coins = 8\n# add 5 to coins\n# then decide: 10 or more coins buys the hat\n',
     buckles:1,
-    hint:"Use score on both sides: score = score + 5. Python works out the right side first.",
-    example:{ code:'coins = 3\ncoins = coins + 2\nprint(coins)', output:'5', note:'Python works out the right side (3 + 2) first, then stores 5 back into coins.' },
+    hint:'Update first: coins = coins + 5. Then write the if / else underneath, using >= 10.',
+    example:{ code:'points = 4\npoints = points + 3\nif points > 6:\n    print("Level up")\nelse:\n    print("Keep going")', output:'Level up', note:'The if line uses whatever value points holds when Python reaches it: 7, not 4.' },
     check(code, out){
-      if((code.match(/score\s*=/g)||[]).length < 2) return "Add a second line that changes score.";
-      if(!/score\s*=\s*score\s*\+\s*\d+/.test(code)) return "Use score on both sides: score = score + 5.";
-      if(parseFloat(out) !== 15) return "It should print 15 (10 plus 5).";
+      if(!/coins\s*=\s*coins\s*\+\s*5/.test(code)) return "Add a line that updates coins: coins = coins + 5.";
+      if(!/>=\s*10/.test(code)) return "10 or more means >= 10.";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      if(lines(out).join("\n") !== "You can buy the hat") return "8 + 5 is 13, so it should print You can buy the hat.";
       return true;
     }
   },
   {
-    id:"text-and-number",
-    title:"Mix text and a number",
-    task:'Print the sentence <code>I am 12 years old</code> using the <code>age</code> variable. A number has to be turned into text with <code>str()</code> before you can join it.',
-    code:'age = 12\n# print the sentence:  I am 12 years old\n# remember: wrap the number in str() to join it to text\n',
+    id:"calculate-then-decide",
+    title:"Calculate, then decide",
+    task:'Make a variable called <code>total</code> by multiplying <code>price</code> by <code>quantity</code>. If the total is more than 20, print <code>Free delivery</code>. Otherwise, print <code>Delivery costs $5</code>.',
+    code:'price = 6\nquantity = 4\n# work out total, then decide about delivery\n',
     buckles:1,
-    hint:'Turn the number into text: print("I am " + str(age) + " years old").',
-    example:{ code:'lives = 3\nprint("Lives left: " + str(lives))', output:'Lives left: 3', note:'str() turns a number into text so it can be joined with +. Without str(), Python shows an error.' },
+    hint:'First: total = price * quantity. Then: if total > 20:',
+    example:{ code:'length = 3\nwidth = 4\narea = length * width\nif area > 10:\n    print("Big room")\nelse:\n    print("Small room")', output:'Big room', note:'Work out the value and store it first, then the condition can test it.' },
     check(code, out){
-      const age = (code.match(/age\s*=\s*(\d+)/)||[])[1] || "12";
-      if(/Error/i.test(out)) return "A number must be turned into text first. Wrap it in str(age).";
-      if(out.trim() !== ("I am " + age + " years old")) return "The output should read: I am " + age + " years old.";
+      if(!/total\s*=\s*(price\s*\*\s*quantity|quantity\s*\*\s*price)/.test(code)) return "Make the total first: total = price * quantity.";
+      if(!/if\s+total\s*>\s*20\s*:/.test(code)) return "Test the total: if total > 20:";
+      if(!hasIfElse(code)) return "You need an else line for the other path.";
+      const exp = num(code, "price") * num(code, "quantity") > 20 ? "Free delivery" : "Delivery costs $5";
+      if(lines(out).join("\n") !== exp) return "It should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"labelled-total",
-    title:"Calculate and label a result",
-    task:'Work out the total cost (<code>price</code> times <code>quantity</code>) and print it with a label, like <code>Total: 24</code>.',
-    code:'price = 6\nquantity = 4\n# work out the total cost, then print it like:  Total: 24\n',
+    id:"value-in-message",
+    title:"Show the value in the message",
+    task:'If <code>score</code> is 50 or more, print <code>You scored 72. You passed!</code>. Otherwise, print <code>You scored 72. Keep practising.</code>. Use the <code>score</code> variable in the message, not the number 72.',
+    code:'score = 72\n# include the score in each message using str(score)\n',
     buckles:1,
-    hint:'Store it, then print with a label: total = price * quantity, then print("Total: " + str(total)).',
-    example:{ code:'length = 5\nwidth = 2\narea = length * width\nprint("Area: " + str(area))', output:'Area: 10', note:'Work out the value first and store it, then join it to a label using str().' },
+    hint:'Join text and the number with str(): print("You scored " + str(score) + ". You passed!")',
+    example:{ code:'lives = 3\nif lives > 0:\n    print("Lives left: " + str(lives))\nelse:\n    print("No lives left")', output:'Lives left: 3', note:'str() turns a number into text so it can be joined into a message with +.' },
     check(code, out){
-      const p = parseInt((code.match(/price\s*=\s*(\d+)/)||[])[1]);
-      const q = parseInt((code.match(/quantity\s*=\s*(\d+)/)||[])[1]);
-      const exp = p * q;
-      if(/Error/i.test(out)) return "Turn the number into text with str() before joining it to the label.";
-      const o = out.trim();
-      if(!/total/i.test(o)) return 'Include a label, like "Total: ".';
-      if(!o.includes(String(exp))) return "Multiply price by quantity to get the total.";
+      if(/Error/i.test(out)) return "A number must be turned into text before joining. Wrap it in str(score).";
+      if(!/str\s*\(\s*score\s*\)/.test(code)) return "Use str(score) in your messages, so they change if the score changes.";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      const s = num(code, "score");
+      const o = lines(out).join(" ");
+      if(!o.includes(String(s))) return "The message should include the score.";
+      if(s >= 50 ? !/passed/i.test(o) : !/practis|practic/i.test(o)) return "With score = " + s + ", the " + (s >= 50 ? "You passed!" : "Keep practising.") + " message should print.";
       return true;
     }
   },
   {
-    id:"average",
-    title:"Work out an average",
-    task:'Work out the average of the three numbers and print it. Add them together first, then divide by 3.',
-    code:'a = 4\nb = 8\nc = 6\n# work out the average: add a, b and c, then divide by 3\n# print the average\n',
+    id:"even-odd",
+    title:"Even or odd?",
+    task:'The <code>%</code> sign gives the remainder after dividing. Print <code>Even</code> if <code>number</code> divides evenly by 2. Otherwise, print <code>Odd</code>.',
+    code:'number = 7\n# use % to check the remainder when number is divided by 2\n',
     buckles:1,
-    hint:"Use brackets so the adding happens first: average = (a + b + c) / 3.",
-    example:{ code:'score = (10 + 20) / 2\nprint(score)', output:'15.0', note:'Brackets are worked out first. The / sign divides, and dividing always gives a decimal (15.0).' },
+    hint:'A number is even when its remainder after dividing by 2 is 0: if number % 2 == 0:',
+    example:{ label:"New idea", code:'print(7 % 3)\nprint(10 % 2)', output:'1\n0', note:'7 divided by 3 is 2, remainder 1. So 7 % 3 gives 1. Any even number % 2 gives 0.' },
     check(code, out){
-      const a = parseInt((code.match(/\ba\s*=\s*(\d+)/)||[])[1]);
-      const b = parseInt((code.match(/\bb\s*=\s*(\d+)/)||[])[1]);
-      const c = parseInt((code.match(/\bc\s*=\s*(\d+)/)||[])[1]);
-      if(!/\/\s*3/.test(code)) return "Remember to divide by 3.";
-      const exp = (a + b + c) / 3;
-      if(isNaN(parseFloat(out)) || Math.abs(parseFloat(out) - exp) > 1e-6) return "Add the three numbers in brackets, then divide by 3.";
+      if(!/%\s*2/.test(code)) return "Use % 2 to find the remainder when dividing by 2.";
+      if(!/==\s*0|!=\s*0/.test(code)) return "Compare the remainder with 0, for example: if number % 2 == 0:";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      const n = num(code, "number");
+      const exp = n % 2 === 0 ? "Even" : "Odd";
+      if(lines(out).join("\n") !== exp) return "With number = " + n + ", it should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"temperature",
-    title:"Convert with a formula",
-    task:'Convert the temperature from Celsius to Fahrenheit and print the result. The formula is <code>fahrenheit = celsius * 9 / 5 + 32</code>.',
-    code:'celsius = 20\n# convert celsius to fahrenheit using the formula above\n# then print the result\n',
+    id:"and-range",
+    title:"Check a range with and",
+    task:'A teen ticket is for ages 13 to 17. Use <code>and</code> to check both ends. If <code>age</code> is at least 13 <strong>and</strong> at most 17, print <code>Teen ticket</code>. Otherwise, print <code>Other ticket</code>.',
+    code:'age = 15\n# check both ends of the range using and\n',
     buckles:1,
-    hint:"Follow the formula exactly: fahrenheit = celsius * 9 / 5 + 32.",
-    example:{ code:'price = 5\nfinal = price * 2 + 1\nprint(final)', output:'11', note:'Python follows the rules of maths: it does the multiply and divide before the add and subtract.' },
+    hint:'Join two conditions: if age >= 13 and age <= 17:',
+    example:{ label:"New idea", code:'temp = 22\nif temp >= 18 and temp <= 26:\n    print("Comfortable")\nelse:\n    print("Too hot or too cold")', output:'Comfortable', note:'and means both conditions must be true for the whole condition to be true.' },
     check(code, out){
-      const c = parseFloat((code.match(/celsius\s*=\s*([\d.]+)/)||[])[1]);
-      const exp = c * 9 / 5 + 32;
-      if(isNaN(parseFloat(out)) || Math.abs(parseFloat(out) - exp) > 1e-6) return "Use the formula: celsius * 9 / 5 + 32.";
+      if(!/\band\b/.test(code)) return "Use and to join the two conditions.";
+      if(!/>=\s*13/.test(code) || !/<=\s*17/.test(code)) return "Check both ends: age >= 13 and age <= 17.";
+      if(!hasIfElse(code)) return "You need both an if line and an else line.";
+      const a = num(code, "age");
+      const exp = (a >= 13 && a <= 17) ? "Teen ticket" : "Other ticket";
+      if(lines(out).join("\n") !== exp) return "With age = " + a + ", it should print " + exp + ".";
       return true;
     }
   },
   {
-    id:"shop-problem",
-    title:"Solve a word problem",
-    task:'Tom buys some pencils. Work out how much he pays: the cost is <code>price_each</code> times <code>number_bought</code>, then take off the <code>discount</code>. Print how much Tom pays.',
-    code:'price_each = 3\nnumber_bought = 5\ndiscount = 2\n# work out the cost, take off the discount, then print what Tom pays\n',
-    buckles:1,
-    hint:"Cost before discount = price_each * number_bought. Then subtract discount, then print the answer.",
-    example:{ code:'packs = 3\neach = 4\nspare = 1\ntotal = packs * each - spare\nprint(total)', output:'11', note:'You can do several steps in one calculation: 3 times 4 is 12, take off 1 leaves 11.' },
-    check(code, out){
-      const pe = parseInt((code.match(/price_each\s*=\s*(\d+)/)||[])[1]);
-      const nb = parseInt((code.match(/number_bought\s*=\s*(\d+)/)||[])[1]);
-      const d = parseInt((code.match(/discount\s*=\s*(\d+)/)||[])[1]);
-      const exp = pe * nb - d;
-      if(/Error/i.test(out)) return "If you add a label, wrap the number in str().";
-      if(!out.includes(String(exp))) return "Multiply price by number bought, then subtract the discount.";
-      return true;
-    }
-  },
-  {
-    id:"swap",
-    title:"The big one: swap two values",
-    task:'These two boxes hold the wrong values. Swap them so <code>box_a</code> holds <code>"banana"</code> and <code>box_b</code> holds <code>"apple"</code>, then the prints will show the swap. <strong>Careful:</strong> if you copy one straight into the other you lose a value. You will need a third variable to hold one safely.',
-    code:'box_a = "apple"\nbox_b = "banana"\n\n# Swap the values using a third (temporary) variable.\n# After your code, box_a should hold "banana" and box_b should hold "apple".\n\nprint(box_a)\nprint(box_b)',
+    id:"elif",
+    title:"The big one: three paths with elif",
+    task:'Some decisions have more than two paths. Use <code>if</code>, <code>elif</code> and <code>else</code> to print <code>Hot</code> when <code>temp</code> is above 30, <code>Warm</code> when it is above 15, and <code>Cold</code> otherwise. <strong>Careful:</strong> the order of your conditions matters.',
+    code:'temp = 22\n# Hot above 30, Warm above 15, otherwise Cold\n',
     buckles:3,
-    hint:"Make a temporary box first: temp = box_a, then box_a = box_b, then box_b = temp.",
-    example:{ label:"Watch out", code:'a = "cat"\nb = "dog"\na = b\nb = a\nprint(a)\nprint(b)', output:'dog\ndog', note:'Copying b into a happens first, so "cat" is lost before b can be saved. That is why you need a third variable to hold a value safely.' },
+    hint:'Check the biggest value first: if temp > 30:, then elif temp > 15:, then else:. Each line ends with a colon.',
+    example:{ label:"New idea", code:'score = 65\nif score >= 80:\n    print("Gold")\nelif score >= 50:\n    print("Silver")\nelse:\n    print("Bronze")', output:'Silver', note:'elif means else if. Python checks each condition from the top and runs only the first one that is true.' },
     check(code, out){
-      if(/box_a\s*=\s*"banana"/.test(code) || /box_b\s*=\s*"apple"/.test(code))
-        return "Swap using the variables, not by typing the new words in directly.";
-      const targets = [...code.matchAll(/^\s*([a-zA-Z_]\w*)\s*=/gm)].map(m => m[1]);
-      const extra = targets.filter(t => t !== "box_a" && t !== "box_b");
-      if(extra.length === 0) return "You need a third variable to hold a value safely. Start with: temp = box_a";
-      const lines = out.trim().split("\n").map(x => x.trim()).filter(Boolean);
-      if(lines[0] !== "banana" || lines[1] !== "apple") return "After swapping, box_a should print banana and box_b should print apple.";
+      if(!/^\s*elif\b.*:\s*$/m.test(code)) return "Add an elif line between the if and the else, ending with a colon.";
+      if(!hasIfElse(code)) return "You need an if line at the top and an else line at the bottom.";
+      const t = num(code, "temp");
+      const exp = t > 30 ? "Hot" : t > 15 ? "Warm" : "Cold";
+      const o = lines(out).join("\n");
+      const i30 = code.search(/>\s*30/), i15 = code.search(/>\s*15/);
+      if(i30 < 0 || i15 < 0) return "Use temp > 30 and temp > 15 in your conditions.";
+      if(i15 < i30) return "Check your order: test temp > 30 first, then temp > 15.";
+      if(o !== exp) return "With temp = " + t + ", it should print " + exp + " and nothing else.";
       return true;
     }
   }
