@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thinking like a programmer</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --white: #ffffff;
+        --off-white: #f5f5f5;
+        --light-grey: #e8e8e8;
+        --mid-grey: #9a9a9a;
+        --blank: #f0f3f6;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif;
+        margin: 0; background: #eaeaea; color: var(--navy);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .viewport { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .stage {
+        width: 1280px; height: 720px; background: var(--white); border-top: 6px solid var(--navy);
+        position: relative; padding: 0; transform-origin: center center; flex-shrink: 0; overflow: hidden;
+    }
+    .zoomer { position: absolute; left: 0; top: 0; width: 1280px; height: 714px; padding: 36px 64px 0 64px; transform-origin: 0 0; }
+    .spot { position: absolute; left: 0; top: 0; width: 1280px; height: 714px; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .35s var(--ease); }
+    .spot.on { opacity: 1; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--mid-grey); }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 130px; bottom: 110px; }
+    .caption {
+        position: absolute; left: 64px; right: 64px; bottom: 30px;
+        font-size: 27px; font-weight: 500; line-height: 1.35;
+        display: flex; align-items: center; gap: 16px; min-height: 60px;
+    }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption b { font-weight: 800; color: var(--pink); }
+    .caption.in { animation: capIn .45s var(--ease); }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; }
+
+    .hide { opacity: 0; transform: translateY(14px); }
+    .rev { transition: opacity .45s var(--ease), transform .45s var(--ease), background-color .35s, color .35s, border-color .35s; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .hint { margin-top: 22px; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+    .dlbl { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* controls */
+    .controls { position: relative; z-index: 25; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 24px; padding: 12px 20px 16px; width: 100%; font-family: 'Barlow Condensed', sans-serif; }
+    .grp { display: flex; align-items: center; gap: 8px; }
+    .controls [hidden] { display: none !important; }
+    .controls button {
+        font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2;
+        display: inline-flex; align-items: center; gap: 8px; background: var(--white); color: var(--navy); border: none; border-radius: 6px; padding: 9px 13px; cursor: pointer;
+    }
+    .controls button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .controls button.on { background: var(--pink); color: var(--white); }
+    .controls button.pri { background: var(--navy); color: var(--white); }
+    .controls button.fs { background: var(--pink); color: var(--white); }
+    .controls button.fs.isfs { background: var(--white); color: var(--navy); }
+    .controls button.fs.nudge { animation: nudge 1.6s ease-out 1s 4; }
+    @keyframes nudge { 0% { box-shadow: 0 0 0 0 rgba(234,0,138,.55); } 70%, 100% { box-shadow: 0 0 0 14px rgba(234,0,138,0); } }
+    .controls svg.ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .controls svg.chev { width: 13px; height: 13px; stroke-width: 3; opacity: .6; transition: transform .2s var(--ease); }
+    .menu.open > .mt svg.chev { transform: rotate(180deg); }
+    .mt .pdot { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 0 2px var(--white); }
+    .controls .dots { display: flex; gap: 8px; margin: 0 8px 0 12px; }
+    .controls .dots button { width: 14px; height: 14px; padding: 0; border-radius: 50%; background: #c9ccd6; }
+    .controls .dots button.cur { background: var(--pink); }
+    .steplbl { font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid-grey); margin-left: 6px; min-width: 110px; }
+    .controls kbd { margin-left: 2px; }
+
+    /* menus */
+    .menu { position: relative; }
+    .pop { display: none; position: absolute; left: 0; bottom: calc(100% + 10px); min-width: 260px; flex-direction: column; gap: 2px; padding: 4px 8px 8px;
+        background: var(--white); border-top: 6px solid var(--navy); border-radius: 10px; box-shadow: 0 10px 30px rgba(27,31,69,.25), 0 0 0 1px rgba(27,31,69,.08); }
+    .menu.r .pop { left: auto; right: 0; }
+    .menu.open .pop { display: flex; animation: popIn .18s var(--ease); }
+    @keyframes popIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .ph { font-size: 15px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); padding: 10px 10px 6px; }
+    .pop .mi { width: 100%; padding: 9px 10px; background: transparent; white-space: nowrap; }
+    .pop .mi:hover { background: var(--off-white); }
+    .pop .mi kbd { margin-left: auto; padding-left: 5px; }
+    .pop .mi .ind { width: 14px; height: 14px; border: 2.5px solid var(--navy); border-radius: 3px; flex-shrink: 0; margin-right: 4px; }
+    .pop .mi .ind.no { border-color: transparent; }
+    .pop .mi.on { background: transparent; color: var(--pink); }
+    .pop .mi.on:hover { background: var(--off-white); }
+    .pop .mi.on .ind { background: var(--pink); border-color: var(--pink); }
+    .pop .mi:disabled { opacity: .35; cursor: default; background: transparent; }
+    .pop .mi.eng .ind { border: none; border-radius: 50%; }
+    .pop .mi.eng .ind.pk { background: var(--pink); }
+    .pop .mi.eng .ind.nv { background: var(--navy); }
+    .pop .swrow { display: flex; gap: 8px; padding: 4px 10px 10px 38px; }
+    .pop .swatch { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 3px solid var(--white); box-shadow: 0 0 0 1px #c9ccd6; }
+    .pop .swatch.cur { box-shadow: 0 0 0 3px var(--navy); }
+    .pop .div { height: 1.5px; background: var(--light-grey); margin: 4px 6px; }
+
+
+
+    /* highlighter and whiteboard surfaces */
+    .hlc { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; z-index: 4; mix-blend-mode: multiply; }
+    .wboard { display: none; position: absolute; left: 0; top: 0; width: 1280px; height: 714px; background: var(--white); z-index: 3; }
+    body.wb .wboard { display: block; }
+    .wbl { position: absolute; right: 64px; top: 40px; font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid-grey); }
+    .wbl b { color: var(--navy); }
+    .wbg { display: none; }
+    body.wb .wbg { display: flex; }
+    body.wb .grp.nav { display: none; }
+    .wbtag { font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--white); background: var(--pink); border-radius: 6px; padding: 9px 13px; line-height: 1.2; }
+    .controls button:disabled { opacity: .35; cursor: default; }
+    #ovbtn { padding: 9px 11px; }
+
+    /* overlays */
+    .ovw[hidden], .keys[hidden], .blk[hidden] { display: none !important; }
+    .ovw { position: fixed; inset: 0; z-index: 45; background: rgba(27,31,69,.96); overflow-y: auto; padding: 40px 48px 60px; opacity: 0; transition: opacity .2s; }
+    .ovw.on, .keys.on, .blk.on { opacity: 1; }
+    .ovh { display: flex; justify-content: space-between; align-items: flex-end; max-width: 1296px; margin: 0 auto 28px; padding-bottom: 12px; border-bottom: 4px solid var(--white); color: var(--white); }
+    .ovh h2 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+    .ovh h2 span { color: var(--pink); }
+    .ovh .hint, .blk .bh { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+    .ovh kbd { display: inline-block; padding: 0 6px; border: 1.5px solid currentColor; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; line-height: 17px; }
+    .ovg { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 30px 24px; justify-content: center; max-width: 1296px; margin: 0 auto; }
+    .ovc { background: none; border: none; padding: 0; margin: 0; cursor: pointer; text-align: left; color: var(--white); font-family: 'Barlow Condensed', sans-serif; }
+    .ovc:focus-visible { outline: none; }
+    .ovc .thw { position: relative; width: 300px; height: 168.75px; overflow: hidden; border-radius: 6px; background: var(--white); transition: box-shadow .15s, transform .15s var(--ease); }
+    .ovc:hover .thw, .ovc:focus-visible .thw { box-shadow: 0 0 0 3px var(--white); transform: translateY(-3px); }
+    .ovc.cur .thw { box-shadow: 0 0 0 4px var(--pink); }
+    .ovc .thw .stage { color: var(--navy); position: absolute; left: 0; top: 0; margin: 0; transform: scale(.234375); transform-origin: 0 0; pointer-events: none; }
+    .ovc .thw *, .ovc .thw *::before { animation: none !important; transition: none !important; }
+    .ovc .lb { display: flex; gap: 10px; margin-top: 10px; font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; line-height: 1.15; }
+    .ovc .lb .n { color: var(--pink); min-width: 18px; }
+    .ovc .lb .t span { color: var(--pink); }
+
+    .keys { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(27,31,69,.55); opacity: 0; transition: opacity .2s; }
+    .kcard { width: min(1080px, 100%); max-height: 100%; overflow: auto; background: var(--white); border-top: 6px solid var(--navy); border-radius: 10px; padding: 22px 36px 30px;
+        box-shadow: 0 10px 30px rgba(27,31,69,.25); color: var(--navy); font-family: 'Barlow Condensed', sans-serif; }
+    .kh { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 20px; border-bottom: 4px solid var(--navy); }
+    .kh h2 { margin: 0; font-size: 38px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+    .kh h2 span { color: var(--pink); }
+    .kh button { width: 36px; height: 36px; border: none; background: none; border-radius: 6px; cursor: pointer; color: var(--navy); display: flex; align-items: center; justify-content: center; }
+    .kh button:hover { background: var(--light-grey); }
+    .kh svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+    .kgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 40px; }
+    .kgrp h3 { margin: 0 0 6px; font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--pink); }
+    .krow { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1.5px solid var(--light-grey); font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 600; }
+    .krow .ks { display: flex; align-items: center; gap: 4px; min-width: 128px; flex-shrink: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; color: var(--mid-grey); }
+    .krow kbd { display: inline-block; min-width: 28px; padding: 1px 7px; border: 2px solid var(--navy); border-radius: 5px; text-align: center; color: var(--navy);
+        font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: .04em; line-height: 18px; }
+
+    .blk { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: var(--navy); cursor: pointer; opacity: 0; transition: opacity .3s; }
+    .blk .msg { display: flex; align-items: center; color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-size: clamp(48px, 8vw, 150px); font-weight: 900; text-transform: uppercase; letter-spacing: .01em; line-height: 1; }
+    .blk .msg::before { content: ''; width: .2em; height: .2em; margin-right: .35em; background: var(--pink); flex-shrink: 0; }
+    .blk .msg span { color: var(--pink); }
+    .blk .bh { position: absolute; bottom: 28px; color: rgba(255,255,255,.28); }
+
+    /* floating text boxes */
+    .tbox { position: absolute; pointer-events: auto; max-width: 560px; padding: 12px 20px; border-radius: 8px; border: 3px solid var(--navy);
+        background: var(--white); color: var(--navy); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 6px 18px rgba(27,31,69,.14); }
+    .tbox.nv { background: var(--navy); color: var(--white); }
+    .tbox.pk { background: var(--pink); border-color: var(--pink); color: var(--white); }
+    .tbox.dragging { cursor: grabbing; box-shadow: 0 12px 28px rgba(27,31,69,.24); }
+    .tbox.in { animation: fbIn .45s var(--ease); }
+    .tbt { font-family: 'Barlow', Helvetica Neue, Helvetica, Arial, sans-serif; font-weight: 600; line-height: 1.25; letter-spacing: 0.005em;
+        white-space: pre-wrap; overflow-wrap: break-word; outline: none; min-width: 2ch; }
+    .tbt:empty::before { content: attr(data-ph); opacity: .45; }
+    .tbox.editing { cursor: text; outline: 3px dashed var(--pink); outline-offset: 6px; }
+    .tbox.pk.editing { outline-color: var(--navy); }
+    .tbox.editing .tbt { user-select: text; -webkit-user-select: text; cursor: text; }
+    .tbbar { position: absolute; top: -17px; right: -13px; display: flex; gap: 5px; opacity: 0; transition: opacity .15s; }
+    .tbox:hover .tbbar, .tbox.editing .tbbar { opacity: 1; }
+    .tbb { width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2.5px solid var(--navy); background: var(--white); color: var(--navy); cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900; line-height: 1; }
+    .tbb svg { width: 14px; height: 14px; fill: none; stroke: var(--navy); stroke-width: 3; stroke-linecap: round; }
+    .tbb.sty span { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, var(--navy) 50%, var(--pink) 50%); }
+
+    /* floating engagement badges */
+    .blayer { position: absolute; left: 0; top: 0; width: 1280px; height: 714px; z-index: 8; pointer-events: none; }
+    .fb { position: absolute; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px; border-radius: 28px; color: var(--white);
+        font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+        pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 6px 18px rgba(27,31,69,.18); }
+    .fb.pk { background: var(--pink); }
+    .fb.nv { background: var(--navy); }
+    .fb.dragging { cursor: grabbing; box-shadow: 0 12px 28px rgba(27,31,69,.28); }
+    .fb svg { width: 28px; height: 28px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .fb .ar { opacity: .75; width: 22px; }
+    .fb.big { height: 78px; border-radius: 39px; padding: 0 32px; gap: 14px; font-size: 34px; }
+    .fb.big svg { width: 40px; height: 40px; }
+    .fb.big .ar { width: 30px; }
+    .fb .x { position: absolute; top: -9px; right: -9px; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2.5px solid var(--navy); background: var(--white);
+        display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .15s; }
+    .fb .x svg { width: 14px; height: 14px; stroke: var(--navy); stroke-width: 3; }
+    .fb:hover .x, .fb .x:focus-visible { opacity: 1; }
+    .fb.in { animation: fbIn .55s var(--ease); }
+    @keyframes fbIn { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: none; } }
+    .ink { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; z-index: 5; touch-action: none; }
+    .ink.active { pointer-events: auto; cursor: crosshair; }
+    .stage.instant *, .stage.instant *::before { transition: none !important; animation: none !important; }
+
+    .controls kbd, .showui kbd { display: inline-block; margin-left: 7px; padding: 0 5px; min-width: 18px; text-align: center; border: 1.5px solid currentColor; border-radius: 4px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; line-height: 16px; opacity: .6; vertical-align: 1px; }
+
+    /* floating timer */
+    .ftimer { position: fixed; z-index: 20; left: 24px; top: 24px; width: 250px; background: #fff; border-top: 6px solid var(--navy); border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(27,31,69,.25), 0 0 0 1px rgba(27,31,69,.08); padding: 0 16px 16px; font-family: 'Barlow Condensed', sans-serif; color: var(--navy); user-select: none; }
+    .ftimer[hidden] { display: none; }
+    .fth { display: flex; justify-content: space-between; align-items: center; height: 40px; cursor: grab; touch-action: none; }
+    .fth:active { cursor: grabbing; }
+    .fth span { font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .fth button { width: 30px; height: 30px; border: none; background: none; color: var(--navy); cursor: pointer; border-radius: 6px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .fth button:hover { background: var(--light-grey); }
+    .fth svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+    .ftring { position: relative; width: 150px; height: 150px; margin: 2px auto 12px; }
+    .ftring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+    .ftring .tb { fill: none; stroke: var(--light-grey); stroke-width: 8; }
+    .ftring .tf { fill: none; stroke: var(--pink); stroke-width: 8; stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .25s linear; }
+    .ftv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .ftimer.done .ftring { animation: ftflash .6s ease-in-out 6 alternate; }
+    .ftimer.done .ftv { color: var(--pink); }
+    @keyframes ftflash { to { transform: scale(1.06); opacity: .55; } }
+    .ftrow { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+    .ftrow button { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border: 2px solid var(--navy);
+        background: #fff; color: var(--navy); border-radius: 6px; padding: 6px 0; cursor: pointer; }
+    .ftrow button.pri { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .ftrow button:focus-visible, .fth button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .ftimer.big { width: 400px; }
+    .ftimer.big .ftring { width: 280px; height: 280px; }
+    .ftimer.big .ftv { font-size: 88px; }
+    .ftimer.big .ftrow button { font-size: 19px; padding: 8px 0; }
+
+    /* tools, hide UI, export */
+    .ink.erase { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ccircle cx='15' cy='15' r='13' fill='white' fill-opacity='.55' stroke='%231b1f45' stroke-width='2'/%3E%3C/svg%3E") 15 15, cell; }
+    .ztip { position: fixed; z-index: 22; left: 50%; top: 16px; transform: translate(-50%, -8px); display: flex; align-items: center; gap: 16px;
+        background: var(--navy); color: var(--white); border-radius: 22px; padding: 8px 18px; pointer-events: none; opacity: 0;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+        transition: opacity .25s var(--ease), transform .25s var(--ease); }
+    .ztip.on { opacity: 1; transform: translate(-50%, 0); }
+    .ztip kbd { display: inline-block; margin-right: 6px; padding: 0 5px; min-width: 18px; text-align: center; border: 1.5px solid currentColor; border-radius: 4px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 13px; line-height: 16px; vertical-align: 1px; opacity: .8; }
+    .ztip .lv { color: var(--pink); font-variant-numeric: tabular-nums; }
+    .ztip .dim { opacity: .6; }
+    body.noui .controls { display: none; }
+    body.nosubs .caption { visibility: hidden; }
+    .showui {
+        display: none; position: fixed; right: 14px; bottom: 14px; z-index: 10;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer;
+        opacity: 0; transition: opacity .2s;
+    }
+    body.noui .showui { display: block; }
+    .showui:hover, .showui:focus-visible { opacity: 1; }
+    #print { display: none; }
+    @media print {
+        @page { size: 1280px 720px; margin: 0; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        html, body { height: auto; overflow: visible; display: block; margin: 0; background: #fff; }
+        body > .viewport, body > .controls, .showui, .ftimer { display: none !important; }
+        #print { display: block; }
+        #print .stage { transform: none !important; margin: 0 !important; break-after: page; page-break-after: always; }
+        #print .stage:last-child { break-after: auto; page-break-after: auto; }
+        #print *, #print *::before { animation: none !important; transition: none !important; }
+        #print .zoomer { transform: none !important; }
+        #print .spot { display: none !important; }
+        #print .fb .x, #print .tbbar { display: none !important; }
+        #print .tbox { outline: none !important; }
+        #print .tbt:empty::before { content: none; }
+        #print .hlc { mix-blend-mode: multiply; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .rev, .acol, .jmr, .cl { transition: none !important; }
+        .caption.in, .dev.shake, .vbox.bump .vnum { animation: none !important; }
+    }
+    .px2 { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 900; color: var(--pink); }
+
+    /* three steps */
+    .steps { display: flex; align-items: center; gap: 26px; }
+    .stepc { width: 310px; border: 3px solid var(--navy); border-radius: 8px; padding: 22px 28px 26px; }
+    .stepc .n { font-family: 'Barlow Condensed', sans-serif; font-size: 84px; font-weight: 900; color: var(--pink); line-height: 1; }
+    .stepc .t { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.05; margin-top: 8px; }
+    .task { width: 1026px; border: 3px solid var(--pink); border-radius: 8px; padding: 20px 32px 24px; margin-bottom: 40px; }
+    .task .t { font-family: 'Barlow Condensed', sans-serif; font-size: 46px; font-weight: 900; line-height: 1.1; margin-top: 4px; }
+    .task p { font-size: 25px; font-weight: 600; margin: 6px 0 0; }
+
+    /* problem */
+    .pwrap { width: 1040px; }
+    .problem { font-size: 34px; font-weight: 500; line-height: 1.55; border-left: 6px solid var(--navy); padding-left: 32px; margin: 0; }
+    .dw { transition: color .3s, box-shadow .3s; box-shadow: inset 0 0 0 rgba(234,0,138,0); }
+    .dw.on { color: var(--pink); box-shadow: inset 0 -0.34em 0 rgba(234,0,138,.16); }
+    .reads { display: flex; gap: 14px; margin: 36px 0 0 38px; }
+    .pill { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; border: 3px solid var(--navy); border-radius: 6px; padding: 4px 16px; transition: background-color .3s, border-color .3s, color .3s; }
+    .pill.on { background: var(--pink); border-color: var(--pink); color: var(--white); }
+
+    /* events */
+    .def { width: 952px; font-size: 29px; font-weight: 500; line-height: 1.4; border-left: 6px solid var(--pink); padding: 6px 0 6px 26px; margin-bottom: 46px; }
+    .def b { color: var(--pink); font-weight: 800; }
+    .ecards { display: flex; gap: 32px; }
+    .ecard { width: 460px; border: 3px solid var(--navy); border-radius: 8px; padding: 24px 30px 26px; }
+    .ecard.pink { border-color: var(--pink); }
+    .etxt { font-family: 'Barlow Condensed', sans-serif; font-size: 50px; font-weight: 900; line-height: 1.02; margin-top: 8px; }
+    .esub { font-size: 24px; font-weight: 600; color: var(--mid-grey); margin-top: 10px; }
+    .ecard.pink .dlbl { color: var(--pink); }
+
+    /* actions */
+    .acols { display: flex; gap: 32px; align-items: flex-start; }
+    .acol { width: 520px; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; transition: border-color .35s, opacity .45s var(--ease), transform .45s var(--ease); }
+    .acol.em { border-color: var(--pink); }
+    .ahead { background: var(--navy); color: var(--white); padding: 16px 26px 18px; transition: background-color .35s; }
+    .acol.em .ahead { background: var(--pink); }
+    .ahead .dlbl { color: rgba(255,255,255,.62); }
+    .ahead .t { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 900; line-height: 1.05; margin-top: 2px; }
+    .aitem { padding: 16px 26px 18px; border-top: 2px solid var(--light-grey); }
+    .ahead + .aitem { border-top: none; }
+    .aitem .dlbl { color: var(--pink); font-size: 19px; }
+    .aitem .t { font-size: 27px; font-weight: 600; line-height: 1.3; margin-top: 2px; }
+
+    /* jobs table */
+    .jt { width: 1100px; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; transition: border-color .35s; }
+    .jt.em { border-color: var(--pink); }
+    .jr { display: grid; grid-template-columns: 112px 390px 1fr; }
+    .jh > div { padding: 14px 24px; font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.15; }
+    .jh .c0 { background: var(--light-grey); text-align: center; }
+    .jh .c1 { background: var(--navy); color: var(--white); }
+    .jh .c2 { background: var(--pink); color: var(--white); }
+    .jh span { display: block; font-family: 'Barlow', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: 0.02em; text-transform: none; opacity: .75; }
+    .jb > div { padding: 20px 24px; font-size: 27px; font-weight: 600; line-height: 1.3; border-top: 2px solid var(--light-grey); display: flex; align-items: center; }
+    .jb .c0 { justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; color: var(--pink); padding: 10px; }
+    .jb .c1 { border-left: 2px solid var(--light-grey); border-right: 2px solid var(--light-grey); }
+    .jb .muted { color: var(--mid-grey); }
+
+    /* code */
+    .codewrap { display: flex; align-items: center; gap: 44px; }
+    .code { width: 668px; background: var(--navy); color: #f4f4f1; border-left: 6px solid var(--pink); border-radius: 8px; padding: 22px 0;
+        font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 23px; }
+    .cl { height: 36px; line-height: 36px; padding: 0 24px; white-space: pre; transition: opacity .35s, background-color .35s; }
+    .cl.blank { height: 16px; }
+    .code.focus .cl { opacity: .3; }
+    .code.focus .cl.hl { opacity: 1; background: rgba(234,0,138,.28); }
+    .kw { color: #ff5fb0; } .num { color: #7fd1ff; } .str { color: #9be6a0; }
+    .jm { width: 440px; }
+    .jmr { display: flex; align-items: center; gap: 18px; padding: 13px 0; border-bottom: 2px solid var(--light-grey); transition: opacity .35s, transform .45s var(--ease); }
+    .jmr:first-child { border-top: 2px solid var(--light-grey); }
+    .jmb { width: 64px; min-width: 64px; height: 50px; flex-shrink: 0; border: 3px solid var(--navy); border-radius: 6px; display: flex; align-items: center; justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; transition: background-color .35s, border-color .35s, color .35s; }
+    .jmb.s { width: 76px; white-space: nowrap; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .jmt { font-size: 23px; font-weight: 600; line-height: 1.3; }
+    .jm.focus .jmr { opacity: .3; }
+    .jm.focus .jmr.hl { opacity: 1; }
+    .jmr.hl .jmb { background: var(--pink); border-color: var(--pink); color: var(--white); }
+
+    /* device */
+    .testrow { display: flex; align-items: center; gap: 96px; }
+    .devcol { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .dev { width: 400px; height: 300px; background: var(--navy); border-radius: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 34px;
+        cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .dev.shake { animation: shk .5s var(--ease); }
+    @keyframes shk { 20% { transform: translateX(-12px) rotate(-5deg); } 40% { transform: translateX(12px) rotate(5deg); } 60% { transform: translateX(-8px) rotate(-3deg); } 80% { transform: translateX(5px) rotate(2deg); } }
+    .dbtn { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
+    .dbtn i { display: block; width: 58px; height: 58px; border-radius: 50%; background: var(--white); border: 7px solid #3b4079; transition: transform .12s, border-color .12s; }
+    .dbtn b { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); line-height: 1; }
+    .dbtn.press i { transform: scale(.84); border-color: var(--pink); }
+    .leds { display: grid; grid-template-columns: repeat(5, 30px); gap: 12px; }
+    .led { width: 30px; height: 30px; border-radius: 5px; background: #2f3468; transition: background-color .06s, box-shadow .06s; }
+    .led.on { background: var(--pink); box-shadow: 0 0 14px rgba(234,0,138,.75); }
+    .vcol { display: flex; flex-direction: column; gap: 26px; }
+    .vbox { width: 360px; border: 3px solid var(--navy); border-radius: 8px; padding: 12px 30px 14px; }
+    .vbox.pink { border-color: var(--pink); }
+    .vname { font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 24px; font-weight: 600; color: var(--mid-grey); }
+    .vnum { font-family: 'Barlow Condensed', sans-serif; font-size: 80px; font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .vbox.pink .vnum { color: var(--pink); }
+    .vbox.bump .vnum { animation: bump .35s var(--ease); }
+    @keyframes bump { 40% { transform: scale(1.12); } }
+    .vnum { transform-origin: left center; }
+
+</style>
+</head>
+<body>
+
+<div class="viewport">
+    <div class="stage" id="stage">
+        <div class="zoomer" id="zoomer">
+        <div class="top">
+            <div><h1 class="sheet-title" id="title"></h1></div>
+            <div class="counter" id="counter"></div>
+        </div>
+        <div class="content" id="content"></div>
+        <div class="caption" id="caption"></div>
+        <div class="progress" id="progress"></div>
+        <div class="wboard" id="wboard"><div class="wbl" id="wbl"></div></div>
+        <canvas class="hlc hlmain" id="hl" width="2560" height="1440"></canvas>
+        <canvas class="hlc hllive" id="hllive" width="2560" height="1440"></canvas>
+        <canvas class="ink" id="ink" width="2560" height="1440"></canvas>
+        </div>
+        <div class="spot" id="spot"></div>
+        <div class="blayer" id="blayer"></div>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="grp nav">
+        <div class="menu" id="playmenu">
+            <button class="mt" title="Playback" aria-haspopup="true" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg><span>Playback</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <div class="pop">
+                <div class="ph">Playback</div>
+                <button class="mi" id="back"><span class="ind no"></span><span class="bl">Previous</span><kbd>&larr;</kbd></button>
+                <button class="mi" id="next"><span class="ind no"></span><span class="bl">Next</span><kbd>&rarr;</kbd></button>
+                <button class="mi" id="replay"><span class="ind no"></span><span class="bl">Replay</span><kbd>R</kbd></button>
+                <div class="div"></div>
+                <button class="mi tg" id="auto" aria-pressed="false"><span class="ind"></span><span class="bl">Autoplay</span><kbd>Space</kbd></button>
+            </div>
+        </div>
+        <button id="ovbtn" aria-label="Slide overview" title="Slide overview (G)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="7" rx="1"/><rect x="13" y="4" width="7.5" height="7" rx="1"/><rect x="3.5" y="13" width="7.5" height="7" rx="1"/><rect x="13" y="13" width="7.5" height="7" rx="1"/></svg></button>
+        <div class="dots" id="dots"></div>
+        <span class="steplbl" id="steplbl"></span>
+    </div>
+    <div class="grp wbg">
+        <button id="wbprev" aria-label="Previous page" title="Previous page (&larr;)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <span class="steplbl" id="wbpg">Page 1 of 1</span>
+        <button id="wbnext" aria-label="Next page" title="Next page (&rarr;)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button id="wbnew"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New page</span><kbd>N</kbd></button>
+        <button id="wbpdf"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Export PDF</span></button>
+    </div>
+    <div class="grp">
+        <div class="menu" id="drawmenu">
+            <button class="mt" title="Draw" aria-haspopup="true" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.2-4.8L16 4.4l3.6 3.6L8.8 18.8z"/><path d="M13.6 6.8l3.6 3.6"/></svg><span>Draw</span><span class="pdot" id="pdot" style="background:#ea008a"></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <div class="pop">
+                <div class="ph">Draw</div>
+                <button class="mi tg" id="pen" aria-pressed="false"><span class="ind"></span><span class="bl">Pen</span><kbd>P</kbd></button>
+                <button class="mi tg" id="hlbtn" aria-pressed="false"><span class="ind"></span><span class="bl">Highlighter</span><kbd>Y</kbd></button>
+                <div class="swrow"><button class="swatch cur" data-c="#ea008a" style="background:#ea008a" aria-label="Pink pen"></button><button class="swatch" data-c="#1b1f45" style="background:#1b1f45" aria-label="Navy pen"></button><button class="swatch" data-c="#111111" style="background:#111111" aria-label="Black pen"></button><button class="swatch" data-c="#0a7bd6" style="background:#0a7bd6" aria-label="Blue pen"></button><button class="swatch" data-c="#12a150" style="background:#12a150" aria-label="Green pen"></button><button class="swatch" data-c="#f28c00" style="background:#f28c00" aria-label="Orange pen"></button><button class="swatch" data-c="#ffd60a" style="background:#ffd60a" aria-label="Yellow"></button></div>
+                <button class="mi tg" id="eraser" aria-pressed="false"><span class="ind"></span><span class="bl">Eraser</span><kbd>E</kbd></button>
+                <button class="mi" id="textbtn"><span class="ind no"></span><span class="bl">Text box</span><kbd>B</kbd></button>
+                <div class="div"></div>
+                <button class="mi" id="clear"><span class="ind no"></span><span class="bl">Clear ink</span><kbd>C</kbd></button>
+            </div>
+        </div>
+        <div class="menu" id="focusmenu">
+            <button class="mt" title="Focus" aria-haspopup="true" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><span>Focus</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <div class="pop">
+                <div class="ph">Focus</div>
+                <button class="mi tg" id="zoombtn" aria-pressed="false"><span class="ind"></span><span class="bl">Zoom</span><kbd>Z</kbd></button>
+                <button class="mi tg" id="lockbtn" aria-pressed="false" disabled><span class="ind"></span><span class="bl">Lock zoom</span><kbd>L</kbd></button>
+                <div class="div"></div>
+                <button class="mi tg" id="spotbtn" aria-pressed="false"><span class="ind"></span><span class="bl">Spotlight</span><kbd>H</kbd></button>
+                <button class="mi" id="blkbtn"><span class="ind no"></span><span class="bl">Blackout</span><kbd>K</kbd></button>
+            </div>
+        </div>
+        <div class="menu" id="engmenu">
+            <button class="mt" title="Engagement methods (M)" aria-haspopup="true" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h12v8H8l-4 3v-3H2z"/><path d="M17 8h5v8h-2v3l-3-3h-6v-2"/></svg><span>Engage</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <div class="pop">
+                <div class="ph">Engagement method</div>
+                <button class="mi eng" data-k="tt"><span class="ind pk"></span><span>Turn &amp; talk</span><kbd>1</kbd></button>
+                <button class="mi eng" data-k="cc"><span class="ind pk"></span><span>Turn &amp; talk + cold call</span><kbd>2</kbd></button>
+                <button class="mi eng" data-k="sj"><span class="ind nv"></span><span>Stop &amp; jot</span><kbd>3</kbd></button>
+                <button class="mi eng" data-k="fv"><span class="ind nv"></span><span>Finger vote</span><kbd>4</kbd></button>
+                <button class="mi eng" data-k="vs"><span class="ind pk"></span><span>Volunteer to share</span><kbd>5</kbd></button>
+                <div class="div"></div>
+                <button class="mi" id="engclear"><span class="ind no"></span><span class="bl">Clear from slide</span></button>
+            </div>
+        </div>
+        <button id="timerbtn" aria-pressed="false" title="Timer (T)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.5 2M9.5 2.5h5"/></svg><span>Timer</span></button>
+        <button id="wbbtn" aria-pressed="false" title="Whiteboard (W)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l4-4 4 4"/></svg><span>Whiteboard</span></button>
+    </div>
+    <div class="grp">
+        <div class="menu r" id="moremenu">
+            <button class="mt" title="More" aria-haspopup="true" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="4"/></svg><span>More</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <div class="pop">
+                <div class="ph">More</div>
+                <button class="mi tg on" id="subs" aria-pressed="true"><span class="ind"></span><span class="bl">Subtitles</span><kbd>S</kbd></button>
+                <button class="mi" id="pdf"><span class="ind no"></span><span class="bl">Export PDF</span></button>
+                <div class="div"></div>
+                <button class="mi" id="keysbtn"><span class="ind no"></span><span class="bl">Keyboard shortcuts</span><kbd>?</kbd></button>
+            </div>
+        </div>
+        <button class="fs" id="fsbtn" title="Fullscreen (F)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path id="fsic" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span class="bl">Fullscreen</span></button>
+        <button class="pri" id="hideui" title="Hide UI (U)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7a12.5 12.5 0 0 1-3 4.2M6.6 6.6C4.3 8 2.7 10.2 2 12c1 2.5 5 7 10 7a9.8 9.8 0 0 0 4.4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg><span>Hide UI</span></button>
+    </div>
+</div>
+<button class="showui" id="showui">Show UI<kbd>U</kbd></button>
+<div class="ftimer" id="ftimer" hidden role="dialog" aria-label="Timer">
+    <div class="fth" id="fth"><span>Timer</span><div>
+        <button id="ftsize" aria-label="Toggle timer size"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
+        <button id="ftclose" aria-label="Close timer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+    <div class="ftring"><svg viewBox="0 0 100 100"><circle class="tb" cx="50" cy="50" r="44"/><circle class="tf" id="ftf" cx="50" cy="50" r="44" pathLength="1"/></svg><div class="ftv" id="ftv">1:00</div></div>
+    <div class="ftrow"><button data-set="30">0:30</button><button data-set="60">1:00</button><button data-set="120">2:00</button><button data-set="180">3:00</button><button data-set="300">5:00</button></div>
+    <div class="ftrow"><button data-adj="-30">&minus;30s</button><button data-adj="30">+30s</button><button data-adj="60">+1 min</button></div>
+    <div class="ftrow"><button class="pri" id="ftstart">Start</button><button id="ftreset">Reset</button></div>
+</div>
+<div class="ztip" id="ztip" aria-live="polite"></div>
+<div class="ovw" id="ovw" hidden role="dialog" aria-label="Slide overview">
+    <div class="ovh"><h2>Slide <span>overview</span></h2><div class="hint"><kbd>G</kbd> or <kbd>Esc</kbd> to close</div></div>
+    <div class="ovg" id="ovg"></div>
+</div>
+<div class="keys" id="keys" hidden role="dialog" aria-label="Keyboard shortcuts">
+    <div class="kcard">
+        <div class="kh"><h2>Keyboard <span>shortcuts</span></h2><button id="keysclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="kgrid" id="kgrid"></div>
+    </div>
+</div>
+<div class="blk" id="blk" hidden role="dialog" aria-label="Blackout">
+    <div class="msg">Eyes on me,&nbsp;<span>please</span></div>
+    <div class="bh">Click or press K to return</div>
+</div>
+<div id="print"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), caption = $('#caption'), titleEl = $('#title'), counter = $('#counter'), progress = $('#progress');
+let timers = [], events = [], beats = [], idx = 0, beat = 0, autoplay = false;
+let segFrom = 0, segTo = 0, segStart = 0;
+let ptimers = [], cleanups = [];
+const stage = document.getElementById('stage');
+
+function at(ms, fn) { events.push({ t: ms, fn, done: false }); }
+function beatAt(ms, html) { beats.push(ms); at(ms, () => say(html)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function show(e) { e.classList.remove('hide'); }
+function say(html) { caption.innerHTML = '<span>' + html + '</span>'; caption.classList.remove('in'); void caption.offsetWidth; caption.classList.add('in'); }
+function stopInteractive() { ptimers.forEach(clearTimeout); ptimers = []; cleanups.forEach(f => f()); cleanups = []; }
+
+/* ---------- shared visuals ---------- */
+function stepsRow() {
+    const row = el('div', 'steps'), items = [];
+    ['Find the events', 'Find the actions', 'Pair them into jobs'].forEach((t, i) => {
+        if (i) { const a = el('div', 'px2 rev hide', '&rarr;'); row.appendChild(a); items.push(a); }
+        const s = el('div', 'stepc rev hide', `<div class="n">${i + 1}</div><div class="t">${t}</div>`);
+        row.appendChild(s); items.push(s);
+    });
+    return { row, items };
+}
+
+const FONT = {
+    '0': ['.##.', '#..#', '#..#', '#..#', '.##.'], '1': ['.#.', '##.', '.#.', '.#.', '###'],
+    '2': ['###.', '...#', '.##.', '#...', '####'], '3': ['###.', '...#', '.##.', '...#', '###.'],
+    '4': ['..#.', '.##.', '#.#.', '####', '..#.'], '5': ['####', '#...', '###.', '...#', '###.'],
+    '6': ['.##.', '#...', '###.', '#..#', '.##.'], '7': ['####', '...#', '..#.', '.#..', '.#..'],
+    '8': ['.##.', '#..#', '.##.', '#..#', '.##.'], '9': ['.##.', '#..#', '.###', '...#', '.##.'],
+    '.': ['.', '.', '.', '.', '#']
+};
+
+function device(o = {}) {
+    const col = el('div', 'devcol');
+    const d = el('div', 'dev', '<div class="dbtn" data-b="a"><i></i><b>A</b></div><div class="leds"></div><div class="dbtn" data-b="b"><i></i><b>B</b></div>');
+    col.append(d, el('div', 'dlbl', 'micro:bit'));
+    const leds = d.querySelector('.leds'), cells = [];
+    for (let i = 0; i < 25; i++) { const c = el('div', 'led'); leds.appendChild(c); cells.push(c); }
+    const btns = { a: d.querySelector('[data-b="a"]'), b: d.querySelector('[data-b="b"]') };
+    let iv = null; const tms = [];
+    cleanups.push(() => { clearInterval(iv); tms.forEach(clearTimeout); });
+    const draw = cols => cells.forEach((c, i) => c.classList.toggle('on', !!(cols[i % 5] && cols[i % 5][Math.floor(i / 5)] === '#')));
+    const scroll = txt => {
+        clearInterval(iv); draw([]);
+        if (exporting) return;
+        const blank = Array(5).fill('.....'), cols = [...blank];
+        txt.split('').forEach(ch => { const g = FONT[ch]; if (!g) return; for (let x = 0; x < g[0].length; x++) cols.push(g.map(r => r[x]).join('')); cols.push('.....'); });
+        cols.push(...blank);
+        let k = 0;
+        iv = setInterval(() => { k++; if (k > cols.length - 5) { clearInterval(iv); draw([]); return; } draw(cols.slice(k, k + 5)); }, 140);
+    };
+    const tap = b => {
+        btns[b].classList.add('press');
+        tms.push(setTimeout(() => btns[b].classList.remove('press'), 180));
+        if (b === 'a' && o.onA) o.onA();
+        if (b === 'b' && o.onB) o.onB();
+    };
+    const shake = () => {
+        d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+        if (o.onShake) o.onShake();
+    };
+    btns.a.onclick = e => { e.stopPropagation(); tap('a'); };
+    btns.b.onclick = e => { e.stopPropagation(); tap('b'); };
+    d.onclick = () => { if (o.onShake) shake(); };
+    return { col, tap, shake, scroll };
+}
+
+function vbox(name, val, pink) {
+    const b = el('div', 'vbox rev hide' + (pink ? ' pink' : ''), `<div class="vname">${name}</div><div class="vnum">${val}</div>`);
+    b.set = v => { b.querySelector('.vnum').innerHTML = v; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); };
+    return b;
+}
+
+const K = s => `<span class="kw">${s}</span>`, N = s => `<span class="num">${s}</span>`, S = s => `<span class="str">${s}</span>`;
+
+/* ---------- scene builders ---------- */
+function openerScene(o) {
+    return { title: o.title, dur: o.dur, run() {
+        const c = el('div', 'center'), s = stepsRow();
+        c.appendChild(s.row); content.appendChild(c);
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        s.items.forEach((e, i) => at(o.reveal + i * 350, () => show(e)));
+    } };
+}
+
+function problemScene(o) {
+    return { title: 'The <span>problem</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), w = el('div', 'pwrap');
+        const p = el('p', 'problem rev hide', o.text);
+        const reads = el('div', 'reads rev hide', '<span class="pill">Read 1</span><span class="pill">Read 2</span>');
+        w.append(p, reads); c.appendChild(w); content.appendChild(c);
+        const dws = [...p.querySelectorAll('.dw')], pills = reads.children, [t0, t1, t2] = o.ts;
+        beatAt(t0, o.caps[0]); at(t0 + 400, () => show(p)); at(t0 + 800, () => show(reads));
+        at(t0 + 1800, () => pills[0].classList.add('on')); at(t0 + 3200, () => pills[1].classList.add('on'));
+        beatAt(t1, o.caps[1]); dws.forEach((d, i) => at(t1 + 700 + i * 650, () => d.classList.add('on')));
+        beatAt(t2, o.caps[2]);
+    } };
+}
+
+function eventsScene(o) {
+    return { title: 'Step 1 &middot; Find the <span>events</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), parts = {};
+        if (o.def) { parts.def = el('div', 'def rev hide', 'An <b>event</b> is a trigger. It is something the program reacts to.'); c.appendChild(parts.def); }
+        const row = el('div', 'ecards');
+        o.events.forEach(([t, sub], i) => {
+            parts[i] = el('div', 'ecard rev hide' + (i % 2 ? ' pink' : ''), `<div class="dlbl">Event ${i + 1}</div><div class="etxt">${t}</div>${sub ? `<div class="esub">${sub}</div>` : ''}`);
+            row.appendChild(parts[i]);
+        });
+        c.appendChild(row); content.appendChild(c);
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        o.shows.forEach(([t, k]) => at(t, () => show(parts[k])));
+    } };
+}
+
+function actionsScene(o) {
+    return { title: 'Step 2 &middot; Find the <span>actions</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), row = el('div', 'acols'), parts = {}, cols = [];
+        let n = 0;
+        o.cols.forEach(([ev, acts], i) => {
+            const col = el('div', 'acol rev hide', `<div class="ahead"><div class="dlbl">When</div><div class="t">${ev}</div></div>`);
+            acts.forEach(a => { const it = el('div', 'aitem rev hide', `<div class="dlbl">Do this</div><div class="t">${a}</div>`); col.appendChild(it); parts['a' + n++] = it; });
+            parts['h' + i] = col; cols.push({ col, many: acts.length > 1 }); row.appendChild(col);
+        });
+        c.appendChild(row); content.appendChild(c);
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        o.shows.forEach(([t, k]) => at(t, () => k === 'em' ? cols.forEach(x => x.many && x.col.classList.add('em')) : show(parts[k])));
+    } };
+}
+
+function jobsScene(o) {
+    return { title: 'Step 3 &middot; Pair them into <span>jobs</span>', dur: o.dur, run() {
+        const c = el('div', 'center');
+        const t = el('div', 'jt rev hide', '<div class="jr jh"><div class="c0">Job</div><div class="c1">When<span>the event</span></div><div class="c2">The program needs to do this<span>the action</span></div></div>');
+        const rows = o.rows.map(([ev, act, muted], i) => {
+            const r = el('div', 'jr jb rev hide', `<div class="c0">${i + 1}</div><div class="c1${muted ? ' muted' : ''}">${ev}</div><div class="c2">${act}</div>`);
+            t.appendChild(r); return r;
+        });
+        c.appendChild(t); content.appendChild(c);
+        o.caps.forEach(([tt, h]) => beatAt(tt, h));
+        o.shows.forEach(([tt, k]) => at(tt, () => k === 'h' ? show(t) : k === 'em' ? t.classList.add('em') : show(rows[k])));
+    } };
+}
+
+function codeScene(o) {
+    return { title: 'From jobs to <span>code</span>', dur: o.dur, run() {
+        const c = el('div', 'center'), w = el('div', 'codewrap');
+        const code = el('div', 'code rev hide'), jm = el('div', 'jm');
+        const lines = o.lines.map(([h, g]) => { const l = el('div', 'cl' + (h ? '' : ' blank'), h); l.g = g; code.appendChild(l); return l; });
+        const jrows = o.jobs.map(([g, t]) => {
+            const r = el('div', 'jmr rev hide', `<div class="jmb${g === 's' ? ' s' : ''}">${g === 's' ? 'Set up' : g}</div><div class="jmt">${t}</div>`);
+            r.g = g; jm.appendChild(r); return r;
+        });
+        w.append(code, jm); c.appendChild(w); content.appendChild(c);
+        const focus = g => {
+            code.classList.toggle('focus', g !== null); jm.classList.toggle('focus', g !== null);
+            lines.forEach(l => l.classList.toggle('hl', l.g === g)); jrows.forEach(r => r.classList.toggle('hl', r.g === g));
+        };
+        o.caps.forEach(([t, h]) => beatAt(t, h));
+        at(500, () => show(code));
+        jrows.forEach((r, i) => at(900 + i * 200, () => show(r)));
+        o.focus.forEach(([t, g]) => at(t, () => focus(g)));
+    } };
+}
+
+/* ---------- scenes ---------- */
+const scenes = [
+openerScene({
+    title: 'Thinking like a <span>programmer</span>', dur: 15500, reveal: 5000,
+    caps: [[0, 'Before I write any code, I plan what my program needs to do.'],
+        [4500, 'I break the problem into small <b>jobs</b>, using three steps.'],
+        [10000, 'I will show you exactly how I work it out, one step at a time.']]
+}),
+problemScene({
+    dur: 16000, ts: [0, 5000, 11000],
+    text: 'At the school fete, you are running the lemonade stall. You want the micro:bit to <span class="dw">count</span> each cup you <span class="dw">sell</span>. You will <span class="dw">press</span> button B each time you sell a cup. When you <span class="dw">press</span> button A, it should <span class="dw">show</span> how much money you have <span class="dw">made</span>. Each cup costs $2.',
+    caps: ['Here is the problem. Before I write any code, I <b>read it twice</b>.',
+        'Then I look for the <b>doing words</b>.',
+        'Each doing word is a clue about what my program has to do.']
+}),
+eventsScene({
+    dur: 23500, def: true,
+    events: [['Button B is pressed', 'A cup is sold'], ['Button A is pressed', 'Time to check the money']],
+    caps: [[0, 'Step 1. I ask myself: <b>what makes something happen?</b>'],
+        [4500, 'An <b>event</b> is a trigger. It is something that happens that the program reacts to.'],
+        [10000, 'When I sell a cup, I press <b>button B</b>. That is my first event.'],
+        [15000, 'Pressing <b>button A</b> is my second event.'],
+        [19000, 'Two triggers, so <b>two events</b>.']],
+    shows: [[5000, 'def'], [10500, 0], [15500, 1]]
+}),
+actionsScene({
+    dur: 24500,
+    cols: [['Button B is pressed', ['Add one to the number of cups']], ['Button A is pressed', ['Work out the money: cups &times; $2', 'Show the money on the display']]],
+    caps: [[0, 'Step 2. For each event, I ask: <b>what should the program do?</b>'],
+        [5000, 'When button B is pressed, <b>add one</b> to the number of cups.'],
+        [10000, 'When button A is pressed, <b>work out the money</b>. That is the cups times $2.'],
+        [15500, 'Then <b>show the money</b> on the display.'],
+        [19500, 'Notice that one event can lead to <b>more than one action</b>.']],
+    shows: [[500, 'h0'], [800, 'h1'], [5500, 'a0'], [10600, 'a1'], [16000, 'a2'], [20000, 'em']]
+}),
+jobsScene({
+    dur: 27500,
+    rows: [['Button B is pressed', 'Add one to the number of cups'], ['Button A is pressed', 'Work out the money (cups &times; $2)'], ['Straight after job 2', 'Show the money on the display', true]],
+    caps: [[0, 'Step 3. I pair each event with its action. Each pair is one <b>job</b>.'],
+        [4800, '<b>Job 1.</b> When button B is pressed, add one to the number of cups.'],
+        [9500, '<b>Job 2.</b> When button A is pressed, work out the money.'],
+        [14000, '<b>Job 3.</b> Straight after, show the money on the display.'],
+        [18000, 'This is the same table you will fill in for your step counter.'],
+        [22500, 'That is the whole program, planned before I wrote a single line of code.']],
+    shows: [[500, 'h'], [5300, 0], [10000, 1], [14500, 2], [18500, 'em']]
+}),
+codeScene({
+    dur: 27000,
+    lines: [[`${K('from')} microbit ${K('import')} *`, 's'], [`cups = ${N(0)}`, 's'], ['', null], [`${K('while')} True:`, null],
+        [`    ${K('if')} button_b.was_pressed():`, 1], [`        cups = cups + ${N(1)}`, 1], ['', null],
+        [`    ${K('if')} button_a.was_pressed():`, 2], [`        money = cups * ${N(2)}`, 2], [`        display.scroll(money)`, 3]],
+    jobs: [['s', 'Start with 0 cups'], [1, 'B pressed: add one to the cups'], [2, 'A pressed: work out the money'], [3, 'Show the money']],
+    caps: [[0, 'Once the jobs are clear, the code almost writes itself.'],
+        [4500, 'Before any jobs, the program <b>starts the count at 0</b>.'],
+        [9000, '<b>Job 1.</b> When button B is pressed, add one to the cups.'],
+        [13500, '<b>Job 2.</b> When button A is pressed, work out the money.'],
+        [18000, '<b>Job 3.</b> Scroll the money across the display.'],
+        [22000, 'Don\'t worry about the exact words yet. Just notice that <b>each job became a few lines</b>.']],
+    focus: [[5000, 's'], [9500, 1], [14000, 2], [18500, 3], [22500, null]]
+}),
+{
+    title: 'Testing the <span>program</span>',
+    dur: 22500,
+    run() {
+        const row = el('div', 'testrow'), vc = el('div', 'vcol');
+        const cups = vbox('cups', '0'), money = vbox('money', '&ndash;', true);
+        let n = 0;
+        const dev = device({
+            onB() { n++; cups.set(n); },
+            onA() { const m = n * 2; money.set(m); dev.scroll(String(m)); }
+        });
+        dev.col.classList.add('rev', 'hide');
+        vc.append(cups, money); row.append(dev.col, vc);
+        const c = el('div', 'center'); c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Now I test it. Observe what happens when I press <b>button B</b> three times.');
+        at(400, () => show(dev.col)); at(700, () => show(cups)); at(900, () => show(money));
+        [2000, 3000, 4000].forEach(t => at(t, () => dev.tap('b')));
+        beatAt(6000, 'The display stays blank, but the program <b>remembers</b> every cup sold.');
+        beatAt(10500, 'Now I press <b>button A</b>. Three cups times $2 is <b>$6</b>.');
+        at(11500, () => dev.tap('a'));
+        beatAt(16500, 'Anything a program remembers or works out is a <b>variable</b>. Finding them is the next skill you will learn.');
+    }
+},
+openerScene({
+    title: 'Let\'s do <span>one more</span>', dur: 8500, reveal: 3400,
+    caps: [[0, 'Let\'s try one more problem.'], [3000, 'Same <b>three steps</b>. A different problem.']]
+}),
+problemScene({
+    dur: 14500, ts: [0, 4500, 10000],
+    text: 'In PE you are doing star jumps while holding a micro:bit. You want the micro:bit to <span class="dw">count</span> each star jump. When you <span class="dw">press</span> button A, it should <span class="dw">show</span> how much energy you have <span class="dw">used</span>. Each star jump uses about 0.2 calories.',
+    caps: ['Here is the new problem. First, I <b>read it twice</b>.',
+        'Then I find the <b>doing words</b>.',
+        'Now I am ready to find the events.']
+}),
+eventsScene({
+    dur: 19000, def: false,
+    events: [['The micro:bit is shaken', 'A star jump happens'], ['Button A is pressed', 'Time to check the energy']],
+    caps: [[0, 'Step 1. I ask: <b>what makes something happen?</b>'],
+        [4000, 'The micro:bit can feel each star jump with its <b>accelerometer</b>. Every jump gives it a shake.'],
+        [10000, 'Pressing <b>button A</b> is the second event.'],
+        [14000, 'Your step counter will use the accelerometer in the same way.']],
+    shows: [[4600, 0], [10500, 1]]
+}),
+actionsScene({
+    dur: 18500,
+    cols: [['The micro:bit is shaken', ['Add one to the number of jumps']], ['Button A is pressed', ['Work out the energy: jumps &times; 0.2', 'Show the energy on the display']]],
+    caps: [[0, 'Step 2. For each event: <b>what should the program do?</b>'],
+        [4000, 'When it is shaken, <b>add one</b> to the number of jumps.'],
+        [8500, 'When button A is pressed, <b>work out the energy</b>. That is the jumps times 0.2.'],
+        [14000, 'Then <b>show the energy</b> on the display.']],
+    shows: [[500, 'h0'], [800, 'h1'], [4500, 'a0'], [9100, 'a1'], [14500, 'a2']]
+}),
+jobsScene({
+    dur: 22000,
+    rows: [['The micro:bit is shaken', 'Add one to the number of jumps'], ['Button A is pressed', 'Work out the energy (jumps &times; 0.2)'], ['Straight after job 2', 'Show the energy on the display', true]],
+    caps: [[0, 'Step 3. I pair each event with its action.'],
+        [4000, '<b>Job 1.</b> When the micro:bit is shaken, add one to the number of jumps.'],
+        [8500, '<b>Job 2.</b> When button A is pressed, work out the energy.'],
+        [12500, '<b>Job 3.</b> Straight after, show the energy on the display.'],
+        [16500, 'Same shape as the lemonade stall. <b>Count</b> something, then <b>work something out</b> from it.']],
+    shows: [[500, 'h'], [4500, 0], [9000, 1], [13000, 2], [17000, 'em']]
+}),
+codeScene({
+    dur: 21500,
+    lines: [[`${K('from')} microbit ${K('import')} *`, 's'], [`jumps = ${N(0)}`, 's'], ['', null], [`${K('while')} True:`, null],
+        [`    ${K('if')} accelerometer.was_gesture(${S('"shake"')}):`, 1], [`        jumps = jumps + ${N(1)}`, 1], ['', null],
+        [`    ${K('if')} button_a.was_pressed():`, 2], [`        energy = jumps * ${N(0.2)}`, 2], [`        display.scroll(energy)`, 3]],
+    jobs: [['s', 'Start with 0 jumps'], [1, 'Shaken: add one to the jumps'], [2, 'A pressed: work out the energy'], [3, 'Show the energy']],
+    caps: [[0, 'Here is the code. Watch how each job matches its lines.'],
+        [4500, '<b>Job 1.</b> When the micro:bit is shaken, add one to the jumps.'],
+        [9000, '<b>Job 2.</b> When button A is pressed, work out the energy.'],
+        [13000, '<b>Job 3.</b> Scroll the energy across the display.'],
+        [17000, 'Each job became a few lines, just like before.']],
+    focus: [[5000, 1], [9500, 2], [13500, 3], [17500, null]]
+}),
+{
+    title: 'Testing the <span>program</span>',
+    dur: 16500,
+    run() {
+        const row = el('div', 'testrow'), vc = el('div', 'vcol');
+        const jumps = vbox('jumps', '0'), energy = vbox('energy', '&ndash;', true);
+        let n = 0;
+        const fmt = v => (Math.round(v * 10) / 10).toFixed(1);
+        const dev = device({
+            onShake() { n++; jumps.set(n); },
+            onA() { const e = fmt(n * 0.2); energy.set(e); dev.scroll(e); }
+        });
+        dev.col.classList.add('rev', 'hide');
+        vc.append(jumps, energy); row.append(dev.col, vc);
+        const c = el('div', 'center'); c.appendChild(row); content.appendChild(c);
+        beatAt(0, 'Time to test it. Observe what happens when I do <b>five star jumps</b>.');
+        at(400, () => show(dev.col)); at(700, () => show(jumps)); at(900, () => show(energy));
+        [1600, 2500, 3400, 4300, 5200].forEach(t => at(t, () => dev.shake()));
+        beatAt(6500, 'Now I press <b>button A</b>. Five jumps times 0.2 is <b>1.0</b>.');
+        at(7400, () => dev.tap('a'));
+        beatAt(12000, 'The program does exactly what the jobs said it should.');
+    }
+},
+{
+    title: 'Your <span>turn</span>',
+    dur: 20500,
+    run() {
+        const c = el('div', 'center');
+        const task = el('div', 'task rev hide', '<div class="dlbl">Your task</div><div class="t">The step counter</div><p>Walk from Eunice Plaza to the main entrance of the S&amp;T building.</p>');
+        const s = stepsRow();
+        c.append(task, s.row); content.appendChild(c);
+        beatAt(0, 'Now it is your turn to plan the <b>step counter</b>.');
+        at(400, () => show(task));
+        beatAt(4500, 'Read the problem twice and look for the <b>doing words</b>.');
+        beatAt(9000, 'Then <b>find the events</b>, <b>find the actions</b>, and <b>pair them into jobs</b>.');
+        s.items.forEach((e, i) => at(9500 + i * 450, () => show(e)));
+        beatAt(15500, 'Fill in <b>every row</b> of your jobs table before you start coding.');
+    }
+}
+];
+
+/* ---------- player ---------- */
+const dots = $('#dots');
+scenes.forEach((_, i) => { const d = el('button'); d.setAttribute('aria-label', 'Scene ' + (i + 1)); d.onclick = () => go(i); dots.appendChild(d); });
+
+const stepLbl = $('#steplbl');
+const dur = () => scenes[idx].dur;
+const beatEnd = b => (b + 1 < beats.length ? beats[b + 1] : dur());
+function label() { stepLbl.textContent = `Step ${beat + 1} of ${beats.length}`; }
+
+function build(i) {
+    clearTimers();
+    stopInteractive();
+    const ni = Math.max(0, Math.min(scenes.length - 1, i));
+    if (ni !== idx) { saveInk(); idx = ni; loadInk(); zoomReset(); renderBadges(); }
+    events = []; beats = [];
+    const sc = scenes[idx];
+    content.innerHTML = ''; caption.innerHTML = '';
+    titleEl.innerHTML = sc.title;
+    counter.innerHTML = `<b>${idx + 1}</b> / ${scenes.length}`;
+    [...dots.children].forEach((d, j) => d.classList.toggle('cur', j === idx));
+    sc.run();
+    beats = [...new Set(beats)].sort((a, b) => a - b);
+}
+
+function jumpTo(to) {
+    stage.classList.add('instant');
+    events.filter(e => !e.done && e.t < to).sort((a, b) => a.t - b.t).forEach(e => { e.done = true; e.fn(); });
+    void stage.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('instant')));
+}
+
+function setProgress(from, to) {
+    progress.style.transition = 'none';
+    progress.style.width = (from / dur() * 100) + '%';
+    void progress.offsetWidth;
+    progress.style.transition = `width ${Math.max(0, to - from)}ms linear`;
+    progress.style.width = (to / dur() * 100) + '%';
+}
+
+function play(from, to, onEnd) {
+    clearTimers();
+    segFrom = from; segTo = to; segStart = performance.now();
+    events.filter(e => !e.done && e.t >= from && e.t < to)
+        .forEach(e => timers.push(setTimeout(() => { e.done = true; e.fn(); }, e.t - from)));
+    beats.forEach((bt, k) => { if (bt > from && bt < to) timers.push(setTimeout(() => { beat = k; label(); }, bt - from)); });
+    if (onEnd) timers.push(setTimeout(onEnd, to - from));
+    setProgress(from, to);
+}
+
+function now() { return Math.min(segTo, segFrom + performance.now() - segStart); }
+
+function startBeat(b) {
+    beat = b; label();
+    jumpTo(beats[b]);
+    if (autoplay) play(beats[b], dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    else play(beats[b], beatEnd(b));
+}
+
+function go(i, b = 0) {
+    build(i);
+    startBeat(b === 'last' ? beats.length - 1 : b);
+}
+
+function next() {
+    if (autoplay) { if (idx < scenes.length - 1) go(idx + 1); return; }
+    clearTimers();
+    if (beat < beats.length - 1) { jumpTo(beatEnd(beat)); startBeat(beat + 1); }
+    else if (idx < scenes.length - 1) go(idx + 1);
+    else { jumpTo(dur()); setProgress(dur(), dur()); }
+}
+
+function back() {
+    if (autoplay) { go(idx - 1); return; }
+    if (beat > 0) go(idx, beat - 1);
+    else if (idx > 0) go(idx - 1, 'last');
+    else go(0);
+}
+
+function toggleAuto() {
+    autoplay = !autoplay;
+    autoBtn.classList.toggle('on', autoplay); autoBtn.setAttribute('aria-pressed', autoplay);
+    const cur = now();
+    clearTimers();
+    if (autoplay) {
+        play(cur, dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+    } else {
+        let b = 0; beats.forEach((bt, k) => { if (bt <= cur) b = k; });
+        beat = b; label();
+        jumpTo(beatEnd(b));
+        setProgress(beatEnd(b), beatEnd(b));
+    }
+}
+
+const autoBtn = $('#auto');
+$('#next').onclick = next;
+$('#back').onclick = back;
+$('#replay').onclick = () => { zoomReset(); go(idx); };
+autoBtn.onclick = toggleAuto;
+const typing = e => e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable);
+document.addEventListener('keydown', e => {
+    if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (wbOpen) {
+        if (e.key === 'ArrowRight') wbGo(wbPage + 1);
+        if (e.key === 'ArrowLeft') wbGo(wbPage - 1);
+        if (e.key === 'n' || e.key === 'N') wbNew();
+        if (e.key === ' ') e.preventDefault();
+        return;
+    }
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') back();
+    if (e.key === 'r' || e.key === 'R') { zoomReset(); go(idx); }
+    if (e.key === ' ') { e.preventDefault(); toggleAuto(); }
+});
+
+/* ---------- pen, highlighter and eraser ---------- */
+const ink = $('#ink'), ctx = ink.getContext('2d'), hlc = $('#hl'), hctx = hlc.getContext('2d'), livec = $('#hllive'), lctx = livec.getContext('2d');
+const penBtn = $('#pen'), hlBtn = $('#hlbtn'), eraserBtn = $('#eraser');
+let tool = null, penColour = '#ea008a', hlColour = '#ffd60a', drawing = false, inkMarked = false, hlMarked = false, scaleK = 1, exporting = false;
+const HL_ALPHA = 0.42, HL_W = 26;
+const inkOps = {}, inkRedo = {};
+const isTyping = e => e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable);
+[ctx, hctx, lctx].forEach(c => { c.scale(2, 2); c.lineCap = 'round'; c.lineJoin = 'round'; });
+let wbOpen = false, wbPage = 0, wbPages = 1;
+const curKey = () => wbOpen ? 'wb' + wbPage : idx;
+const opsOf = k => (inkOps[k] = inkOps[k] || []), redoOf = k => (inkRedo[k] = inkRedo[k] || []);
+let curStroke = null;
+
+function setTool(t) {
+    tool = t;
+    ink.classList.toggle('active', !!t);
+    ink.classList.toggle('erase', t === 'eraser');
+    [[penBtn, 'pen'], [hlBtn, 'hl'], [eraserBtn, 'eraser']].forEach(([b, n]) => { b.classList.toggle('on', t === n); b.setAttribute('aria-pressed', t === n); });
+    syncSwatches(); syncMenus();
+}
+function syncSwatches() {
+    const c = tool === 'hl' ? hlColour : penColour;
+    document.querySelectorAll('.swatch').forEach(x => x.classList.toggle('cur', x.dataset.c === c));
+}
+const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const targetsOf = op => op.t === 'eraser' ? [ctx, hctx] : op.t === 'hl' ? [hctx] : [ctx];
+function brush(c, op) {
+    const er = op.t === 'eraser';
+    c.globalCompositeOperation = er ? 'destination-out' : 'source-over';
+    c.globalAlpha = op.t === 'hl' ? HL_ALPHA : 1;
+    c.strokeStyle = c.fillStyle = er ? '#000' : op.c;
+    c.lineWidth = op.w;
+}
+function unbrush(c) { c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
+function dotOn(c, op) { const p = op.pts[0]; c.beginPath(); c.arc(p.x, p.y, op.w / 2, 0, Math.PI * 2); c.fill(); }
+function segOn(c, op, i) {
+    const P = op.pts, a = P[i - 1], m0 = i > 1 ? mid(P[i - 2], a) : a, m1 = mid(a, P[i]);
+    c.beginPath(); c.moveTo(m0.x, m0.y); c.quadraticCurveTo(a.x, a.y, m1.x, m1.y); c.stroke();
+}
+function tailOn(c, op) {
+    const P = op.pts, n = P.length; if (n < 2) return;
+    const m = mid(P[n - 2], P[n - 1]);
+    c.beginPath(); c.moveTo(m.x, m.y); c.lineTo(P[n - 1].x, P[n - 1].y); c.stroke();
+}
+function pathOn(c, op) {
+    const P = op.pts;
+    if (P.length < 2) { dotOn(c, op); return; }
+    c.beginPath(); c.moveTo(P[0].x, P[0].y);
+    for (let i = 1; i < P.length; i++) { const m = mid(P[i - 1], P[i]); c.quadraticCurveTo(P[i - 1].x, P[i - 1].y, m.x, m.y); }
+    c.lineTo(P[P.length - 1].x, P[P.length - 1].y); c.stroke();
+}
+function redrawInk() {
+    [ctx, hctx, lctx].forEach(c => { unbrush(c); c.clearRect(0, 0, 1280, 720); });
+    let mi = false, mh = false;
+    opsOf(curKey()).forEach(op => {
+        if (op.t === 'clear') { ctx.clearRect(0, 0, 1280, 720); hctx.clearRect(0, 0, 1280, 720); mi = mh = false; return; }
+        targetsOf(op).forEach(c => { brush(c, op); pathOn(c, op); unbrush(c); });
+        if (op.t === 'pen') mi = true;
+        if (op.t === 'hl') mh = true;
+    });
+    inkMarked = mi; hlMarked = mh;
+}
+function commit(op) { opsOf(curKey()).push(op); redoOf(curKey()).length = 0; }
+function clearInk() { if (!inkMarked && !hlMarked) return; commit({ t: 'clear' }); redrawInk(); }
+function saveInk() {}
+function loadInk() { redrawInk(); }
+function undoInk() { if (drawing) return; const o = opsOf(curKey()); if (!o.length) return; redoOf(curKey()).push(o.pop()); redrawInk(); }
+function redoInk() { if (drawing) return; const r = redoOf(curKey()); if (!r.length) return; opsOf(curKey()).push(r.pop()); redrawInk(); }
+function liveHL() { lctx.clearRect(0, 0, 1280, 720); brush(lctx, curStroke); pathOn(lctx, curStroke); unbrush(lctx); }
+function pt(e) { const r = ink.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 1280, y: (e.clientY - r.top) / r.height * 720 }; }
+ink.addEventListener('pointerdown', e => {
+    if (!tool) return;
+    drawing = true; ink.setPointerCapture(e.pointerId);
+    const w = tool === 'eraser' ? 26 / (scaleK * Z.z) : tool === 'hl' ? HL_W : 5;
+    curStroke = { t: tool, c: tool === 'hl' ? hlColour : penColour, w, pts: [pt(e)] };
+    if (tool === 'hl') { liveHL(); hlMarked = true; return; }
+    targetsOf(curStroke).forEach(c => { brush(c, curStroke); dotOn(c, curStroke); unbrush(c); });
+    if (tool === 'pen') inkMarked = true;
+});
+ink.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    curStroke.pts.push(pt(e));
+    if (curStroke.t === 'hl') { liveHL(); return; }
+    targetsOf(curStroke).forEach(c => { brush(c, curStroke); segOn(c, curStroke, curStroke.pts.length - 1); unbrush(c); });
+});
+['pointerup', 'pointercancel'].forEach(t => ink.addEventListener(t, () => {
+    if (!drawing) return;
+    if (curStroke.t === 'hl') { lctx.clearRect(0, 0, 1280, 720); brush(hctx, curStroke); pathOn(hctx, curStroke); unbrush(hctx); }
+    else targetsOf(curStroke).forEach(c => { brush(c, curStroke); tailOn(c, curStroke); unbrush(c); });
+    commit(curStroke); curStroke = null; drawing = false;
+}));
+penBtn.onclick = () => setTool(tool === 'pen' ? null : 'pen');
+hlBtn.onclick = () => setTool(tool === 'hl' ? null : 'hl');
+eraserBtn.onclick = () => setTool(tool === 'eraser' ? null : 'eraser');
+$('#clear').onclick = clearInk;
+document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
+    if (tool === 'hl') hlColour = b.dataset.c; else { penColour = b.dataset.c; setTool('pen'); }
+    syncSwatches(); syncMenus();
+});
+
+/* ---------- hide UI ---------- */
+function setUI(hidden) { document.body.classList.toggle('noui', hidden); if (document.activeElement) document.activeElement.blur(); fit(); }
+$('#hideui').onclick = () => setUI(true);
+$('#showui').onclick = () => setUI(false);
+
+/* ---------- subtitles ---------- */
+const subsBtn = $('#subs');
+function toggleSubs() {
+    const off = document.body.classList.toggle('nosubs');
+    subsBtn.classList.toggle('on', !off);
+    subsBtn.setAttribute('aria-pressed', !off);
+    subsBtn.blur();
+}
+subsBtn.onclick = toggleSubs;
+
+
+/* ---------- floating timer ---------- */
+const ftEl = $('#ftimer'), ftV = $('#ftv'), ftF = $('#ftf'), ftStart = $('#ftstart'), ftBtn = $('#timerbtn');
+const FT = { total: 60, left: 60, iv: null, end: 0 };
+const ftFmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+function ftDraw() { ftV.textContent = ftFmt(Math.ceil(FT.left)); ftF.style.strokeDashoffset = (1 - FT.left / FT.total).toFixed(4); }
+function ftStop() { clearInterval(FT.iv); FT.iv = null; ftStart.textContent = 'Start'; }
+function ftBeep() {
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [0, .35, .7].forEach(t => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ac.destination);
+            g.gain.setValueAtTime(.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, ac.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + t + .25);
+            o.start(ac.currentTime + t); o.stop(ac.currentTime + t + .3); });
+    } catch (e) {}
+}
+function ftTick() {
+    FT.left = Math.max(0, (FT.end - performance.now()) / 1000);
+    ftDraw();
+    if (FT.left <= 0) { ftStop(); ftEl.classList.add('done'); ftBeep(); }
+}
+function ftSet(sec) { ftStop(); ftEl.classList.remove('done'); FT.total = FT.left = sec; ftDraw(); }
+function ftToggleRun() {
+    if (FT.iv) { ftTick(); ftStop(); return; }
+    if (FT.left <= 0) ftSet(FT.total);
+    ftEl.classList.remove('done');
+    FT.end = performance.now() + FT.left * 1000;
+    FT.iv = setInterval(ftTick, 200); ftStart.textContent = 'Pause';
+}
+function ftAdj(d) {
+    const nl = Math.max(10, Math.round(FT.left) + d);
+    const diff = nl - FT.left;
+    FT.left = nl; FT.total = Math.max(nl, FT.total + d, 10);
+    if (FT.iv) FT.end += diff * 1000;
+    ftEl.classList.remove('done'); ftDraw();
+}
+function ftShow(on) {
+    ftEl.hidden = !on; ftBtn.setAttribute('aria-pressed', on); ftBtn.classList.toggle('on', on);
+    if (!on) ftStop();
+}
+ftEl.querySelectorAll('[data-set]').forEach(b => b.onclick = () => ftSet(+b.dataset.set));
+ftEl.querySelectorAll('[data-adj]').forEach(b => b.onclick = () => ftAdj(+b.dataset.adj));
+ftStart.onclick = ftToggleRun;
+$('#ftreset').onclick = () => ftSet(FT.total);
+$('#ftclose').onclick = () => ftShow(false);
+$('#ftsize').onclick = () => { ftEl.classList.toggle('big'); ftClamp(); };
+ftBtn.onclick = () => ftShow(ftEl.hidden);
+ftEl.addEventListener('click', e => { if (e.target.closest('button')) e.target.closest('button').blur(); });
+function ftClamp() {
+    const r = ftEl.getBoundingClientRect();
+    ftEl.style.left = Math.max(0, Math.min(window.innerWidth - r.width, r.left)) + 'px';
+    ftEl.style.top = Math.max(0, Math.min(window.innerHeight - r.height, r.top)) + 'px';
+}
+(() => {
+    const h = $('#fth'); let dx = 0, dy = 0, drag = false;
+    h.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; drag = true; const r = ftEl.getBoundingClientRect(); dx = e.clientX - r.left; dy = e.clientY - r.top; h.setPointerCapture(e.pointerId); });
+    h.addEventListener('pointermove', e => { if (!drag) return; ftEl.style.left = (e.clientX - dx) + 'px'; ftEl.style.top = (e.clientY - dy) + 'px'; ftClamp(); });
+    ['pointerup', 'pointercancel'].forEach(t => h.addEventListener(t, () => drag = false));
+    window.addEventListener('resize', () => { if (!ftEl.hidden) ftClamp(); });
+})();
+ftDraw();
+
+
+/* ---------- zoom, lock and spotlight ---------- */
+const zoomer = $('#zoomer'), spotEl = $('#spot'), zoomBtn = $('#zoombtn'), lockBtn = $('#lockbtn'), spotBtn = $('#spotbtn');
+const ZW = 1280, ZH = 714;
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mouse = { x: ZW / 2, y: ZH / 2 };
+const Z = { on: false, locked: false, level: 2, z: 1, x: ZW / 2, y: ZH / 2, lx: 0, ly: 0 };
+const SP = { on: false, r: 150, cr: 150, x: ZW / 2, y: ZH / 2 };
+let zraf = 0, zlast = 0;
+
+function applyZoom() {
+    if (Z.z <= 1.0005) zoomer.style.transform = '';
+    else zoomer.style.transform = `translate(${(Z.x * (1 - Z.z)).toFixed(2)}px, ${(Z.y * (1 - Z.z)).toFixed(2)}px) scale(${Z.z.toFixed(4)})`;
+}
+function applySpot() {
+    const r = SP.cr;
+    spotEl.style.background = `radial-gradient(circle at ${SP.x.toFixed(1)}px ${SP.y.toFixed(1)}px, rgba(27,31,69,0) ${(r - 26).toFixed(1)}px, rgba(27,31,69,.74) ${(r + 26).toFixed(1)}px)`;
+}
+function zoomFrame(n) {
+    const dt = zlast ? Math.min(64, n - zlast) : 16; zlast = n;
+    const a = reduceMotion ? 1 : 1 - Math.exp(-dt / 90), b = reduceMotion ? 1 : 1 - Math.exp(-dt / 45);
+    const tz = Z.on ? Z.level : 1, tx = Z.locked ? Z.lx : mouse.x, ty = Z.locked ? Z.ly : mouse.y;
+    Z.z += (tz - Z.z) * a; Z.x += (tx - Z.x) * a; Z.y += (ty - Z.y) * a;
+    const zDone = Math.abs(tz - Z.z) < 0.0008 && Math.abs(tx - Z.x) < 0.08 && Math.abs(ty - Z.y) < 0.08;
+    if (zDone) { Z.z = tz; Z.x = tx; Z.y = ty; }
+    applyZoom();
+    let sDone = true;
+    if (SP.on) {
+        SP.x += (mouse.x - SP.x) * b; SP.y += (mouse.y - SP.y) * b; SP.cr += (SP.r - SP.cr) * a;
+        sDone = Math.abs(mouse.x - SP.x) < 0.08 && Math.abs(mouse.y - SP.y) < 0.08 && Math.abs(SP.r - SP.cr) < 0.08;
+        if (sDone) { SP.x = mouse.x; SP.y = mouse.y; SP.cr = SP.r; }
+        applySpot();
+    }
+    if (zDone && sDone) { zraf = 0; zlast = 0; } else zraf = requestAnimationFrame(zoomFrame);
+}
+function kick() { if (!zraf) { zlast = 0; zraf = requestAnimationFrame(zoomFrame); } }
+
+function setZoom(on) {
+    Z.on = on;
+    if (!on) setLock(false);
+    zoomBtn.classList.toggle('on', on); zoomBtn.setAttribute('aria-pressed', on);
+    lockBtn.disabled = !on;
+    syncMenus(); syncTip();
+    kick();
+}
+function setLock(on) {
+    if (on && !Z.on) return;
+    Z.locked = on;
+    if (on) { Z.lx = Z.x; Z.ly = Z.y; }
+    lockBtn.classList.toggle('on', on); lockBtn.setAttribute('aria-pressed', on);
+    syncTip();
+    kick();
+}
+const ztip = $('#ztip');
+function syncTip() {
+    ztip.classList.toggle('on', Z.on);
+    if (!Z.on) return;
+    ztip.innerHTML = `<span class="lv">${Z.level.toFixed(1)}&times;</span><span><kbd>Z</kbd>Zoom out</span><span><kbd>L</kbd>${Z.locked ? 'Unlock' : 'Lock'}</span><span class="dim">Scroll to adjust</span>`;
+}
+function zoomReset() {
+    Z.on = false; setLock(false); setZoom(false);
+    Z.z = 1; Z.x = mouse.x; Z.y = mouse.y; applyZoom();
+}
+function setSpot(on) {
+    if (on && !SP.on) { SP.x = mouse.x; SP.y = mouse.y; SP.cr = SP.r; applySpot(); }
+    SP.on = on;
+    spotEl.classList.toggle('on', on);
+    spotBtn.classList.toggle('on', on); spotBtn.setAttribute('aria-pressed', on);
+    syncMenus();
+    kick();
+}
+
+window.addEventListener('pointermove', e => {
+    const r = stage.getBoundingClientRect(), k = r.width / 1280;
+    mouse.x = clamp((e.clientX - r.left) / k, 0, ZW);
+    mouse.y = clamp((e.clientY - r.top) / k - 6, 0, ZH);
+    if (Z.on || SP.on || Z.z > 1) kick();
+});
+window.addEventListener('wheel', e => {
+    if (!Z.on && !SP.on) return;
+    e.preventDefault();
+    const d = clamp(e.deltaY || e.deltaX, -200, 200);
+    if (SP.on && (e.shiftKey || !Z.on)) SP.r = clamp(SP.r * Math.exp(-d * 0.0015), 60, 420);
+    else { Z.level = clamp(Z.level * Math.exp(-d * 0.0015), 1.25, 5); syncTip(); }
+    kick();
+}, { passive: false });
+zoomBtn.onclick = () => { setZoom(!Z.on); zoomBtn.blur(); };
+lockBtn.onclick = () => { setLock(!Z.locked); lockBtn.blur(); };
+spotBtn.onclick = () => { setSpot(!SP.on); spotBtn.blur(); };
+
+
+/* ---------- engagement badges ---------- */
+const ICON = {
+    talk: '<svg viewBox="0 0 24 24"><path d="M2 4h12v8H8l-4 3v-3H2z"/><path d="M17 8h5v8h-2v3l-3-3h-6v-2"/></svg>',
+    arrow: '<svg class="ar" viewBox="0 0 24 24"><path d="M3 12h16M13 6l6 6-6 6"/></svg>',
+    person: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>',
+    pencil: '<svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.8L16 4.4l3.6 3.6L8.8 18.8z"/><path d="M13.6 6.8l3.6 3.6"/></svg>',
+    vol: '<svg viewBox="0 0 24 24"><circle cx="8.5" cy="7.5" r="3.2"/><path d="M2.5 21c0-3.7 2.7-6.6 6-6.6 1.5 0 2.8.5 3.8 1.4"/><path d="M12.3 15.8L18 6"/><path d="M16.4 5.2l2.2-2.7 1.7 3.3"/></svg>',
+    hand: '<svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></svg>'
+};
+const ENGAGE = {
+    tt: { cls: 'pk', html: `${ICON.talk}<span>Turn &amp; talk</span>` },
+    cc: { cls: 'pk', html: `${ICON.talk}<span>Turn &amp; talk</span>${ICON.arrow}${ICON.person}<span>Cold call</span>` },
+    sj: { cls: 'nv', html: `${ICON.pencil}<span>Stop &amp; jot</span>` },
+    fv: { cls: 'nv', html: `${ICON.hand}<span>Finger vote</span>` },
+    vs: { cls: 'pk', html: `${ICON.vol}<span>Volunteer to share</span>` }
+};
+const ENG_KEYS = ['tt', 'cc', 'sj', 'fv', 'vs'];
+const blayer = $('#blayer'), badgeStore = {};
+const sceneBadges = () => { const k = curKey(); return (badgeStore[k] = badgeStore[k] || []); };
+
+function placeBadge(b, e) {
+    b.x = clamp(b.x, 0, 1280 - e.offsetWidth); b.y = clamp(b.y, 0, 714 - e.offsetHeight);
+    e.style.left = b.x + 'px'; e.style.top = b.y + 'px';
+}
+function badgeEl(b, animate) {
+    const e = el('div', 'fb ' + ENGAGE[b.k].cls + (b.big ? ' big' : '') + (animate ? ' in' : ''), ENGAGE[b.k].html);
+    const x = el('button', 'x', '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>');
+    x.type = 'button'; x.setAttribute('aria-label', 'Remove badge');
+    e.appendChild(x);
+    e.style.left = b.x + 'px'; e.style.top = b.y + 'px';
+    x.addEventListener('pointerdown', ev => ev.stopPropagation());
+    x.onclick = () => { const arr = sceneBadges(), i = arr.indexOf(b); if (i > -1) arr.splice(i, 1); e.remove(); };
+    let drag = false, sx = 0, sy = 0, ox = 0, oy = 0, lastTap = 0, moved = false;
+    e.addEventListener('pointerdown', ev => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        drag = true; moved = false; sx = ev.clientX; sy = ev.clientY; ox = b.x; oy = b.y;
+        e.setPointerCapture(ev.pointerId); e.classList.add('dragging'); e.classList.remove('in');
+    });
+    e.addEventListener('pointermove', ev => {
+        if (!drag) return;
+        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 4) moved = true;
+        b.x = ox + (ev.clientX - sx) / scaleK; b.y = oy + (ev.clientY - sy) / scaleK; placeBadge(b, e);
+    });
+    ['pointerup', 'pointercancel'].forEach(t => e.addEventListener(t, ev => {
+        if (!drag) return;
+        drag = false; e.classList.remove('dragging');
+        if (t === 'pointerup' && !moved) {
+            const n = performance.now();
+            if (n - lastTap < 350) {
+                const cx = b.x + e.offsetWidth / 2, cy = b.y + e.offsetHeight / 2;
+                b.big = !b.big; e.classList.toggle('big', b.big);
+                b.x = cx - e.offsetWidth / 2; b.y = cy - e.offsetHeight / 2; placeBadge(b, e);
+                lastTap = 0;
+            } else lastTap = n;
+        }
+    }));
+    return e;
+}
+function renderBadges() {
+    if (blayer.contains(document.activeElement)) document.activeElement.blur();
+    blayer.innerHTML = '';
+    (badgeStore[curKey()] || []).forEach(b => blayer.appendChild(badgeEl(b)));
+    (textStore[curKey()] || []).forEach(t => blayer.appendChild(textEl(t)));
+}
+function addBadge(k) {
+    const arr = sceneBadges(), b = { k, x: 0, y: 0, big: false }, e = badgeEl(b, true);
+    blayer.appendChild(e);
+    b.x = 1216 - e.offsetWidth; b.y = 146 + (arr.length % 6) * 72;
+    placeBadge(b, e); arr.push(b);
+}
+function clearBadges() { badgeStore[curKey()] = []; blayer.querySelectorAll('.fb').forEach(n => n.remove()); }
+document.querySelectorAll('.mi.eng').forEach(b => b.onclick = () => addBadge(b.dataset.k));
+$('#engclear').onclick = clearBadges;
+
+
+/* ---------- floating text boxes ---------- */
+const textStore = {};
+const sceneTexts = () => { const k = curKey(); return (textStore[k] = textStore[k] || []); };
+const TB_STY = ['wt', 'nv', 'pk'], TB_SZ = [24, 32, 44];
+function textEl(t, fresh) {
+    const e = el('div', 'tbox ' + TB_STY[t.sty] + (fresh ? ' in' : ''));
+    const body = el('div', 'tbt'); body.textContent = t.text; body.dataset.ph = 'Type a prompt';
+    body.style.fontSize = TB_SZ[t.sz] + 'px';
+    const bar = el('div', 'tbbar');
+    const bSty = el('button', 'tbb sty', '<span></span>'), bSz = el('button', 'tbb', 'A'),
+          bX = el('button', 'tbb', '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>');
+    [[bSty, 'Change colour'], [bSz, 'Change text size'], [bX, 'Remove text box']].forEach(([b, l]) => { b.type = 'button'; b.setAttribute('aria-label', l); b.addEventListener('pointerdown', ev => { ev.stopPropagation(); ev.preventDefault(); }); });
+    bar.append(bSty, bSz, bX); e.append(body, bar);
+    e.style.left = t.x + 'px'; e.style.top = t.y + 'px';
+    const place = () => placeBadge(t, e);
+    const remove = () => { const arr = sceneTexts(), i = arr.indexOf(t); if (i > -1) arr.splice(i, 1); e.remove(); };
+    bSty.onclick = () => { e.classList.remove(TB_STY[t.sty]); t.sty = (t.sty + 1) % TB_STY.length; e.classList.add(TB_STY[t.sty]); };
+    bSz.onclick = () => { t.sz = (t.sz + 1) % TB_SZ.length; body.style.fontSize = TB_SZ[t.sz] + 'px'; place(); };
+    bX.onclick = remove;
+    const edit = () => {
+        e.classList.add('editing');
+        try { body.contentEditable = 'plaintext-only'; } catch (err) { body.contentEditable = 'true'; }
+        if (body.contentEditable !== 'plaintext-only') body.contentEditable = 'true';
+        body.focus();
+        const r = document.createRange(); r.selectNodeContents(body); r.collapse(false);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    };
+    const finish = () => {
+        if (!e.classList.contains('editing')) return;
+        e.classList.remove('editing'); body.contentEditable = 'false';
+        t.text = body.innerText.replace(/^\s+|\s+$/g, '');
+        if (!t.text) { remove(); return; }
+        body.textContent = t.text; place();
+    };
+    e.edit = edit;
+    body.addEventListener('blur', finish);
+    body.addEventListener('input', () => { t.text = body.innerText; place(); });
+    body.addEventListener('keydown', ev => {
+        if (ev.key === 'Escape' || (ev.key === 'Enter' && !ev.shiftKey)) { ev.preventDefault(); body.blur(); }
+    });
+    body.addEventListener('paste', ev => {
+        ev.preventDefault();
+        document.execCommand('insertText', false, (ev.clipboardData || window.clipboardData).getData('text/plain'));
+    });
+    let drag = false, sx = 0, sy = 0, ox = 0, oy = 0, lastTap = 0, moved = false;
+    e.addEventListener('pointerdown', ev => {
+        if (ev.button !== 0 || e.classList.contains('editing')) return;
+        ev.preventDefault();
+        drag = true; moved = false; sx = ev.clientX; sy = ev.clientY; ox = t.x; oy = t.y;
+        e.setPointerCapture(ev.pointerId); e.classList.add('dragging'); e.classList.remove('in');
+    });
+    e.addEventListener('pointermove', ev => {
+        if (!drag) return;
+        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 4) moved = true;
+        t.x = ox + (ev.clientX - sx) / scaleK; t.y = oy + (ev.clientY - sy) / scaleK; place();
+    });
+    ['pointerup', 'pointercancel'].forEach(type => e.addEventListener(type, () => {
+        if (!drag) return;
+        drag = false; e.classList.remove('dragging');
+        if (type === 'pointerup' && !moved) {
+            const n = performance.now();
+            if (n - lastTap < 350) { lastTap = 0; edit(); } else lastTap = n;
+        }
+    }));
+    return e;
+}
+function addText(atMouse) {
+    const t = { text: '', x: 0, y: 0, sty: 0, sz: 1 }, e = textEl(t, true);
+    blayer.appendChild(e);
+    if (atMouse) { t.x = mouse.x; t.y = mouse.y; }
+    else { const n = sceneTexts().length % 5; t.x = 640 - e.offsetWidth / 2 + n * 24; t.y = 300 - e.offsetHeight / 2 + n * 24; }
+    placeBadge(t, e); sceneTexts().push(t);
+    e.edit();
+}
+$('#textbtn').onclick = () => addText(false);
+
+/* ---------- menus ---------- */
+const menus = [...document.querySelectorAll('.menu')], engMenu = $('#engmenu');
+function closeMenus(except) {
+    menus.forEach(m => { if (m !== except) { m.classList.remove('open'); m.querySelector('.mt').setAttribute('aria-expanded', 'false'); } });
+}
+function toggleMenu(m, force) {
+    const open = force !== undefined ? force : !m.classList.contains('open');
+    closeMenus(m); m.classList.toggle('open', open); m.querySelector('.mt').setAttribute('aria-expanded', open);
+}
+menus.forEach(m => {
+    m.querySelector('.mt').addEventListener('click', e => { toggleMenu(m); e.currentTarget.blur(); });
+    m.querySelector('.pop').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) { b.blur(); closeMenus(); } });
+});
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.menu')) closeMenus(); });
+function syncMenus() {
+    $('#drawmenu .mt').classList.toggle('on', !!tool);
+    $('#focusmenu .mt').classList.toggle('on', Z.on || SP.on);
+    $('#pdot').style.background = tool === 'hl' ? hlColour : penColour;
+}
+
+/* ---------- fullscreen ---------- */
+const fsBtn = $('#fsbtn'), fsIc = $('#fsic');
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+function toggleFS() {
+    if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    const r = document.documentElement, f = r.requestFullscreen || r.webkitRequestFullscreen;
+    if (!f) return;
+    const p = f.call(r); if (p && p.catch) p.catch(() => {});
+}
+function syncFS() {
+    const on = !!fsEl();
+    fsBtn.classList.toggle('isfs', on); fsBtn.classList.remove('nudge');
+    fsBtn.querySelector('.bl').textContent = on ? 'Exit fullscreen' : 'Fullscreen';
+    fsIc.setAttribute('d', on ? 'M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5' : 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5');
+    setUI(on);
+    requestAnimationFrame(fit);
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, syncFS));
+if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) fsBtn.hidden = true;
+else fsBtn.classList.add('nudge');
+fsBtn.onclick = () => { toggleFS(); fsBtn.blur(); };
+
+/* ---------- whiteboard ---------- */
+const wbBtn = $('#wbbtn'), wbl = $('#wbl');
+let wbPausedAt = 0;
+function loadSurface() { redrawInk(); renderBadges(); }
+function syncWB() {
+    $('#wbpg').textContent = `Page ${wbPage + 1} of ${wbPages}`;
+    wbl.innerHTML = `Whiteboard&nbsp;&nbsp;<b>${wbPage + 1}</b> / ${wbPages}`;
+    $('#wbprev').disabled = wbPage === 0; $('#wbnext').disabled = wbPage >= wbPages - 1;
+    wbBtn.classList.toggle('on', wbOpen); wbBtn.setAttribute('aria-pressed', wbOpen);
+}
+function toggleWB() {
+    if (document.activeElement) document.activeElement.blur();
+    closeMenus(); zoomReset();
+    if (!wbOpen) {
+        wbPausedAt = now(); clearTimers(); setProgress(wbPausedAt, wbPausedAt);
+        wbOpen = true;
+    } else {
+        wbOpen = false;
+    }
+    document.body.classList.toggle('wb', wbOpen);
+    loadSurface(); syncWB(); fit();
+    if (!wbOpen) {
+        if (autoplay) play(wbPausedAt, dur(), () => { if (idx < scenes.length - 1) go(idx + 1); });
+        else play(wbPausedAt, beatEnd(beat));
+    }
+}
+function wbGo(p) {
+    p = clamp(p, 0, wbPages - 1); if (p === wbPage) return;
+    if (document.activeElement) document.activeElement.blur();
+    zoomReset(); wbPage = p; loadSurface(); syncWB();
+}
+function wbNew() { wbPages++; wbGo(wbPages - 1); }
+wbBtn.onclick = () => { toggleWB(); wbBtn.blur(); };
+$('#wbprev').onclick = () => wbGo(wbPage - 1);
+$('#wbnext').onclick = () => wbGo(wbPage + 1);
+$('#wbnew').onclick = () => { wbNew(); $('#wbnew').blur(); };
+syncWB();
+
+/* ---------- overlays: overview, shortcuts, blackout ---------- */
+const modals = { ovw: $('#ovw'), keys: $('#keys'), blk: $('#blk') };
+let modal = null;
+function openModal(n) {
+    if (modal) closeModal();
+    closeMenus();
+    if (document.activeElement) document.activeElement.blur();
+    if (n === 'blk' && autoplay) toggleAuto();
+    if (n === 'ovw') renderOverview();
+    modal = n; modals[n].hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => modals[n].classList.add('on')));
+    if (n === 'ovw') { const c = modals.ovw.querySelector('.ovc.cur'); if (c) c.scrollIntoView({ block: 'center' }); }
+}
+function closeModal() {
+    if (!modal) return;
+    const m = modals[modal]; m.classList.remove('on'); m.hidden = true; modal = null;
+}
+window.addEventListener('keydown', e => {
+    if (!modal || /^F\d+$/.test(e.key)) return;
+    const k = e.key.toLowerCase();
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (k === 'escape' || (modal === 'blk' && k === 'k') || (modal === 'ovw' && k === 'g') || (modal === 'keys' && (k === '?' || k === '/'))) closeModal();
+}, true);
+modals.blk.onclick = closeModal;
+modals.keys.addEventListener('click', e => { if (!e.target.closest('.kcard') || e.target.closest('#keysclose')) closeModal(); });
+modals.ovw.addEventListener('click', e => { if (!e.target.closest('.ovc')) closeModal(); });
+$('#blkbtn').onclick = () => openModal('blk');
+$('#keysbtn').onclick = () => openModal('keys');
+$('#ovbtn').onclick = () => { openModal('ovw'); };
+
+const thumbs = [];
+function renderOverview() {
+    const g = $('#ovg'); g.innerHTML = '';
+    scenes.forEach((sc, i) => {
+        const c = el('button', 'ovc' + (i === idx ? ' cur' : ''));
+        c.setAttribute('aria-label', 'Go to scene ' + (i + 1));
+        const w = el('div', 'thw'); if (thumbs[i]) w.appendChild(thumbs[i].cloneNode(true));
+        c.append(w, el('div', 'lb', `<span class="n">${i + 1}</span><span class="t">${sc.title}</span>`));
+        c.onclick = () => { closeModal(); if (i !== idx) go(i); };
+        g.appendChild(c);
+    });
+}
+
+const SHORTCUTS = [
+    ['Slides', [['&rarr;', 'Next'], ['&larr;', 'Previous'], ['R', 'Replay scene'], ['Space', 'Autoplay'], ['G', 'Slide overview']]],
+    ['Draw', [['P', 'Pen'], ['Y', 'Highlighter'], ['E', 'Eraser'], ['B', 'Text box'], ['C', 'Clear ink'], ['Ctrl|Z', 'Undo'], ['Ctrl|Shift|Z', 'Redo']]],
+    ['Focus', [['Z', 'Zoom (scroll to adjust)'], ['L', 'Lock zoom'], ['H', 'Spotlight (scroll to resize)'], ['K', 'Blackout']]],
+    ['Engage', [['M', 'Engagement methods'], ['1|5', 'Choose a method'], ['T', 'Timer']]],
+    ['Whiteboard', [['W', 'Open or close'], ['&larr;|&rarr;', 'Change page'], ['N', 'New page']]],
+    ['View', [['F', 'Fullscreen'], ['U', 'Hide or show UI'], ['S', 'Subtitles'], ['?', 'Shortcuts'], ['Esc', 'Close or stop tool']]]
+];
+$('#kgrid').innerHTML = SHORTCUTS.map(([h, rows]) => `<div class="kgrp"><h3>${h}</h3>${rows.map(([k, l]) => {
+    const keys = k === '1|5' ? '<kbd>1</kbd>to<kbd>5</kbd>' : k.split('|').map(x => `<kbd>${x}</kbd>`).join(k.includes('Ctrl') ? '+' : '');
+    return `<div class="krow"><span class="ks">${keys}</span><span>${l}</span></div>`;
+}).join('')}</div>`).join('');
+
+/* ---------- export PDF ---------- */
+const printBox = $('#print');
+function snapStage(boardOnly) {
+    stage.querySelectorAll('input').forEach(n => n.setAttribute('value', n.value));
+    const page = stage.cloneNode(true), imgs = [];
+    page.removeAttribute('id'); page.removeAttribute('style'); page.classList.remove('instant');
+    page.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    page.querySelectorAll('.spot, canvas.hllive').forEach(n => n.remove());
+    [['canvas.ink', ink, inkMarked, 'ink'], ['canvas.hlmain', hlc, hlMarked, 'hlc']].forEach(([sel, src, marked, cls]) => {
+        const cv = page.querySelector(sel); if (!cv) return;
+        if (marked) { const img = new Image(); img.className = cls; img.alt = ''; img.src = src.toDataURL(); cv.replaceWith(img); imgs.push(img); }
+        else cv.remove();
+    });
+    if (boardOnly) page.querySelectorAll('.top, .content, .caption, .progress').forEach(n => n.remove());
+    return { page, imgs };
+}
+function runScene(i) {
+    build(i);
+    events.slice().sort((a, b) => a.t - b.t).forEach(e => { if (!e.done) { e.done = true; e.fn(); } });
+    progress.style.transition = 'none'; progress.style.width = '100%';
+}
+function buildThumbs() {
+    exporting = true;
+    for (let i = 0; i < scenes.length; i++) {
+        runScene(i);
+        const { page } = snapStage(false);
+        page.querySelectorAll('canvas, img.ink, img.hlc, .blayer').forEach(n => n.remove());
+        thumbs[i] = page;
+    }
+    exporting = false;
+}
+async function exportPDF() {
+    if (document.activeElement) document.activeElement.blur();
+    zoomReset();
+    printBox.innerHTML = '';
+    const imgs = [];
+    if (wbOpen) {
+        const keep = wbPage;
+        for (let p = 0; p < wbPages; p++) {
+            wbPage = p; loadSurface(); syncWB();
+            const r = snapStage(true); imgs.push(...r.imgs); printBox.appendChild(r.page);
+        }
+        wbPage = keep; loadSurface(); syncWB();
+    } else {
+        const keepIdx = idx, keepBeat = beat;
+        exporting = true;
+        for (let i = 0; i < scenes.length; i++) {
+            runScene(i);
+            const r = snapStage(false); imgs.push(...r.imgs); printBox.appendChild(r.page);
+        }
+        exporting = false;
+        go(keepIdx, keepBeat);
+    }
+    await Promise.all(imgs.map(im => im.decode().catch(() => {})));
+    window.print();
+}
+$('#pdf').onclick = exportPDF;
+$('#wbpdf').onclick = () => { $('#wbpdf').blur(); exportPDF(); };
+window.addEventListener('afterprint', () => { printBox.innerHTML = ''; });
+
+document.addEventListener('keydown', e => {
+    if (isTyping(e)) return;
+    if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'z') { e.preventDefault(); e.shiftKey ? redoInk() : undoInk(); }
+        else if (k === 'y') { e.preventDefault(); redoInk(); }
+        return;
+    }
+    if (e.altKey) return;
+    if (e.key === 'p' || e.key === 'P') setTool(tool === 'pen' ? null : 'pen');
+    if (e.key === 'e' || e.key === 'E') setTool(tool === 'eraser' ? null : 'eraser');
+    if (e.key === 'c' || e.key === 'C') clearInk();
+    if (e.key === 's' || e.key === 'S') toggleSubs();
+    if (e.key === 't' || e.key === 'T') ftShow(ftEl.hidden);
+    if (e.key === 'u' || e.key === 'U') setUI(!document.body.classList.contains('noui'));
+    if (e.key === 'z' || e.key === 'Z') setZoom(!Z.on);
+    if (e.key === 'l' || e.key === 'L') setLock(!Z.locked);
+    if (e.key === 'h' || e.key === 'H') setSpot(!SP.on);
+    if (e.key === 'f' || e.key === 'F') toggleFS();
+    if (e.key === 'm' || e.key === 'M') toggleMenu(engMenu);
+    if (e.key === 'b' || e.key === 'B') { e.preventDefault(); closeMenus(); addText(true); }
+    if (e.key === 'y' || e.key === 'Y') setTool(tool === 'hl' ? null : 'hl');
+    if (e.key === 'w' || e.key === 'W') toggleWB();
+    if (e.key === 'k' || e.key === 'K') openModal('blk');
+    if ((e.key === 'g' || e.key === 'G') && !wbOpen) openModal('ovw');
+    if (e.key === '?' || e.key === '/') { e.preventDefault(); openModal('keys'); }
+    if (/^[1-5]$/.test(e.key) && engMenu.classList.contains('open')) { addBadge(ENG_KEYS[+e.key - 1]); closeMenus(); }
+    if (e.key === 'Escape') closeMenus();
+    if (e.key === 'Escape') setTool(null);
+});
+
+const controlsEl = document.querySelector('.controls');
+function fit() {
+    const st = $('#stage'), noui = document.body.classList.contains('noui');
+    const vw = window.innerWidth - (noui ? 0 : 40), vh = window.innerHeight - (noui ? 0 : controlsEl.offsetHeight + 20);
+    const k = Math.min(vw / 1280, vh / 720);
+    scaleK = k;
+    st.style.transform = `scale(${k})`;
+    st.style.margin = `${(720 * k - 720) / 2}px ${(1280 * k - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); buildThumbs(); go(0); });
+</script>
+
+</body>
+</html>
