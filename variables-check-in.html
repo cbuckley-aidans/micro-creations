@@ -169,6 +169,14 @@
     .ck-step .t { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-top: 6px; }
     .ck-step .d { font-size: 22px; font-weight: 600; margin-top: 6px; }
 
+    /* operator symbol card */
+    .ck-symc { display: flex; align-items: center; gap: 20px; border: 3px solid var(--pink); border-radius: 8px; padding: 12px 24px; }
+    .ck-sym { width: 64px; height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--pink); color: #fff;
+        font-family: var(--mono); font-size: 46px; font-weight: 600; line-height: 1; }
+    .ck-symw { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+    .ck-symd { font-size: 23px; font-weight: 600; }
+    .ck-symd code { font-family: var(--mono); font-weight: 600; color: var(--pink); }
+
     /* controls */
     .controls { position: relative; z-index: 25; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 24px; padding: 12px 20px 16px; width: 100%; font-family: 'Barlow Condensed', sans-serif; }
     .grp { display: flex; align-items: center; gap: 8px; }
@@ -575,7 +583,7 @@ function tok(s) {
         else if (t === 'print') out += '<span class="ck-fn">print</span>';
         else if (/^[A-Za-z_]/.test(t)) out += `<span class="ck-id">${t}</span>`;
         else if (/^\s+$/.test(t)) out += t;
-        else if (t === '=' || t === '+') out += `<span class="ck-op">${t}</span>`;
+        else if ('=+*/'.includes(t)) out += `<span class="ck-op">${t}</span>`;
         else out += `<span class="ck-p">${esc(t)}</span>`;
     }
     return out;
@@ -642,6 +650,31 @@ function jotBeats(intro, jot, tJot, tUp, bu) {
     beatAt(tJot, '<b>Stop and jot:</b> ' + jot);
     beatAt(tUp, 'Hold up your whiteboards.');
     at(tUp + 300, () => show(bu));
+}
+
+/* assignment with an operator: code, symbol card, box, working and output */
+function opScene(o) {
+    const f = frame('What will this code print?');
+    const code = codePanel([`${o.name} = ${o.start}`, `[[${o.name}]] = [[${o.name} ${o.op} ${o.by}]]`, `print(${o.name})`]);
+    const [ml, mr] = code.marks(1);
+    const sym = el('div', 'ck-symc rev hide', `<span class="ck-sym">${o.sym}</span><div><div class="ck-symw">${o.word}</div><div class="ck-symd">${o.desc}</div></div>`);
+    const nt = o.note ? note(o.note) : null;
+    f.L.append(code, sym); if (nt) f.L.appendChild(nt);
+    const s = slot(380), bu = boardsUp(), st = el('div', 'ck-stack rev hide'), vb = vbox(o.name, 210, '');
+    vb.style.marginLeft = '42px';
+    const work = el('div', 'ck-work', '<span class="dlbl">Right side</span>');
+    const wp = [o.work, '=', o.result].map((t, i) => { const w = el('span', 'rev hide' + (i === 2 ? ' pk' : ''), t); work.appendChild(w); return w; });
+    const out = outPanel();
+    st.style.gap = '12px';
+    st.append(vb, work, out); s.append(bu, st); f.R.appendChild(s);
+    code.reveal(600); at(1200, () => show(sym));
+    return {
+        boards: () => show(bu),
+        line1: t => { at(t, () => { hideEl(bu); show(st); code.focus(0); }); at(t + 600, () => vb.set(o.start)); },
+        right: t => { at(t, () => { code.focus(1); mr.classList.add('on'); }); wp.forEach((w, i) => at(t + 700 + i * 600, () => show(w))); },
+        store: t => { at(t, () => { mr.classList.remove('on'); ml.classList.add('on'); }); at(t + 500, () => vb.set(o.result)); },
+        print: t => { at(t, () => { ml.classList.remove('on'); code.focus(2); }); at(t + 500, () => out.add(o.printed)); if (nt) at(t + 900, () => show(nt)); }
+    };
 }
 
 /* ---------- scenes ---------- */
@@ -788,6 +821,39 @@ const scenes = [
     }
 },
 {
+    title: 'Multiplying a <span>variable</span>',
+    cfu: 'sj', time: 45,
+    dur: 31000,
+    run() {
+        const S = opScene({ name: 'cookies', start: '4', op: '*', by: '3', work: '4 * 3', result: '12', printed: '12',
+            sym: '*', word: 'Multiply', desc: 'Python uses <code>*</code> instead of ×' });
+        beatAt(0, 'In Python, the <b>*</b> symbol means <b>multiply</b>. We use it instead of ×.');
+        beatAt(5000, '<b>Stop and jot:</b> what will this code print?');
+        beatAt(10500, 'Hold up your whiteboards.'); at(10800, S.boards);
+        beatAt(13500, 'Line 1 puts <b>4</b> into the box called cookies.'); S.line1(13800);
+        beatAt(17000, 'Line 2: work out the <b>right side first</b>. cookies is 4, so 4 * 3 is <b>12</b>.'); S.right(17300);
+        beatAt(22000, 'Then store the answer in the box on the <b>left</b>. cookies is now <b>12</b>.'); S.store(22300);
+        beatAt(26000, 'So line 3 prints <b>12</b>.'); S.print(26300);
+    }
+},
+{
+    title: 'Dividing a <span>variable</span>',
+    cfu: 'sj', time: 45,
+    dur: 31000,
+    run() {
+        const S = opScene({ name: 'slices', start: '12', op: '/', by: '4', work: '12 / 4', result: '3.0', printed: '3.0',
+            sym: '/', word: 'Divide', desc: 'Python uses <code>/</code> instead of ÷',
+            note: 'Dividing with <code>/</code> always gives a <b>float</b>, even when the answer is a whole number.' });
+        beatAt(0, 'In Python, the <b>/</b> symbol means <b>divide</b>. We use it instead of ÷.');
+        beatAt(5000, '<b>Stop and jot:</b> what will this code print?');
+        beatAt(10500, 'Hold up your whiteboards.'); at(10800, S.boards);
+        beatAt(13500, 'Line 1 puts <b>12</b> into the box called slices.'); S.line1(13800);
+        beatAt(17000, 'Line 2: work out the <b>right side first</b>. slices is 12, so 12 / 4 is <b>3.0</b>.'); S.right(17300);
+        beatAt(21500, 'Then store the answer in the box on the <b>left</b>. slices is now <b>3.0</b>.'); S.store(21800);
+        beatAt(25000, 'Tricky one! Dividing with <b>/</b> always gives a <b>float</b>, so line 3 prints <b>3.0</b>, not 3.'); S.print(25300);
+    }
+},
+{
     title: 'Trace it <span>line by line</span>',
     cfu: 'sj', time: 60,
     dur: 29000,
@@ -928,7 +994,7 @@ const scenes = [
         const g = el('div', 'sumgrid');
         const data = [
             ['Name = value', 'The name goes on the left of the equals sign. The value goes on the right.', false],
-            ['Right side first', 'Work out the right side, then store the answer in the box on the left.', true],
+            ['Right side first', 'Work out the right side using +, * or /, then store the answer in the box on the left.', true],
             ['Latest value wins', 'A variable only remembers its most recent value. Code runs from top to bottom.', true],
             ['Match it exactly', 'Names must match in spelling and capitals. Text needs quotation marks.', false]
         ];
@@ -936,7 +1002,7 @@ const scenes = [
         c.appendChild(g); content.appendChild(c);
         beatAt(0, 'In a variable, the <b>name</b> goes on the left and the <b>value</b> goes on the right.');
         at(500, () => show(cards[0]));
-        beatAt(4000, 'For lines like <b>coins = coins + 3</b>, work out the right side first, then store it on the left.');
+        beatAt(4000, 'Work out the right side first, using <b>+</b>, <b>*</b> or <b>/</b>, then store the answer on the left.');
         at(4400, () => show(cards[1]));
         beatAt(8000, 'A variable only remembers its <b>most recent</b> value.');
         at(8400, () => show(cards[2]));
