@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variables: Checking for Understanding</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --tint: #e9ecf5;
+        --scr: #10132c;
+        --cond: 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --mono: 'JetBrains Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: var(--cond); font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 124px; bottom: 108px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 28px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 25px; font-weight: 500; line-height: 1.32; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption b.no { color: var(--navy); }
+    .caption code { font-family: var(--mono); font-size: .9em; font-weight: 700; }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+
+    .next { font-family: var(--cond); font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .next:focus-visible { outline-color: var(--navy); }
+    .pop-in { animation: capIn .45s var(--ease); }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* question frame */
+    .q { display: flex; flex-direction: column; height: 100%; }
+    .qhead { display: flex; align-items: center; gap: 18px; }
+    .qtitle { font-size: 40px; font-weight: 800; line-height: 1.15; }
+    .tchip { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); border: 3px solid var(--pink); border-radius: 6px; padding: 3px 12px 2px; }
+    .sctag { margin-left: auto; font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--navy); box-shadow: inset 0 0 0 3px var(--navy); border-radius: 6px; padding: 6px 12px 5px; line-height: 1; }
+    .prompt { font-size: 28px; font-weight: 600; margin-top: 6px; line-height: 1.3; }
+    .prompt b { color: var(--pink); font-weight: 800; }
+    .prompt code, .quote code, .opt code, .job code { font-family: var(--mono); font-size: .88em; font-weight: 700; color: var(--pink); }
+    .body { flex: 1; min-height: 0; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 30px; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* code colouring */
+    .dk .s { color: #ff5cb3; } .dk .n, .dk .v { color: #fff; } .dk .f, .dk .o { color: #9aa3cf; }
+    .lt .s { color: var(--pink); } .lt .n, .lt .v { color: var(--navy); } .lt .f, .lt .o { color: #6b7199; }
+    .c-s { fill: #ff5cb3; } .c-n, .c-v { fill: #fff; } .c-f, .c-o { fill: #9aa3cf; }
+
+    /* svg classes */
+    svg { overflow: visible; display: block; }
+    .cd { font-family: var(--mono); font-size: 22px; font-weight: 500; white-space: pre; }
+    .ln { font-family: var(--mono); font-size: 18px; fill: #6d7299; }
+    .plab { font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; fill: #8a90b8; }
+    .plab.dk { fill: var(--mid-grey); }
+    .otxt { font-family: var(--mono); font-size: 22px; font-weight: 700; fill: #fff; white-space: pre; }
+    .otxt.err { fill: #ff5cb3; font-size: 19px; }
+    .vname { font-family: var(--mono); font-size: 24px; font-weight: 700; fill: var(--pink); }
+    .vval { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+    .bigtok { font-family: var(--mono); font-size: 42px; font-weight: 700; }
+    .ghostlbl { font-family: var(--mono); font-size: 22px; font-weight: 700; fill: #9aa0bd; }
+    .note { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 600; fill: var(--mid-grey); }
+    .cur { animation: blink 1s steps(1) infinite; }
+
+    /* multiple choice */
+    .opts { display: grid; gap: 10px; }
+    .col .opt { font-size: 23px; padding: 9px 18px; }
+    .opt { display: flex; align-items: center; gap: 16px; border: 3px solid var(--navy); border-radius: 8px; background: #fff; padding: 12px 20px;
+        font-family: inherit; font-size: 25px; font-weight: 600; color: var(--navy); text-align: left; line-height: 1.25; cursor: pointer;
+        transition: background-color .2s, border-color .2s, color .2s, opacity .2s; }
+    .opt .l { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 24px; font-weight: 900;
+        display: flex; align-items: center; justify-content: center; transition: background-color .2s, color .2s; }
+    .opt:hover:not(:disabled) { background: #f6f7fb; }
+    .opt.sel { background: var(--tint); }
+    .opt.sel .l { background: var(--pink); }
+    .opt.right, .opt.right:hover { background: var(--pink); border-color: var(--pink); color: #fff; opacity: 1; }
+    .opt.right .l { background: #fff; color: var(--pink); }
+    .opt.right code { color: #fff; }
+    .opt.wrong { border-style: dashed; opacity: .5; animation: shake .4s; cursor: default; }
+    .opt:disabled { cursor: default; }
+    .pred .opts { width: 380px; }
+    .pred .opts { gap: 8px; }
+    .pred .opt { min-height: 64px; padding: 7px 14px; }
+    .mini { font-family: var(--mono); font-size: 23px; font-weight: 700; background: var(--scr); color: #fff; border-radius: 6px; padding: 8px 16px; flex: 1;
+        min-height: 46px; white-space: pre; line-height: 1.25; display: flex; align-items: center; }
+    .mini.empty { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 600; font-style: italic; color: #8a90b8; }
+    .opt.right .mini { background: #fff; color: var(--pink); }
+
+    /* quote */
+    .quote { border-left: 8px solid var(--pink); padding: 4px 0 4px 20px; font-size: 25px; font-weight: 600; font-style: italic; line-height: 1.3; margin-bottom: 14px; }
+    .quote b { font-style: normal; font-weight: 800; color: var(--pink); }
+    .quote code { font-style: normal; }
+    .col { display: flex; flex-direction: column; }
+
+    /* scenes */
+    .scene { position: relative; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; flex-shrink: 0; background: #fff; }
+    .scene > svg { overflow: hidden; }
+    .replay { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; gap: 6px; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 6px; padding: 5px 12px 4px 9px; cursor: pointer; }
+    .replay svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .replay:hover { background: var(--blank); }
+
+    /* tap tokens */
+    .codebig { background: var(--navy); border-radius: 8px; padding: 22px 34px 22px 22px; display: flex; flex-direction: column; gap: 8px; }
+    .cline { display: flex; align-items: center; gap: 14px; }
+    .cline .ln2 { width: 34px; color: #6d7299; font-family: var(--mono); font-size: 22px; text-align: right; margin-right: 6px; }
+    .tok { font-family: var(--mono); font-size: 40px; font-weight: 700; background: transparent; border: 3px solid transparent; border-radius: 8px; padding: 2px 12px; color: #fff; cursor: pointer;
+        transition: background-color .2s, border-color .2s, opacity .2s; }
+    .tok.s { color: #ff5cb3; } .tok.o { color: #9aa3cf; }
+    .tok:hover:not(:disabled) { border-color: rgba(255,255,255,.3); }
+    .tok.sel { border-color: #fff; background: rgba(255,255,255,.14); }
+    .tok.right { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .tok.wrong { border-style: dashed; border-color: #6d7299; opacity: .5; animation: shake .4s; }
+    .tok:disabled { cursor: default; }
+
+    /* tap a line */
+    .lines { background: var(--navy); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; width: 560px; flex-shrink: 0; }
+    .lbtn { display: flex; align-items: center; gap: 18px; font-family: var(--mono); font-size: 30px; font-weight: 500; color: #fff; background: transparent; border: 3px solid transparent;
+        border-radius: 6px; padding: 6px 12px; cursor: pointer; text-align: left; white-space: pre; transition: background-color .2s, border-color .2s, opacity .2s; }
+    .lbtn .ln2 { color: #6d7299; font-size: 22px; width: 26px; text-align: right; }
+    .lbtn:hover:not(:disabled) { background: rgba(255,255,255,.07); }
+    .lbtn.sel { border-color: #fff; background: rgba(255,255,255,.12); }
+    .lbtn.right { background: var(--pink); border-color: var(--pink); }
+    .lbtn.right span { color: #fff !important; }
+    .lbtn.wrong { border-style: dashed; border-color: #6d7299; opacity: .45; animation: shake .4s; }
+    .lbtn:disabled { cursor: default; }
+
+    /* screens and editors */
+    .screen { background: var(--scr); border-radius: 8px; padding: 12px 20px 16px; font-family: var(--mono); color: #fff; font-size: 24px; font-weight: 700; line-height: 1.45; white-space: pre-wrap; }
+    .screen .err { color: #ff5cb3; font-size: 20px; }
+    .lab { display: block; font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #8a90b8; margin-bottom: 4px; white-space: normal; }
+    .editor { background: var(--navy); border-radius: 8px; padding: 12px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .erow { display: flex; align-items: center; gap: 14px; }
+    .erow .ln2 { color: #6d7299; font-family: var(--mono); font-size: 22px; width: 26px; text-align: right; flex-shrink: 0; }
+    .erow .static { font-family: var(--mono); font-size: 30px; font-weight: 500; padding: 8px 15px; white-space: pre; }
+    .editor.compact { gap: 6px; }
+    .editor.compact .static, .editor.compact .codein { font-size: 25px; padding-top: 4px; padding-bottom: 4px; }
+    .codein { flex: 1; min-width: 0; font-family: var(--mono); font-size: 30px; font-weight: 500; color: #fff; background: rgba(255,255,255,.06); border: 3px solid #3b4170; border-radius: 6px;
+        padding: 6px 12px; caret-color: var(--pink); outline: none; -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s; }
+    .codein:focus { border-color: var(--pink); }
+    .codein::placeholder { color: #5d6390; }
+    .codein.right { border-color: var(--pink); background: rgba(234,0,138,.25); }
+    .codein.wrong { border-style: dashed; border-color: #8a90b8; animation: shake .4s; }
+
+    /* drag tiles */
+    .tile { font-family: inherit; font-size: 24px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 16px; line-height: 1.25;
+        cursor: grab; touch-action: none; position: relative; z-index: 2; transition: transform .3s var(--ease), box-shadow .2s, border-color .2s; box-shadow: 0 4px 0 #c3c6d0; white-space: nowrap; text-align: center; }
+    .tile.sm { font-size: 22px; padding: 7px 14px; white-space: normal; text-align: left; }
+    .tile.code { font-family: var(--mono); font-size: 25px; }
+    .tile.sel { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(234,0,138,.22); }
+    .tile.drag { transition: none; cursor: grabbing; z-index: 30; box-shadow: 0 14px 30px rgba(27,31,69,.25); border-color: var(--pink); }
+    .tile.right { background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: none; cursor: default; }
+    .tile.wrong { border-style: dashed; background: var(--tint); box-shadow: none; animation: shake .4s; }
+
+    /* sort */
+    .sort3 { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr auto; gap: 14px 18px; width: 100%; height: 100%; }
+    .bin { border: 3px solid var(--navy); border-radius: 8px; display: flex; flex-direction: column; overflow: visible; transition: box-shadow .2s; }
+    .bin.pk { border-color: var(--pink); }
+    .bin h3 { margin: 0; padding: 8px 16px 7px; font-family: var(--cond); font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--navy); display: flex; justify-content: space-between; align-items: baseline; }
+    .bin h3 small { font-family: var(--mono); font-size: 18px; font-weight: 700; text-transform: none; letter-spacing: 0; opacity: .8; }
+    .bin.pk h3 { background: var(--pink); }
+    .bin.ol h3 { background: #fff; color: var(--navy); border-bottom: 3px solid var(--navy); }
+    .bin .sub { font-size: 18px; font-weight: 600; color: var(--mid-grey); padding: 8px 16px 0; }
+    .bin .area { flex: 1; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; justify-content: center; border-radius: 0 0 6px 6px; transition: background-color .2s; }
+    .bin.hover .area, .bin.armed:hover .area { background: rgba(234,0,138,.06); }
+    .bin.armed { box-shadow: 0 0 0 4px rgba(234,0,138,.15); cursor: pointer; }
+    .pool { background: var(--blank); border-radius: 8px; padding: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-content: center; justify-content: center; transition: background-color .2s; }
+    .pool.hover { background: #e3e7ee; }
+    .sort3 .pool { grid-column: 1 / -1; min-height: 78px; }
+
+    /* slots */
+    .bwrap { position: relative; width: 806px; height: 336px; border: 3px solid var(--navy); border-radius: 8px; flex-shrink: 0; }
+    .bwrap > svg { position: absolute; left: 0; top: 0; }
+    .slot, .gap, .oslot { border: 3px dashed #c3c6d0; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: border-color .2s, background-color .2s; }
+    .slot { position: absolute; width: 180px; height: 50px; }
+    .slot.hover, .slot.armed:hover, .gap.hover, .gap.armed:hover, .oslot.hover, .oslot.armed:hover { border-color: var(--pink); background: rgba(234,0,138,.06); }
+    .slot.armed, .gap.armed, .oslot.armed { border-color: #e7a3c9; cursor: pointer; }
+    .slot.filled, .gap.filled, .oslot.filled { border-color: transparent; background: none; }
+    .slot .tile, .gap .tile { box-shadow: none; padding: 5px 14px; font-size: 23px; }
+    .bside { width: 320px; display: flex; flex-direction: column; gap: 10px; height: 336px; flex-shrink: 0; }
+    .bside .pool { flex: 1; flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: center; }
+
+    /* cloze */
+    .cloze { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .crow { display: flex; align-items: stretch; border: 3px solid var(--navy); border-radius: 8px; min-height: 76px; }
+    .crow .num { width: 56px; flex-shrink: 0; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 30px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .crow .sent { flex: 1; align-self: center; padding: 8px 18px; font-size: 27px; font-weight: 600; line-height: 62px; }
+    .cz { font-family: var(--mono); font-size: 25px; font-weight: 500; background: var(--blank); border-radius: 6px; padding: 4px 12px; white-space: pre; }
+    .tile.op { min-width: 64px; font-size: 28px; }
+    .gap.sym { min-width: 84px; }
+    .bside .pool.wrap { flex-direction: row; flex-wrap: wrap; align-content: center; gap: 14px; }
+    .gap { display: inline-flex; vertical-align: middle; min-width: 140px; height: 54px; margin: 0 2px; }
+
+    /* order */
+    .ordwrap { display: grid; grid-template-columns: 420px 1fr; gap: 26px; width: 100%; height: 100%; }
+    .ordright { display: flex; flex-direction: column; gap: 9px; min-height: 0; }
+    .srow { display: flex; align-items: center; gap: 14px; }
+    .srow .num { width: 46px; height: 46px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .oslot { flex: 1; height: 56px; justify-content: flex-start; padding: 0 6px; }
+    .oslot .tile { box-shadow: none; }
+    .ordright .pool { flex: 1; align-content: center; }
+
+    /* trace table */
+    .ttab { border-collapse: separate; border-spacing: 0; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; }
+    .ttab th { background: var(--navy); color: #fff; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 9px 18px 8px; text-align: left; }
+    .ttab td { padding: 7px 18px; border-top: 2px solid var(--light-grey); font-size: 24px; transition: background-color .3s; }
+    .ttab tr:first-child td { border-top: none; }
+    .ttab td.lno { font-family: var(--cond); font-size: 24px; font-weight: 800; color: var(--mid-grey); text-align: center; padding: 7px 10px; }
+    .ttab td.cdc { font-family: var(--mono); font-size: 25px; font-weight: 500; white-space: pre; }
+    .ttab tr.on td { background: rgba(234,0,138,.09); }
+    .ttab .pre { font-size: 18px; font-weight: 600; color: var(--mid-grey); margin-right: 8px; }
+    .numin { width: 110px; font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 3px 8px; text-align: center; outline: none;
+        -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s, color .2s; }
+    .numin:focus { border-color: var(--pink); }
+    .numin.right { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .numin.wrong { border-style: dashed; animation: shake .4s; }
+
+    /* match */
+    .match { width: 100%; display: flex; flex-direction: column; gap: 9px; }
+    .mrow { display: grid; grid-template-columns: 1fr 250px auto; align-items: center; gap: 18px; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 8px 6px 20px; transition: border-color .2s; }
+    .mrow.ok { border-color: var(--pink); }
+    .job { font-size: 25px; font-weight: 600; line-height: 1.2; }
+    .eg { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--navy); background: var(--blank); border-radius: 6px; padding: 4px 10px; justify-self: start; white-space: nowrap; }
+    .seg { display: flex; gap: 8px; }
+    .seg button { font-family: var(--cond); font-size: 21px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 6px;
+        padding: 7px 0 6px; width: 124px; cursor: pointer; transition: background-color .2s, border-color .2s, color .2s, opacity .2s; }
+    .seg button:hover:not(:disabled) { background: #f6f7fb; }
+    .seg button.sel { background: var(--tint); border-color: var(--pink); }
+    .seg button.right { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .seg button.wrong { border-style: dashed; opacity: .45; animation: shake .4s; }
+    .seg button:disabled { cursor: default; }
+
+    /* end */
+    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 30px 60px; text-align: center; }
+    .scorecard .big { font-family: var(--cond); font-size: 120px; font-weight: 900; color: var(--pink); line-height: 1; }
+    .scorecard .dlbl { margin-top: 8px; }
+    .dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+    .dots span { width: 34px; height: 34px; border-radius: 6px; border: 3px solid var(--navy); font-family: var(--cond); font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .dots span.y { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .again { margin-top: 26px; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 8px 22px; cursor: pointer; }
+
+    @media (prefers-reduced-motion: reduce) { .caption .in, .pop-in, .opt.wrong, .tile.wrong, .tok.wrong, .lbtn.wrong, .codein.wrong, .numin.wrong, .seg button.wrong { animation: none; } }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Checking <span>variables</span></h1>
+        <div class="counter" id="counter"></div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Check</button></div>
+    <div class="progress" id="progress"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), btn = $('#next'), counter = $('#counter'), progress = $('#progress');
+const PK = '#ea008a', NV = '#1b1f45', GR = '#c9ccd6', LT = '#f0f3f6', SC = '#10132c', NS = 'http://www.w3.org/2000/svg';
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function sel(tag, attrs = {}, html) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* ---------- animation helpers ---------- */
+let runId = 0;
+const easeOut = t => 1 - (1 - t) * (1 - t), easeInOut = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function play(dur, step, guard) {
+    const id = runId, ok = guard || (() => id === runId);
+    return new Promise(res => {
+        const st = performance.now();
+        const f = n => { if (!ok()) return; const t = Math.min(1, (n - st) / dur); step(t); if (t < 1) requestAnimationFrame(f); else res(); };
+        requestAnimationFrame(f);
+    });
+}
+function wait(ms) { const id = runId; return new Promise(r => setTimeout(() => { if (id === runId) r(); }, ms)); }
+
+/* ---------- code helpers ---------- */
+function tokens(line) {
+    const re = /("[^"]*"?|'[^']*'?)|(-?\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(\s+)|(.)/g, out = [];
+    let m;
+    while ((m = re.exec(line))) { const t = m[0]; out.push({ t, k: m[1] ? 's' : m[2] ? 'n' : m[3] ? (t === 'print' ? 'f' : 'v') : m[4] ? 'w' : 'o' }); }
+    return out;
+}
+const codeHTML = line => tokens(line).map(x => x.k === 'w' ? x.t : `<span class="${x.k}">${esc(x.t)}</span>`).join('');
+const codeTS = line => tokens(line).map(x => x.k === 'w' ? x.t : `<tspan class="c-${x.k}">${esc(x.t)}</tspan>`).join('');
+
+/* ---------- memory box ---------- */
+const REST = -18;
+function chipSVG(val) {
+    const w = Math.max(64, String(val).length * 14.4 + 30), str = /^["']/.test(val);
+    return `<rect x="${-w / 2}" y="-22" width="${w}" height="44" rx="8" fill="#fff" stroke="${NV}" stroke-width="3"/><text class="vval" y="8" text-anchor="middle" fill="${str ? PK : NV}">${esc(val)}</text>`;
+}
+function boxShape(name, o = {}) {
+    const pw = Math.max(96, name.length * 14.4 + 30), fw = Math.max(170, pw + 36), hw = fw / 2, ins = 22;
+    const fill = o.ghost ? 'none' : LT, st = o.ghost ? `stroke="#b8bcc8" stroke-dasharray="7 6"` : `stroke="${NV}"`;
+    const flap = sx => `<polygon points="${sx * hw},0 ${sx * (hw - ins)},-24 ${sx * (hw + 12)},-38 ${sx * (hw + 34)},-14" fill="${fill}" ${st} stroke-width="3" stroke-linejoin="round"/>`;
+    return { pw, fw, hw,
+        back: `${flap(-1)}${flap(1)}<polygon points="${-hw},0 ${-hw + ins},-24 ${hw - ins},-24 ${hw},0" fill="${o.ghost ? 'none' : '#cfd3df'}" ${st} stroke-width="3" stroke-linejoin="round"/>`,
+        front: `<rect x="${-hw}" y="0" width="${fw}" height="96" fill="${o.ghost ? '#fff' : LT}" ${st} stroke-width="4" stroke-linejoin="round"/>
+            <rect x="${-pw / 2}" y="30" width="${pw}" height="40" rx="6" fill="#fff" stroke="${o.ghost ? '#b8bcc8' : PK}" stroke-width="3" ${o.ghost ? 'stroke-dasharray="6 5"' : ''}/>
+            <text class="${o.ghost ? 'ghostlbl' : 'vname'}" x="0" y="58" text-anchor="middle">${esc(name)}</text>` };
+}
+function vbox(layer, cx, ry, name, s = 1) {
+    const sh = boxShape(name);
+    const g = sel('g', { transform: `translate(${cx} ${ry}) scale(${s})` });
+    g.innerHTML = `${sh.back}<g class="vals"></g>${sh.front}`;
+    layer.appendChild(g);
+    const vals = g.querySelector('.vals');
+    const B = {
+        g, cur: null, val: null,
+        set(val) { vals.innerHTML = ''; this.cur = null; this.val = null; if (val === undefined) return; const c = sel('g', { transform: `translate(0 ${REST})` }, chipSVG(val)); vals.appendChild(c); this.cur = c; this.val = val; },
+        appear() { return play(380, k => { const e = easeOut(k); g.setAttribute('opacity', k); g.setAttribute('transform', `translate(${cx} ${ry + 14 * (1 - e)}) scale(${s})`); }); },
+        async put(val, from) {
+            const old = this.cur, c = sel('g', {}, chipSVG(val));
+            vals.appendChild(c); this.cur = c; this.val = val;
+            const fx = from ? from.x : 0, fy = from ? from.y : -170;
+            c.setAttribute('transform', `translate(${fx} ${fy})`); c.setAttribute('opacity', from ? 1 : 0);
+            const outP = old ? play(480, k => { const e = easeInOut(k); old.setAttribute('transform', `translate(${150 * e} ${REST - 110 * easeOut(k)}) rotate(${18 * e})`); old.setAttribute('opacity', 1 - k); }).then(() => old.remove()) : Promise.resolve();
+            if (old) await wait(260);
+            await play(from ? 700 : 520, k => { const e = easeInOut(k); c.setAttribute('transform', `translate(${fx * (1 - e)} ${fy + (REST - fy) * (from ? e : easeOut(k))})`); if (!from) c.setAttribute('opacity', Math.min(1, k * 2.5)); });
+            await outP;
+        },
+        pulse() {
+            const r = this.cur && this.cur.querySelector('rect'); if (!r) return Promise.resolve();
+            return play(600, k => { const p = Math.sin(k * Math.PI); r.setAttribute('stroke', p > .15 ? PK : NV); r.setAttribute('stroke-width', 3 + 3 * p); });
+        }
+    };
+    return B;
+}
+function ghostBox(cx, ry, name, s = 1) {
+    const sh = boxShape(name, { ghost: true });
+    return `<g transform="translate(${cx} ${ry}) scale(${s})">${sh.back}${sh.front}
+        <g transform="translate(${sh.hw - 6} -6)"><circle r="20" fill="${PK}"/><path d="M-8 -8 L8 8 M8 -8 L-8 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+        <text class="note" x="0" y="126" text-anchor="middle" style="fill:${PK};font-weight:700">No box with this name</text></g>`;
+}
+const replayIcon = `<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>`;
+
+/* ---------- code runner scene: code panel, screen, memory ---------- */
+function codeScene(svg, code, o = {}) {
+    const W = o.w || 740, CW = o.cw || 380, n = code.length, LH = 38, CH = 54 + n * LH, SY = 14 + CH + 14, SH = 316 - SY, mem = !o.noMem;
+    const lineY = i => 14 + 60 + i * LH;
+    let lines = '';
+    code.forEach((ln, i) => { lines += `<text class="ln" x="40" y="${lineY(i)}" text-anchor="end">${i + 1}</text><text class="cd" x="54" y="${lineY(i)}" xml:space="preserve">${codeTS(ln)}</text>`; });
+    svg.innerHTML = `<rect x="14" y="14" width="${CW}" height="${CH}" rx="8" fill="${NV}"/><text class="plab" x="28" y="38">Code</text>
+        <g class="hl" opacity="0"><rect x="14" y="0" width="${CW}" height="35" fill="rgba(234,0,138,.32)"/><rect x="14" y="0" width="6" height="35" fill="${PK}"/></g>${lines}
+        <rect x="14" y="${SY}" width="${CW}" height="${SH}" rx="8" fill="${SC}"/><text class="plab" x="28" y="${SY + 24}">Screen</text><g class="out"></g>
+        <rect class="cur" width="13" height="24" fill="${PK}" style="display:none"/>
+        ${mem ? `<rect x="${CW + 30}" y="14" width="${W - CW - 44}" height="302" rx="8" fill="#f5f6fa"/><text class="plab dk" x="${CW + 44}" y="38">Memory</text><g class="mem"></g>` : ''}`;
+    const hl = svg.querySelector('.hl'), out = svg.querySelector('.out'), cur = svg.querySelector('.cur'), memL = svg.querySelector('.mem');
+    const boxes = {}, MX = CW + 30 + (W - CW - 44) / 2, vars = o.vars || [];
+    const slot = name => vars.length > 1 ? { y: [112, 246][vars.indexOf(name)], s: .66 } : { y: 196, s: 1 };
+    let outN = 0;
+    const S = {
+        introDone: false,
+        mark(i) { if (i < 0) { hl.setAttribute('opacity', 0); return; } hl.setAttribute('transform', `translate(0 ${lineY(i) - 25})`); hl.setAttribute('opacity', 1); },
+        cursor(on) { cur.setAttribute('x', 28); cur.setAttribute('y', SY + 38 + outN * 30); cur.style.display = on ? '' : 'none'; },
+        reset() { out.innerHTML = ''; outN = 0; this.mark(-1); this.cursor(false); if (memL) memL.innerHTML = ''; for (const k in boxes) delete boxes[k]; },
+        async type(txt, err) {
+            const t = sel('text', { class: 'otxt' + (err ? ' err' : ''), x: 28, y: SY + 56 + outN * 30, 'xml:space': 'preserve' });
+            out.appendChild(t); outN++; this.cursor(false);
+            await play(Math.max(250, txt.length * 45), k => { t.textContent = txt.slice(0, Math.round(k * txt.length)); });
+        },
+        async assign(name, val) {
+            if (!memL) return;
+            if (!boxes[name]) { const p = slot(name); boxes[name] = vbox(memL, MX, p.y, name, p.s); boxes[name].g.setAttribute('opacity', 0); await boxes[name].appear(); }
+            await boxes[name].put(val);
+        },
+        box: name => boxes[name],
+        async step(s, i) {
+            this.mark(i); await wait(420);
+            if (s.r && boxes[s.r]) { await boxes[s.r].pulse(); await wait(150); }
+            if (s.a) { await this.assign(s.a[0], s.a[1]); await wait(320); }
+            if (s.p !== undefined) { if (s.v && boxes[s.v]) await boxes[s.v].pulse(); for (const l of [].concat(s.p)) await this.type(l, s.err); await wait(320); }
+        }
+    };
+    return S;
+}
+
+/* =========================================================
+   QUESTIONS
+   ========================================================= */
+const QS = [
+    { kind: 'tap', title: 'Find the values', sc: 'SC1', prompt: 'Tap every <b>value</b> in this code.',
+      lines: ['city = "Brisbane"', 'age = 12', 'height = 1.52', 'pet_name = "Biscuit"'],
+      msg: 'Each value sits on the right of the <code>=</code>. Values can be text in quotes or numbers.' },
+
+    { kind: 'cloze', title: 'Named containers', sc: 'SC1', prompt: 'Complete each sentence using the word bank.',
+      rows: [['A', { a: 'variable' }, 'is', 'a', 'named', 'container.'],
+             ['The', { a: 'name' }, 'stays,', 'but', 'the', { a: 'value' }, 'can', 'change.'],
+             ['Use', { a: 'print' }, 'to', 'show', 'a', 'value', 'on', 'the', 'screen.']],
+      words: ['variable', 'name', 'value', 'print', 'number', 'equals'],
+      slotHints: { variable: 'Gap 1 needs the word for a named container.', name: 'Which part is the label on the box? It stays the same.', value: 'Which part is stored inside the box? It can be swapped for a new one.', print: 'Which function shows something on the screen?' },
+      hints: { number: 'Values aren\u2019t always numbers. They can be text too.', equals: 'The <code>=</code> puts a value into a variable. It isn\u2019t part of these sentences.' },
+      msg: 'A variable is a named container. Its name stays the same, its value can change, and <code>print</code> shows it.' },
+
+    { kind: 'trace', title: 'Print a variable', sc: 'SC1', prompt: 'What will appear on the screen?',
+      code: ['name = "Jordan"', 'print(name)'], steps: [{ a: ['name', '"Jordan"'] }, { p: 'Jordan', v: 'name' }],
+      opts: [
+        { s: '"Jordan"', hint: 'Quotes only show Python where text starts and ends. They don\u2019t appear on the screen.' },
+        { s: 'Jordan', hint: '' },
+        { s: 'name', hint: '<code>name</code> has no quotes, so Python looks inside the box called name and shows what it finds.' },
+        { s: '', hint: '<code>print</code> always shows something. Look at what is stored in the box.' }],
+      answer: 1, msg: '<code>print(name)</code> looks inside the box and shows the value. The quotes are not printed.' },
+
+    { kind: 'mcside', title: 'Mia\u2019s claim', sc: 'SC1', prompt: 'Mia is reading this code. Is she right?',
+      code: ['score = 50', 'print("score")', 'print(score)'], steps: [{ a: ['score', '50'] }, { p: 'score' }, { p: '50' }],
+      quote: '\u201cLines 2 and 3 will show the same thing on the screen.\u201d',
+      opts: [
+        { t: 'Yes. Both lines show the word score.', hint: 'Line 3 has no quotes, so Python looks inside the box called score.' },
+        { t: 'Yes. Both lines show 50.', hint: 'On line 2, the quotes make <code>"score"</code> plain text, so Python prints it exactly as written.' },
+        { t: 'No. Line 2 shows score and line 3 shows 50.', hint: '' },
+        { t: 'No. Line 2 causes a NameError.', hint: '<code>"score"</code> in quotes is just text. Python doesn\u2019t need to look anything up.' }],
+      answer: 2, msg: 'Quotes make <code>"score"</code> plain text. Without quotes, Python looks inside the box and prints 50.' },
+
+    { kind: 'trace', title: 'A new value', sc: 'SC2', prompt: 'What will appear on the screen?',
+      code: ['score = 10', 'score = 25', 'print(score)'], stop: 1, steps: [{ a: ['score', '10'] }, { a: ['score', '25'] }, { p: '25', v: 'score' }],
+      opts: [
+        { s: '10', hint: 'Line 2 replaced 10 with 25. A variable only remembers its newest value.' },
+        { s: '25', hint: '' },
+        { s: '10\n25', hint: 'There is only one <code>print</code>, and the box only holds 25 now.' },
+        { s: '', hint: 'Line 3 is a <code>print</code>, so something appears on the screen.' }],
+      answer: 1, msg: 'A variable holds one value at a time. Line 2 swapped 10 for 25, so 25 is printed.' },
+
+    { kind: 'trace', title: 'Joining with a comma', sc: 'SC2', prompt: 'What will appear on the screen?',
+      code: ['lives = 3', 'print("Lives:", lives)'], steps: [{ a: ['lives', '3'] }, { p: 'Lives: 3', v: 'lives' }],
+      opts: [
+        { s: '"Lives:" 3', hint: 'Quotes only show Python where text starts and ends. They don\u2019t appear on the screen.' },
+        { s: 'Lives: lives', hint: '<code>lives</code> has no quotes, so Python looks inside the box and prints its value.' },
+        { s: 'Lives:3', hint: 'A comma inside <code>print</code> joins things with a space between them.' },
+        { s: 'Lives: 3', hint: '' }],
+      answer: 3, msg: 'Text in quotes prints as written, the variable prints its value, and the comma adds a space.' },
+
+    { kind: 'tapline', title: 'Spot the NameError', sc: 'SC2', prompt: 'This program stops with a <b>NameError</b>. Tap the line that causes it.',
+      code: ['pet = "dog"', 'age = 4', 'print(pet)', 'print(Age)', 'print(age)'], answer: 3,
+      hints: ['Line 1 creates the variable pet. Creating a variable never causes a NameError.', 'Line 2 creates the variable age. Creating a variable never causes a NameError.',
+              'Look at the screen. dog was printed, so line 3 worked.', '', 'Line 5 matches line 2 exactly. Python stops at the first error, so line 5 never even runs.'],
+      msg: '<code>Age</code> with a capital A is a different name to <code>age</code>. Python can\u2019t find it, so it gives a NameError.' },
+
+    { kind: 'fix', title: 'Fix the bug', sc: 'SC2', prompt: 'Line 2 causes a NameError. Edit it so the program prints 7.',
+      code: ['score = 7', 'print(Score)'], edit: 1, bug: 'print(Score)', err: "NameError: name 'Score' is not defined", out: '7',
+      boxes: [['score', '7', 128, 150, .85]], ghost: [345, 150, 'Score', .85],
+      accept: n => n === 'print(score)',
+      hint: n => /^Print/i.test(n) && !/^print/.test(n) ? 'Python is case sensitive. <code>print</code> is all lowercase.'
+          : /["']score["']/i.test(n) ? 'With quotes, Python prints the word score. Leave them off so it looks inside the box.'
+          : /Score|SCORE/.test(n) ? 'Python is case sensitive. Compare the first letter of the name with line 1.'
+          : /print\(7\)/.test(n) ? 'That shows 7, but it doesn\u2019t use the variable. Print the variable instead.'
+          : !/\(.*\)/.test(n) ? '<code>print</code> needs brackets around what you want to show.'
+          : 'Line 2 needs to print the variable from line 1, spelled exactly the same.',
+      msg: 'Variable names must match exactly. <code>score</code> and <code>Score</code> are different names to Python.' },
+
+    { kind: 'label', title: 'Parts of a variable', sc: 'SC3', prompt: 'Drag a label onto each part of this line of code.',
+      toks: [['temperature', 230, '#fff'], ['=', 452, '#9aa3cf'], ['37.5', 650, '#fff']], keys: ['Name', 'Assignment', 'Value'],
+      tiles: ['Name', 'Assignment', 'Value', 'Print'],
+      hints: { Name: 'The name is on the left. It is the label on the box.', Assignment: 'The <code>=</code> in the middle is the assignment. It puts the value into the box.',
+               Value: 'The value is on the right. It is what gets stored in the box.', Print: 'There is no <code>print</code> in this line. <code>print</code> shows something on the screen.' },
+      msg: 'The name labels the box, the <code>=</code> assigns, and the value on the right is stored inside.' },
+
+    { kind: 'sort3', title: 'Sort the data types', sc: 'SC3', prompt: 'Drag each value into its data type.',
+      bins: [['String', 'str', 'Text in quotes', 's', 'pk'], ['Integer', 'int', 'Whole number', 'i', ''], ['Float', 'float', 'Decimal number', 'f', 'ol']],
+      items: [
+        ['"Hello"', 's', 'Text inside quotes is a string.'],
+        ['"42"', 's', 'Anything inside quotes is a string, even if it looks like a number.'],
+        ['"3.5"', 's', 'Anything inside quotes is a string, even if it looks like a number.'],
+        ['42', 'i', '42 is a whole number with no quotes, so it is an integer.'],
+        ['-7', 'i', '-7 is a whole number. Negative whole numbers are still integers.'],
+        ['2026', 'i', '2026 is a whole number with no quotes, so it is an integer.'],
+        ['3.5', 'f', '3.5 has a decimal point and no quotes, so it is a float.'],
+        ['0.25', 'f', '0.25 has a decimal point, so it is a float.'],
+        ['7.0', 'f', '7.0 has a decimal point, so it is a float, even though it equals 7.']],
+      msg: 'Quotes make a string. Whole numbers are integers, and numbers with a decimal point are floats.' },
+
+    { kind: 'order', title: 'A tricky line',  sc: 'SC3', prompt: 'The box <code>score</code> holds 4. Put the steps Python follows in order.',
+      steps: [
+        ['Look inside the score box and find 4', 'Python needs to know what score holds before it can add anything.'],
+        ['Work out the right side: 4 + 1 = 5', 'The adding happens after Python looks up score, and before it stores anything.'],
+        ['Put 5 into the score box', 'Storing comes last. Python only stores once the right side is worked out.']],
+      extra: ['Put 1 into the score box', 'Python doesn\u2019t store just the 1. It works out all of <code>score + 1</code> first.'],
+      msg: 'Work out the right side first, then put the answer into the box on the left. 4 becomes 5.' },
+
+    { kind: 'table', title: 'Trace the coins', sc: 'SC3', prompt: 'Complete the trace table for this program.', var: 'coins',
+      rows: [
+        { code: 'coins = 5', a: '5', h: () => 'Line 1 stores 5 straight into coins.' },
+        { code: 'coins = coins + 3', a: '8', h: v => v === '3' ? 'Line 2 adds 3 to what coins already holds. Work out 5 + 3.' : 'Work out the right side first. coins holds 5, so 5 + 3.' },
+        { code: 'coins = coins + 10', a: '18', h: v => (v === '10' || v === '15') ? 'coins holds 8 after line 2, not 5. Work out 8 + 10.' : 'Use the newest value of coins from the row above, then add 10.' },
+        { code: 'print(coins)', a: '18', pre: 'Screen:', h: () => '<code>print</code> shows whatever is in the box after line 3.' }],
+      msg: 'Each line works out the right side using the newest value, then stores it. 5, then 8, then 18.' },
+
+    { kind: 'cloze', title: 'Maths symbols', sc: 'Operators', prompt: 'Drag the correct symbol into each line of code.', codeTiles: true,
+      rows: [['Multiply:', '`total = price`', { a: '*' }, '`quantity`'],
+             ['Divide:', '`each = total`', { a: '/' }, '`people`'],
+             ['Add:', '`score = score`', { a: '+' }, '`1`'],
+             ['Subtract:', '`lives = lives`', { a: '-' }, '`1`']],
+      words: ['*', '/', '+', '-', 'x', '\u00f7'],
+      slotHints: { '*': 'Which symbol does Python use to multiply?', '/': 'Which symbol does Python use to divide?', '+': 'Which symbol adds?', '-': 'Which symbol subtracts?' },
+      hints: { x: 'Python doesn\u2019t use x to multiply, because x could be a variable name. Use <code>*</code> instead.', '\u00f7': 'There is no \u00f7 key on a keyboard, so Python uses <code>/</code> to divide.' },
+      msg: 'Python multiplies with <code>*</code> and divides with <code>/</code>. Adding and subtracting use <code>+</code> and <code>-</code>.' },
+
+    { kind: 'trace', title: 'Multiply', sc: 'Operators', prompt: 'What will appear on the screen?',
+      code: ['cost = 4', 'total = cost * 3', 'print(total)'], vars: ['cost', 'total'], stop: 1,
+      steps: [{ a: ['cost', '4'] }, { r: 'cost', a: ['total', '12'] }, { p: '12', v: 'total' }],
+      opts: [
+        { s: '7', hint: '<code>*</code> means multiply, not add. Work out 4 \u00d7 3.' },
+        { s: 'cost * 3', hint: 'Python works out <code>cost * 3</code> first, then stores the answer in total.' },
+        { s: '12', hint: '' },
+        { s: '43', hint: 'Python doesn\u2019t join the digits together. <code>*</code> multiplies 4 by 3.' }],
+      answer: 2, msg: 'Python looks up cost (4), works out 4 * 3 = 12, then stores 12 in total.' },
+
+    { kind: 'fix', title: 'Not an x', sc: 'Operators', prompt: 'Line 3 causes a SyntaxError. Edit it so the program prints the area.',
+      code: ['length = 5', 'width = 4', 'area = length x width', 'print(area)'], edit: 2, bug: 'area = length x width', err: 'SyntaxError: invalid syntax', out: '20',
+      boxes: [['length', '5', 118, 112, .62], ['width', '4', 352, 112, .62]], result: ['area', '20', 235, 248, .62],
+      accept: n => /^area=(length\*width|width\*length)$/.test(n),
+      hint: n => /\u00d7/.test(n) ? 'There is no \u00d7 key in Python. Use <code>*</code> (Shift + 8).'
+          : /lengthxwidth|widthxlength|[a-z]x[a-z]/i.test(n) && !/\*/.test(n) ? 'Python doesn\u2019t use x to multiply. It thinks x is part of a name. Use <code>*</code>.'
+          : /^area=20$/.test(n) ? 'That gives the right number, but use the variables so the code still works if the sizes change.'
+          : /\//.test(n) ? '<code>/</code> divides. Which symbol multiplies?'
+          : /\+/.test(n) ? '<code>+</code> adds. Which symbol multiplies?'
+          : !/^area=/.test(n) ? 'Keep <code>area =</code> on the left so line 4 can print it.'
+          : 'Multiply length by width using <code>*</code>.',
+      msg: '<code>*</code> multiplies. Python works out 5 * 4 = 20 and stores it in area.' },
+
+    { kind: 'trace', title: 'Divide', sc: 'Operators', prompt: 'What will appear on the screen?',
+      code: ['pizza = 12', 'each = pizza / 4', 'print(each)'], vars: ['pizza', 'each'], stop: 1,
+      steps: [{ a: ['pizza', '12'] }, { r: 'pizza', a: ['each', '3.0'] }, { p: '3.0', v: 'each' }],
+      opts: [
+        { s: '3', hint: 'Close! Dividing with <code>/</code> always gives a float in Python, even when it divides evenly.' },
+        { s: '48', hint: '<code>/</code> means divide, not multiply. Work out 12 \u00f7 4.' },
+        { s: '12 / 4', hint: 'Python works out the right side first, then stores the answer in each.' },
+        { s: '3.0', hint: '' }],
+      answer: 3, msg: '<code>/</code> divides. The answer is always a float, so 12 / 4 gives 3.0.' },
+
+    { kind: 'table', title: 'Trace the money', sc: 'Operators', prompt: 'Complete the trace table for this program.', var: 'money',
+      rows: [
+        { code: 'money = 20', a: '20', h: () => 'Line 1 stores 20 straight into money.' },
+        { code: 'money = money * 2', a: '40', h: v => v === '22' ? '<code>*</code> multiplies. Work out 20 * 2.' : 'Work out the right side using the value money holds now: 20 * 2.' },
+        { code: 'money = money / 4', a: '10.0', h: v => v === '10' ? 'Close! Dividing with <code>/</code> always gives a float, so include the decimal point.' : (v === '5' || v === '5.0') ? 'money holds 40 after line 2, not 20. Work out 40 / 4.' : v === '160' ? '<code>/</code> divides, not multiplies. Work out 40 / 4.' : 'Use the newest value of money, then divide by 4.' },
+        { code: 'print(money)', a: '10.0', pre: 'Screen:', h: v => v === '10' ? '<code>print</code> shows exactly what is in the box, and the box holds a float.' : '<code>print</code> shows whatever is in the box after line 3.' }],
+      msg: '20 doubles to 40, then 40 / 4 gives 10.0. Division always gives a float.' },
+
+    { kind: 'fix', chip: 'Complete the code', title: 'Price for three', sc: 'Operators', prompt: 'Complete line 2 so <code>total</code> stores the price multiplied by 3.',
+      code: ['price = 5', '', 'print(total)'], edit: 1, bug: '', ph: 'Type line 2', err: '', out: '15',
+      boxes: [['price', '5', 235, 112, .62]], result: ['total', '15', 235, 248, .62],
+      accept: n => /^total=(price\*3|3\*price)$/.test(n),
+      hint: n => /x|\u00d7/.test(n.replace(/^total=/, '').replace(/price/g, '')) ? 'Python doesn\u2019t use x to multiply. Use <code>*</code>.'
+          : /^total=15$/.test(n) ? 'That gives the right number, but use the variable price so the code still works if the price changes.'
+          : /^Total/.test(n) ? 'Python is case sensitive. Line 3 prints <code>total</code> in lowercase.'
+          : !/^total=/.test(n) ? 'Store the answer in a variable called <code>total</code> so line 3 can print it.'
+          : /\+/.test(n) ? '<code>+</code> adds. Which symbol multiplies?'
+          : /\//.test(n) ? '<code>/</code> divides. Which symbol multiplies?'
+          : /Price/.test(n) ? 'Python is case sensitive. Use <code>price</code> exactly as line 1 spells it.'
+          : 'Use the pattern <code>total = price * 3</code>.',
+      msg: 'Python looks up price (5), works out 5 * 3 = 15, and stores it in total.' },
+
+    { kind: 'match', title: 'Right type for the job', sc: 'SC4', prompt: 'Choose the best data type to store each piece of information.',
+      rows: [
+        ['Number of students in a class', '26', 'i', 'You count students in whole numbers, so use an integer.'],
+        ['Your height in metres', '1.52', 'f', 'Height has a decimal point, so use a float.'],
+        ['The title of your favourite book', 'Matilda', 's', 'A title is text, so use a string.'],
+        ['A mobile phone number', '0412 345 678', 's', 'Phone numbers start with 0 and have spaces, and you never do maths with them. Store them as text.'],
+        ['Price of a muffin at the canteen', '3.50', 'f', 'Money has cents after a decimal point, so use a float.']],
+      msg: 'Whole numbers are integers, decimals are floats, and text (or numbers you won\u2019t do maths with) are strings.' },
+
+    { kind: 'write', title: 'Write it yourself', sc: 'SC4', prompt: 'Line 1: create a variable called <code>pet</code> that stores the text <code>dog</code>. Line 2: print it.',
+      msg: 'Line 1 stores <code>"dog"</code> in a box called pet. Line 2 looks inside the box and shows dog on the screen.' }
+];
+const TOTAL = QS.length;
+const CHIP = { tap: 'Tap to select', cloze: 'Fill the gaps', trace: 'Predict', mcside: 'Multiple choice', tapline: 'Spot the error', fix: 'Fix the code',
+    label: 'Drag and drop', sort3: 'Sort', order: 'Put in order', table: 'Trace table', match: 'Match', write: 'Write code' };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- flow ---------- */
+let qi = 0, firstTry = [], tries = 0, mode = 'check', cur = null;
+function render() {
+    runId++;
+    content.innerHTML = ''; tries = 0; mode = 'check';
+    const q = QS[qi];
+    counter.innerHTML = `Question <b>${qi + 1}</b> / ${TOTAL}`;
+    progress.style.width = (qi / TOTAL * 100) + '%';
+    const wrap = el('div', 'q');
+    wrap.appendChild(el('div', 'qhead', `<div class="qtitle">${q.title}</div><div class="tchip">${q.chip || CHIP[q.kind]}</div><div class="sctag">${q.sc}</div>`));
+    wrap.appendChild(el('div', 'prompt', q.prompt));
+    const body = el('div', 'body'); wrap.appendChild(body); content.appendChild(wrap);
+    cur = KINDS[q.kind](q, body);
+    say(cur.instr);
+    btn.hidden = false; btn.textContent = 'Check';
+    refresh();
+}
+function refresh() { if (mode === 'check') btn.disabled = !cur.ready(); }
+function check() {
+    tries++;
+    const r = cur.check();
+    if (r.ok) {
+        if (tries === 1) firstTry[qi] = true;
+        say(`<b>Correct.</b> ${QS[qi].msg}`);
+        mode = 'next'; btn.disabled = false; btn.textContent = qi === TOTAL - 1 ? 'Finish' : 'Next';
+        btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
+        if (cur.done) cur.done();
+        btn.focus({ preventScroll: true });
+    } else {
+        say(`<b class="no">Not quite.</b> ${r.hint}`);
+        refresh();
+    }
+}
+btn.onclick = () => {
+    if (btn.disabled) return;
+    if (mode === 'check') check();
+    else if (qi === TOTAL - 1) finish();
+    else { qi++; render(); }
+};
+const enterSubmits = inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!btn.disabled && mode === 'check') check(); } });
+function finish() {
+    runId++;
+    content.innerHTML = '';
+    btn.hidden = true;
+    counter.innerHTML = '<b>Complete</b>';
+    progress.style.width = '100%';
+    const n = firstTry.filter(Boolean).length;
+    say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
+    const c = el('div', 'center');
+    const dots = QS.map((_, i) => `<span class="${firstTry[i] ? 'y' : ''}">${i + 1}</span>`).join('');
+    const card = el('div', 'scorecard pop-in', `<div class="big">${n} / ${TOTAL}</div><div class="dlbl">Correct on the first try</div><div class="dots">${dots}</div>`);
+    const again = el('button', 'again', 'Start again');
+    again.onclick = () => { qi = 0; firstTry = []; render(); };
+    c.append(card, again); content.appendChild(c);
+}
+
+/* ---------- multiple choice core ---------- */
+function mcCore(els, q, extra = {}) {
+    let s = null;
+    els.forEach((b, i) => b.onclick = () => {
+        if (mode !== 'check' || b.classList.contains('wrong')) return;
+        els.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); s = i; refresh();
+    });
+    return {
+        instr: extra.instr || 'Choose an answer, then press <b>Check</b>.',
+        ready: () => s !== null,
+        check() {
+            const b = els[s];
+            b.classList.remove('sel');
+            if (s === q.answer) { b.classList.add('right'); els.forEach(x => x.disabled = true); return { ok: true }; }
+            b.classList.add('wrong'); b.disabled = true;
+            const h = (q.opts || q.hints)[s]; s = null; return { ok: false, hint: typeof h === 'string' ? h : h.hint };
+        },
+        done: extra.done
+    };
+}
+const L = 'ABCD';
+function screenOpt(o, i) {
+    const inner = o.s === '' ? `<span class="mini empty">Nothing appears</span>` : `<span class="mini">${esc(o.s)}</span>`;
+    return el('button', 'opt', `<span class="l">${L[i]}</span>${inner}`);
+}
+
+const KINDS = {
+    /* tap every value */
+    tap(q, body) {
+        const panel = el('div', 'codebig dk'), toks = [];
+        q.lines.forEach((line, li) => {
+            const row = el('div', 'cline');
+            row.appendChild(el('span', 'ln2', li + 1));
+            const tk = tokens(line).filter(x => x.k !== 'w');
+            tk.forEach((x, i) => {
+                const role = x.k === 'o' ? 'assign' : i === 0 ? 'name' : 'value';
+                const b = el('button', 'tok ' + x.k, esc(x.t)); b.role_ = role; b.t_ = x.t;
+                b.onclick = () => { if (mode !== 'check' || b.disabled) return; b.classList.toggle('sel'); refresh(); };
+                row.appendChild(b); toks.push(b);
+            });
+            panel.appendChild(row);
+        });
+        body.appendChild(panel);
+        return {
+            instr: 'Tap to select (tap again to undo), then press <b>Check</b>.',
+            ready: () => toks.some(t => t.classList.contains('sel')),
+            check() {
+                let hint = null;
+                toks.filter(t => t.classList.contains('sel')).forEach(t => {
+                    t.classList.remove('sel');
+                    if (t.role_ === 'value') { t.classList.add('right'); t.disabled = true; }
+                    else { t.classList.remove('wrong'); void t.offsetWidth; t.classList.add('wrong'); setTimeout(() => t.classList.remove('wrong'), 900);
+                        if (!hint) hint = t.role_ === 'name' ? `<code>${esc(t.t_)}</code> is a name. Names go on the left of the <code>=</code>.` : 'The <code>=</code> is the assignment. It puts the value into the box.'; }
+                });
+                const left = toks.filter(t => t.role_ === 'value' && !t.classList.contains('right')).length;
+                if (hint) return { ok: false, hint };
+                if (left) return { ok: false, hint: `Good so far, but you\u2019ve missed ${left === 1 ? 'a value' : left + ' values'}. Every line has one.` };
+                toks.forEach(t => t.disabled = true);
+                return { ok: true };
+            }
+        };
+    },
+
+    /* cloze with word bank */
+    cloze(q, body) {
+        const box = el('div', 'cloze'), zones = [];
+        q.rows.forEach((r, i) => {
+            const row = el('div', 'crow', `<div class="num">${i + 1}</div>`), sent = el('div', 'sent');
+            r.forEach(p => {
+                if (typeof p === 'string') { if (p[0] === '`') sent.append(el('code', 'cz lt', codeHTML(p.slice(1, -1))), ' '); else sent.append(p + ' '); return; }
+                const g = el('span', 'gap' + (q.codeTiles ? ' sym' : '')); g.tabIndex = 0; g.setAttribute('aria-label', 'Gap'); sent.append(g, ' ');
+                zones.push({ el: g, box: g, cap: 1, key: p.a, onPut: () => g.classList.add('filled'), onTake: () => g.classList.remove('filled') });
+            });
+            row.appendChild(sent); box.appendChild(row);
+        });
+        const side = el('div', 'bside', `<div class="dlbl">${q.codeTiles ? 'Symbols' : 'Word bank'}</div>`), pool = el('div', 'pool' + (q.codeTiles ? ' wrap' : '')); side.appendChild(pool);
+        side.style.height = 'auto'; side.style.alignSelf = 'stretch';
+        body.append(box, side);
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.words).forEach(w => { const t = D.tile(w); if (q.codeTiles) t.classList.add('code', 'op'); pool.appendChild(t); });
+        return {
+            instr: `Drag each ${q.codeTiles ? 'symbol' : 'word'} into a gap (or tap a ${q.codeTiles ? 'symbol' : 'word'}, then a gap), then press <b>Check</b>.`,
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                let bad = 0, hint = null;
+                zones.forEach(z => {
+                    const t = z.box.querySelector('.tile'); if (!t || z.locked) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.textContent === z.key) { t.classList.add('right'); z.locked = true; }
+                    else { bad++; t.classList.add('wrong'); if (!hint) hint = q.hints[t.textContent] || q.slotHints[z.key]; }
+                });
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} gaps need changing. ` : '') + hint } : { ok: true };
+            }
+        };
+    },
+
+    /* predict output with animated code runner */
+    trace(q, body) {
+        body.classList.add('pred');
+        const sc = el('div', 'scene');
+        sc.innerHTML = `<svg viewBox="0 0 740 330" width="734" height="327"></svg>`;
+        const rp = el('button', 'replay', `${replayIcon}<span>Replay</span>`); sc.appendChild(rp);
+        const g = el('div', 'opts');
+        const els = q.opts.map((o, i) => { const b = screenOpt(o, i); g.appendChild(b); return b; });
+        body.append(sc, g);
+        const S = codeScene(sc.querySelector('svg'), q.code, { vars: q.vars });
+        const last = q.steps.length - 1, stop = q.stop === undefined ? last : q.stop;
+        let solved = false;
+        S.run = async function (full, skip) {
+            if (!skip) {
+                this.introDone = false; this.reset(); await wait(350);
+                for (let i = 0; i < stop; i++) await this.step(q.steps[i], i);
+                const h = q.steps[stop];
+                if (h.a && !this.box(h.a[0])) { if (h.r && this.box(h.r)) await this.box(h.r).pulse(); await this.assign(h.a[0], '?'); }
+                this.mark(stop); this.cursor(true); this.introDone = true;
+            }
+            if (!full) return;
+            await wait(skip ? 150 : 600);
+            for (let i = stop; i <= last; i++) await this.step(q.steps[i], i);
+            this.mark(-1);
+        };
+        rp.onclick = () => { runId++; S.run(solved); };
+        S.run(false);
+        return mcCore(els, q, { instr: 'Watch the code run, then choose what appears on the screen.', done: () => { solved = true; runId++; S.run(true, S.introDone); } });
+    },
+
+    /* quote + multiple choice with code panel */
+    mcside(q, body) {
+        const side = el('div', 'scene');
+        side.innerHTML = `<svg viewBox="0 0 330 330" width="327" height="327"></svg>`;
+        const col = el('div', 'col'); col.style.flex = '1';
+        col.appendChild(el('div', 'quote', q.quote));
+        const g = el('div', 'opts');
+        const els = q.opts.map((o, i) => { const b = el('button', 'opt', `<span class="l">${L[i]}</span><span>${o.t}</span>`); g.appendChild(b); return b; });
+        col.appendChild(g); body.append(side, col);
+        body.style.justifyContent = 'flex-start';
+        const S = codeScene(side.querySelector('svg'), q.code, { noMem: true, cw: 302, w: 330 });
+        S.cursor(true);
+        return mcCore(els, q, { done: async () => { runId++; S.reset(); for (let i = 0; i < q.steps.length; i++) await S.step(q.steps[i], i); S.mark(-1); } });
+    },
+
+    /* tap the line that causes the error */
+    tapline(q, body) {
+        const panel = el('div', 'lines dk');
+        const els = q.code.map((c, i) => { const b = el('button', 'lbtn', `<span class="ln2">${i + 1}</span><span>${codeHTML(c)}</span>`); panel.appendChild(b); return b; });
+        const right = el('div', 'col'); right.style.cssText = 'gap:14px;width:540px';
+        const scr = el('div', 'screen', `<span class="lab">Screen</span>dog\n<span class="err">NameError ...</span>`);
+        const memS = el('div', 'scene'); memS.style.border = 'none'; memS.style.background = '#f5f6fa';
+        memS.innerHTML = `<svg viewBox="0 0 540 222" width="540" height="222"><text class="plab dk" x="16" y="26">Memory</text><g class="m"></g></svg>`;
+        right.append(scr, memS); body.append(panel, right);
+        const m = memS.querySelector('.m');
+        const b1 = vbox(m, 92, 116, 'pet', .66), b2 = vbox(m, 264, 116, 'age', .66);
+        b1.set('"dog"'); b2.set('4');
+        return mcCore(els, { answer: q.answer, hints: q.hints }, { instr: 'Tap a line of code, then press <b>Check</b>.', done: () => {
+            scr.innerHTML = `<span class="lab">Screen</span>dog\n<span class="err">NameError: name 'Age' is not defined</span>`;
+            const gb = sel('g', { opacity: 0 }, ghostBox(440, 116, 'Age', .66)); m.appendChild(gb);
+            play(400, k => gb.setAttribute('opacity', k));
+        } });
+    },
+
+    /* edit or complete a line of code */
+    fix(q, body) {
+        const left = el('div', 'col'); left.style.cssText = 'gap:12px;width:600px';
+        const compact = q.code.length > 2;
+        const ed = el('div', 'editor dk' + (compact ? ' compact' : ''), `<span class="lab">Code</span>`);
+        let inp;
+        q.code.forEach((c, i) => {
+            const r = el('div', 'erow', `<span class="ln2">${i + 1}</span>`);
+            if (i === q.edit) {
+                inp = el('input', 'codein'); inp.value = q.bug; inp.placeholder = q.ph || ''; inp.spellcheck = false; inp.autocomplete = 'off';
+                inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('aria-label', 'Line ' + (i + 1)); r.appendChild(inp);
+            } else r.insertAdjacentHTML('beforeend', `<span class="static">${codeHTML(c)}</span>`);
+            ed.appendChild(r);
+        });
+        const scr = el('div', 'screen', `<span class="lab">Screen</span>${q.err ? `<span class="err">${esc(q.err)}</span>` : ''}`); scr.style.minHeight = compact ? '92px' : '108px';
+        left.append(ed, scr);
+        const memS = el('div', 'scene'); memS.style.border = 'none'; memS.style.background = '#f5f6fa';
+        memS.innerHTML = `<svg viewBox="0 0 470 330" width="470" height="330"><text class="plab dk" x="16" y="28">Memory</text><g class="m"></g></svg>`;
+        body.append(left, memS);
+        const m = memS.querySelector('.m');
+        const bx = q.boxes.map(([n, v, x, y, sc]) => { const b = vbox(m, x, y, n, sc); b.set(v); return b; });
+        if (q.ghost) m.insertAdjacentHTML('beforeend', `<g class="gh">${ghostBox(...q.ghost)}</g>`);
+        inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); });
+        enterSubmits(inp);
+        setTimeout(() => inp.focus({ preventScroll: true }), 50);
+        return {
+            instr: q.bug ? `Edit line ${q.edit + 1}, then press <b>Check</b> to run it.` : `Type line ${q.edit + 1}, then press <b>Check</b> to run it.`,
+            ready: () => inp.value.trim() !== '' && inp.value.trim() !== q.bug,
+            check() {
+                const n = inp.value.trim().replace(/\s+/g, '');
+                if (q.accept(n)) { inp.classList.add('right'); inp.readOnly = true; return { ok: true }; }
+                inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong');
+                return { ok: false, hint: q.hint(n) };
+            },
+            async done() {
+                const gh = m.querySelector('.gh');
+                if (gh) play(350, k => gh.setAttribute('opacity', 1 - k));
+                for (const b of bx) await b.pulse();
+                if (q.result) { const [n, v, x, y, sc] = q.result; const rb = vbox(m, x, y, n, sc); rb.g.setAttribute('opacity', 0); await rb.appear(); await rb.put(v); await rb.pulse(); }
+                scr.innerHTML = `<span class="lab">Screen</span>${esc(q.out)}`;
+            }
+        };
+    },
+
+    /* label the parts of an assignment */
+    label(q, body) {
+        const W = 806, H = 330, xs = q.toks.map(t => t[1]), s = .78, BX = 403, BY = 238;
+        const wrap = el('div', 'bwrap');
+        let toks = '', ticks = '';
+        q.toks.forEach(([t, x, c]) => { toks += `<text class="bigtok" x="${x}" y="76" text-anchor="middle" fill="${c}">${esc(t)}</text>`; ticks += `<line x1="${x}" x2="${x}" y1="102" y2="122" stroke="${GR}" stroke-width="3"/>`; });
+        wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+            <rect x="40" y="22" width="726" height="80" rx="8" fill="${NV}"/>${toks}${ticks}
+            <text class="plab dk" x="24" y="${H - 16}">Memory</text><g class="link"></g><g class="m"></g></svg>`;
+        const side = el('div', 'bside', '<div class="dlbl">Labels</div>'), pool = el('div', 'pool'); side.appendChild(pool);
+        body.append(wrap, side);
+        const m = wrap.querySelector('.m'), link = wrap.querySelector('.link');
+        const vb = vbox(m, BX, BY, 'temperature', s);
+        const zones = q.keys.map((k, i) => {
+            const z = el('div', 'slot'); z.style.left = (xs[i] - 90) + 'px'; z.style.top = '124px'; z.tabIndex = 0; z.setAttribute('aria-label', 'Label slot ' + (i + 1));
+            wrap.appendChild(z);
+            return { el: z, box: z, cap: 1, key: k, onPut: () => z.classList.add('filled'), onTake: () => z.classList.remove('filled') };
+        });
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.tiles).forEach(t => pool.appendChild(D.tile(t)));
+        return {
+            instr: 'Drag each label to the part of the code it names (or tap a label, then a space).',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                let bad = 0, hint = null;
+                zones.forEach(z => {
+                    const t = z.box.querySelector('.tile'); if (!t || z.locked) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.textContent === z.key) { t.classList.add('right'); z.locked = true; }
+                    else { bad++; t.classList.add('wrong'); if (!hint) hint = q.hints[t.textContent]; }
+                });
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} labels need changing. ` : '') + hint } : { ok: true };
+            },
+            async done() {
+                const p = sel('path', { d: `M${xs[0]} 178 C ${xs[0]} 260, 300 ${BY + 40}, ${BX - 110} ${BY + 40}`, fill: 'none', stroke: PK, 'stroke-width': 4, 'stroke-linecap': 'round' });
+                link.appendChild(p); const len = p.getTotalLength(); p.style.strokeDasharray = len;
+                await play(600, k => p.style.strokeDashoffset = len * (1 - easeOut(k)));
+                await vb.put('37.5', { x: (xs[2] - BX) / s, y: (66 - BY) / s });
+            }
+        };
+    },
+
+    /* sort into three data types */
+    sort3(q, body) {
+        const wrap = el('div', 'sort3');
+        const zones = q.bins.map(([h, py, sub, key, cls]) => {
+            const b = el('div', 'bin ' + cls, `<h3>${h}<small>${py}</small></h3><div class="sub">${sub}</div><div class="area"></div>`); b.tabIndex = 0; wrap.appendChild(b);
+            return { el: b, box: b.querySelector('.area'), cap: Infinity, key };
+        });
+        const pool = el('div', 'pool'); wrap.appendChild(pool); body.appendChild(wrap);
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.items).forEach(([t, k, h]) => { const tl = D.tile(t); tl.classList.add('code'); tl.k = k; tl.h = h; pool.appendChild(tl); });
+        return {
+            instr: 'Drag each tile into a group (or tap a tile, then a group), then press <b>Check</b>.',
+            ready: () => !pool.querySelector('.tile'),
+            check() {
+                const wrong = [];
+                zones.forEach(z => z.box.querySelectorAll('.tile').forEach(t => {
+                    if (t.classList.contains('right')) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.k === z.key) t.classList.add('right'); else { t.classList.add('wrong'); wrong.push(t.h); }
+                }));
+                return wrong.length ? { ok: false, hint: (wrong.length > 1 ? `${wrong.length} tiles need moving. ` : '') + wrong[0] } : { ok: true };
+            }
+        };
+    },
+
+    /* order the steps of score = score + 1 */
+    order(q, body) {
+        const wrap = el('div', 'ordwrap');
+        const sc = el('div', 'scene'); sc.style.background = '#f5f6fa';
+        sc.innerHTML = `<svg viewBox="0 0 414 340" width="414" height="340">
+            <rect x="16" y="16" width="382" height="70" rx="8" fill="${NV}"/>
+            <text class="cd" x="207" y="60" text-anchor="middle" style="font-size:30px" xml:space="preserve">${codeTS('score = score + 1')}</text>
+            <g class="ul" opacity="0"><line x1="206" x2="362" y1="74" y2="74" stroke="${PK}" stroke-width="4" stroke-linecap="round"/></g>
+            <g class="work" opacity="0"><rect x="107" y="104" width="200" height="48" rx="8" fill="#fff" stroke="${PK}" stroke-width="3"/><text class="vval" x="207" y="136" text-anchor="middle" fill="${NV}" xml:space="preserve">4 + 1</text></g>
+            <text class="plab dk" x="28" y="324">Memory</text><g class="m"></g></svg>`;
+        const rightCol = el('div', 'ordright'), zones = [];
+        q.steps.forEach((_, i) => {
+            const row = el('div', 'srow', `<span class="num">${i + 1}</span>`), z = el('div', 'oslot'); z.tabIndex = 0; z.setAttribute('aria-label', 'Step ' + (i + 1));
+            row.appendChild(z); rightCol.appendChild(row);
+            zones.push({ el: z, box: z, cap: 1, key: i, onPut: () => z.classList.add('filled'), onTake: () => z.classList.remove('filled') });
+        });
+        const pool = el('div', 'pool'); rightCol.appendChild(pool);
+        wrap.append(sc, rightCol); body.appendChild(wrap);
+        const m = sc.querySelector('.m'), vb = vbox(m, 207, 232, 'score', .8); vb.set('4');
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle([...q.steps.map((s, i) => [s[0], i, s[1]]), [q.extra[0], -1, q.extra[1]]]).forEach(([t, k, h]) => { const tl = D.tile(t); tl.classList.add('sm'); tl.k = k; tl.h = h; pool.appendChild(tl); });
+        return {
+            instr: 'Drag the steps into order (or tap a step, then a space). One step is not needed.',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                let bad = 0, hint = null;
+                zones.forEach(z => {
+                    const t = z.box.querySelector('.tile'); if (!t || z.locked) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.k === z.key) { t.classList.add('right'); z.locked = true; }
+                    else { bad++; t.classList.add('wrong'); if (!hint) hint = t.h; }
+                });
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} steps need moving. ` : '') + hint } : { ok: true };
+            },
+            async done() {
+                const ul = sc.querySelector('.ul'), work = sc.querySelector('.work'), wt = work.querySelector('text');
+                await play(300, k => ul.setAttribute('opacity', k));
+                await vb.pulse();
+                work.setAttribute('transform', 'translate(0 60)');
+                await play(450, k => { const e = easeOut(k); work.setAttribute('opacity', k); work.setAttribute('transform', `translate(0 ${60 * (1 - e)})`); });
+                await wait(500);
+                wt.innerHTML = `4 + 1 = <tspan fill="${PK}">5</tspan>`;
+                await wait(500);
+                await vb.put('5', { x: 0, y: (178 - 232) / .8 });
+                work.setAttribute('opacity', 0);
+            }
+        };
+    },
+
+    /* trace table */
+    table(q, body) {
+        const tbl = el('table', 'ttab lt'), tb = el('tbody');
+        tbl.innerHTML = `<thead><tr><th>Line</th><th>Code</th><th>Value of ${q.var}</th></tr></thead>`;
+        const ins = q.rows.map((r, i) => {
+            const tr = el('tr', '', `<td class="lno">${i + 1}</td><td class="cdc">${codeHTML(r.code)}</td><td></td>`);
+            const inp = el('input', 'numin'); inp.inputMode = 'decimal'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Line ' + (i + 1));
+            if (r.pre) tr.lastChild.appendChild(el('span', 'pre', r.pre));
+            tr.lastChild.appendChild(inp); tb.appendChild(tr);
+            inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); });
+            enterSubmits(inp);
+            return inp;
+        });
+        tbl.appendChild(tb);
+        const memS = el('div', 'scene'); memS.style.border = 'none'; memS.style.background = '#f5f6fa';
+        memS.innerHTML = `<svg viewBox="0 0 330 330" width="330" height="330"><text class="plab dk" x="16" y="28">Memory</text><g class="m"></g></svg>`;
+        body.append(tbl, memS);
+        const vb = vbox(memS.querySelector('.m'), 165, 170, q.var, .9);
+        return {
+            instr: `Type what <b>${q.var}</b> holds after each line, then press <b>Check</b>.`,
+            ready: () => ins.every(i => i.value.trim() !== ''),
+            check() {
+                let hint = null, bad = 0;
+                ins.forEach((inp, i) => {
+                    if (inp.readOnly) return;
+                    const v = inp.value.trim();
+                    if (v === q.rows[i].a) { inp.classList.add('right'); inp.readOnly = true; }
+                    else { bad++; inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong'); if (!hint) hint = `Line ${i + 1}: ` + q.rows[i].h(v); }
+                });
+                return bad ? { ok: false, hint } : { ok: true };
+            },
+            async done() {
+                const trs = tb.querySelectorAll('tr');
+                for (let i = 0; i < q.rows.length; i++) {
+                    trs.forEach(t => t.classList.remove('on')); trs[i].classList.add('on');
+                    if (!q.rows[i].pre) await vb.put(q.rows[i].a); else await vb.pulse();
+                    await wait(350);
+                }
+                trs.forEach(t => t.classList.remove('on'));
+            }
+        };
+    },
+
+    /* match a data type to each job */
+    match(q, body) {
+        const box = el('div', 'match'), TY = [['s', 'String'], ['i', 'Integer'], ['f', 'Float']];
+        const rows = q.rows.map(([job, eg, a, h]) => {
+            const r = el('div', 'mrow', `<div class="job">${job}</div><div class="eg">${esc(eg)}</div>`), seg = el('div', 'seg');
+            const R = { r, a, h, pick: null, bs: {} };
+            TY.forEach(([k, t]) => {
+                const b = el('button', '', t); R.bs[k] = b; seg.appendChild(b);
+                b.onclick = () => { if (mode !== 'check' || b.disabled) return; Object.values(R.bs).forEach(x => x.classList.remove('sel')); b.classList.add('sel'); R.pick = k; refresh(); };
+            });
+            r.appendChild(seg); box.appendChild(r); return R;
+        });
+        body.appendChild(box);
+        return {
+            instr: 'Choose a data type for each one, then press <b>Check</b>.',
+            ready: () => rows.every(R => R.pick),
+            check() {
+                let hint = null, bad = 0;
+                rows.forEach(R => {
+                    if (R.r.classList.contains('ok')) return;
+                    const b = R.bs[R.pick]; b.classList.remove('sel');
+                    if (R.pick === R.a) { b.classList.add('right'); R.r.classList.add('ok'); Object.values(R.bs).forEach(x => x.disabled = true); }
+                    else { bad++; b.classList.add('wrong'); b.disabled = true; R.pick = null; if (!hint) hint = R.h; }
+                });
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} need changing. ` : '') + hint } : { ok: true };
+            }
+        };
+    },
+
+    /* write two lines of code */
+    write(q, body) {
+        const left = el('div', 'col'); left.style.cssText = 'gap:14px;width:600px';
+        const ed = el('div', 'editor dk', `<span class="lab">Your code</span>`);
+        const ins = [1, 2].map(n => {
+            const r = el('div', 'erow', `<span class="ln2">${n}</span>`), inp = el('input', 'codein');
+            inp.spellcheck = false; inp.autocomplete = 'off'; inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('aria-label', 'Line ' + n);
+            inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); });
+            enterSubmits(inp);
+            r.appendChild(inp); ed.appendChild(r); return inp;
+        });
+        const scr = el('div', 'screen', `<span class="lab">Screen</span>`); scr.style.minHeight = '108px';
+        left.append(ed, scr);
+        const memS = el('div', 'scene'); memS.style.border = 'none'; memS.style.background = '#f5f6fa';
+        memS.innerHTML = `<svg viewBox="0 0 470 330" width="470" height="330"><text class="plab dk" x="16" y="28">Memory</text><text class="note emp" x="235" y="172" text-anchor="middle">Empty until your code runs</text><g class="m"></g></svg>`;
+        body.append(left, memS);
+        setTimeout(() => ins[0].focus({ preventScroll: true }), 50);
+        const h1 = v => {
+            if (!v) return 'Line 1 is empty. Start with the name <code>pet</code>.';
+            if (/^print/i.test(v)) return 'Line 1 should create the variable. Printing comes on line 2.';
+            if (/==/.test(v)) return 'Use one <code>=</code> to store a value.';
+            if (/^["']/.test(v)) return 'The name <code>pet</code> doesn\u2019t go in quotes. Only the text value does.';
+            if (/^dog\b/i.test(v)) return 'The name goes on the left of the <code>=</code> and the value goes on the right.';
+            if (/^pet\b/i.test(v) && !/^pet\b/.test(v)) return 'Python is case sensitive. Write <code>pet</code> in lowercase.';
+            if (!/=/.test(v)) return 'Use <code>=</code> to put the value into the variable.';
+            if (/=\s*dog\s*$/i.test(v)) return 'Without quotes, Python thinks dog is the name of another variable. Text needs quotes.';
+            if (/=\s*["']?dog["']?$/i.test(v) && !/=\s*(["'])dog\1$/i.test(v)) return 'Check your quotes. Text needs a quote at the start and at the end.';
+            if (/=\s*(["'])dog\1$/i.test(v)) return 'The text should be <code>dog</code> in lowercase.';
+            return 'Use the pattern name <code>=</code> value, with the text in quotes.';
+        };
+        const h2 = v => {
+            if (!v) return 'Line 2 is empty. Use <code>print</code> to show the value on the screen.';
+            if (/^print/i.test(v) && !/^print/.test(v)) return 'Python is case sensitive. <code>print</code> is all lowercase.';
+            if (!/\(/.test(v)) return '<code>print</code> needs brackets around what you want to show.';
+            if (/["']pet["']/i.test(v)) return 'With quotes, Python prints the word pet. Leave them off so it looks inside the box.';
+            if (/dog/i.test(v)) return 'That would show dog, but it doesn\u2019t use your variable. Print the variable name instead.';
+            if (/pet/i.test(v) && !/pet/.test(v)) return 'Python is case sensitive. The name must match line 1 exactly.';
+            return 'Use <code>print</code> with the variable name inside the brackets.';
+        };
+        return {
+            instr: 'Type both lines, then press <b>Check</b> to run your code.',
+            ready: () => ins.every(i => i.value.trim() !== ''),
+            check() {
+                const v = ins.map(i => i.value.trim());
+                const ok = [/^pet\s*=\s*(["'])dog\1$/.test(v[0]), /^print\s*\(\s*pet\s*\)$/.test(v[1])];
+                let hint = null;
+                ins.forEach((inp, i) => {
+                    if (inp.readOnly) return;
+                    if (ok[i]) { inp.classList.add('right'); inp.readOnly = true; }
+                    else { inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong'); if (!hint) hint = `Line ${i + 1}: ` + (i ? h2(v[1]) : h1(v[0])); }
+                });
+                return hint ? { ok: false, hint } : { ok: true };
+            },
+            async done() {
+                memS.querySelector('.emp').remove();
+                const vb = vbox(memS.querySelector('.m'), 235, 170, 'pet', .95); vb.g.setAttribute('opacity', 0);
+                await vb.appear(); await vb.put(ins[0].value.trim().includes("'") ? "'dog'" : '"dog"');
+                await wait(250); await vb.pulse();
+                scr.innerHTML = `<span class="lab">Screen</span>dog`;
+            }
+        };
+    }
+};
+
+/* ---------- drag and drop (drag, or tap a tile then tap a target) ---------- */
+function dnd(pool, zones, onChange) {
+    let sl = null;
+    const all = () => [pool, ...zones];
+    const zoneOf = t => all().find(z => z.box.contains(t));
+    const armAll = on => zones.forEach(z => z.el.classList.toggle('armed', on && !z.locked));
+    const deselect = () => { if (sl) sl.classList.remove('sel'); sl = null; armAll(false); };
+    function moveTo(t, z) {
+        const from = zoneOf(t);
+        t.style.transform = ''; t.classList.remove('wrong');
+        z.box.appendChild(t);
+        if (from && from !== z && from.onTake) from.onTake(t);
+        if (z.onPut) z.onPut(t);
+        deselect(); onChange();
+    }
+    function put(t, z) {
+        const from = zoneOf(t);
+        if (z.locked || from === z) { t.style.transform = ''; return; }
+        if (z.cap === 1) {
+            const ex = z.box.querySelector('.tile');
+            if (ex) { if (ex.classList.contains('right')) { t.style.transform = ''; return; } moveTo(ex, pool); }
+        }
+        moveTo(t, z);
+    }
+    const hit = (x, y) => all().find(z => { const r = z.el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    all().forEach(z => {
+        const act = () => { if (sl && !z.locked) put(sl, z); };
+        z.el.addEventListener('click', act);
+        z.el.addEventListener('keydown', e => { if (e.target === z.el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); act(); } });
+    });
+    function tile(text) {
+        const t = el('span', 'tile', text);
+        t.tabIndex = 0; t.setAttribute('role', 'button');
+        const tap = () => {
+            if (t.classList.contains('right') || mode !== 'check') return;
+            t.style.transform = '';
+            const z = zoneOf(t);
+            if (z !== pool) { if (sl && sl !== t && !z.locked) { put(sl, z); return; } put(t, pool); return; }
+            if (sl === t) { deselect(); return; }
+            deselect(); sl = t; t.classList.add('sel'); armAll(true);
+        };
+        t.addEventListener('click', e => e.stopPropagation());
+        t.addEventListener('pointerdown', e => {
+            if (t.classList.contains('right') || mode !== 'check' || e.button > 0) return;
+            e.preventDefault(); e.stopPropagation(); t.setPointerCapture(e.pointerId);
+            const sx = e.clientX, sy = e.clientY; let moved = false;
+            const move = ev => {
+                const dx = ev.clientX - sx, dy = ev.clientY - sy;
+                if (!moved && Math.hypot(dx, dy) > 6) { moved = true; t.classList.add('drag'); }
+                if (!moved) return;
+                t.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px)`;
+                const h = hit(ev.clientX, ev.clientY);
+                all().forEach(z => z.el.classList.toggle('hover', z === h));
+            };
+            const up = ev => {
+                t.removeEventListener('pointermove', move); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up);
+                t.classList.remove('drag'); all().forEach(z => z.el.classList.remove('hover'));
+                if (!moved) { tap(); return; }
+                const h = hit(ev.clientX, ev.clientY);
+                if (h) put(t, h); else t.style.transform = '';
+            };
+            t.addEventListener('pointermove', move); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
+        });
+        t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); tap(); } });
+        return t;
+    }
+    return { tile };
+}
+
+/* ---------- scale to window ---------- */
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); render(); });
+</script>
+</body>
+</html>
