@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Variables: Checking for Understanding</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --tint: #e9ecf5;
+        --scr: #10132c;
+        --cond: 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --mono: 'JetBrains Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: var(--cond); font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 124px; bottom: 108px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 28px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 25px; font-weight: 500; line-height: 1.32; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption b.no { color: var(--navy); }
+    .caption code, .prompt code, .card code { font-family: var(--mono); font-size: .88em; font-weight: 700; }
+    .prompt code { color: var(--pink); }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+    .next { font-family: var(--cond); font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+    .next svg { width: 18px; height: 18px; fill: currentColor; }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .next:focus-visible { outline-color: var(--navy); }
+    .pop-in { animation: capIn .45s var(--ease); }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* question frame */
+    .q { display: flex; flex-direction: column; height: 100%; }
+    .qhead { display: flex; align-items: center; gap: 18px; }
+    .qtitle { font-size: 40px; font-weight: 800; line-height: 1.15; }
+    .prompt { font-size: 25px; font-weight: 600; margin-top: 6px; line-height: 1.3; }
+    .body { flex: 1; min-height: 0; margin-top: 14px; display: flex; gap: 26px; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* code colouring */
+    .dk .s { color: #ff5cb3; } .dk .n, .dk .v { color: #fff; } .dk .f, .dk .o { color: #9aa3cf; }
+    .lt .s { color: var(--pink); } .lt .n, .lt .v { color: var(--navy); } .lt .f, .lt .o { color: #6b7199; }
+
+    /* svg classes */
+    svg { overflow: visible; display: block; }
+    .plab { font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; fill: var(--mid-grey); }
+    .vname { font-family: var(--mono); font-size: 24px; font-weight: 700; fill: var(--pink); }
+    .vval { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+    .note { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 600; fill: var(--mid-grey); }
+
+    /* left column: editor and screen */
+    .left { width: 620px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    .lab { display: block; font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #8a90b8; }
+    .editor { background: var(--navy); border-radius: 8px; padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .ehead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+    .reset { font-family: var(--cond); font-size: 16px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #c3c6d0; background: transparent; border: 2px solid #3b4170;
+        border-radius: 5px; padding: 3px 10px 2px; cursor: pointer; }
+    .reset:hover { border-color: #8a90b8; color: #fff; }
+    .tools { display: flex; gap: 8px; }
+    .card.ex { position: relative; }
+    .xbtn { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border: 2px solid #c3c6d0; border-radius: 6px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .xbtn svg { width: 12px; height: 12px; stroke: var(--navy); stroke-width: 2.4; stroke-linecap: round; }
+    .xbtn:hover { border-color: var(--navy); }
+    .erow { display: flex; align-items: center; gap: 12px; min-height: 48px; border-radius: 6px; padding: 0 6px 0 0; transition: background-color .2s, box-shadow .2s; }
+    .erow .ln2 { color: #6d7299; font-family: var(--mono); font-size: 20px; width: 30px; text-align: right; flex-shrink: 0; }
+    .editor.compact { gap: 4px; }
+    .editor.compact .erow { min-height: 42px; }
+    .editor.compact .code, .editor.compact .full { font-size: 25px; }
+    .editor.compact .full { padding: 2px 10px; }
+    .erow.on { background: rgba(234,0,138,.26); box-shadow: inset 5px 0 0 var(--pink); }
+    .erow.bad { background: rgba(255,92,179,.14); box-shadow: inset 5px 0 0 #ff5cb3; }
+    .code { font-family: var(--mono); font-size: 27px; font-weight: 500; white-space: pre; color: #fff; padding: 0 2px; }
+    .full { flex: 1; min-width: 0; font-family: var(--mono); font-size: 27px; font-weight: 500; color: #fff; background: rgba(255,255,255,.06); border: 3px solid #3b4170; border-radius: 6px;
+        padding: 4px 10px; caret-color: var(--pink); outline: none; -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s; }
+    .blank { font-family: var(--mono); font-size: 27px; font-weight: 500; color: #fff; background: rgba(255,255,255,.08); border: 2px dashed #8a90b8; border-radius: 5px;
+        padding: 2px 4px; margin: 0 2px; text-align: center; caret-color: var(--pink); outline: none; -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s; }
+    .full:focus, .blank:focus { border-color: var(--pink); border-style: solid; }
+    .full:focus-visible, .blank:focus-visible { outline: none; }
+    .full::placeholder { color: #5d6390; }
+    .full.done, .blank.done { border-color: var(--pink); border-style: solid; background: rgba(234,0,138,.25); }
+    .screen { flex: 1; min-height: 96px; background: var(--scr); border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+    .screen > div { padding: 10px 18px 12px; font-family: var(--mono); color: #fff; font-size: 24px; font-weight: 700; line-height: 1.4; white-space: pre-wrap; overflow: hidden; }
+    .screen .goal { border-left: 2px dashed #3b4170; color: #8a90b8; }
+    .screen .err { color: #ff5cb3; font-size: 19px; line-height: 1.3; }
+    .screen .errl { color: #8a90b8; font-size: 15px; font-family: var(--cond); letter-spacing: .1em; text-transform: uppercase; font-weight: 800; margin-top: 4px; }
+    .screen .match { color: var(--pink); }
+    .curs { display: inline-block; width: 12px; height: 22px; background: var(--pink); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+
+    /* right column: support card and memory */
+    .right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    .card { border: 3px solid var(--navy); border-radius: 8px; padding: 10px 16px 14px; flex-shrink: 0; }
+    .card .lab2 { font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); margin-bottom: 8px; }
+    .excode { background: var(--navy); border-radius: 6px; padding: 8px 14px; font-family: var(--mono); font-size: 22px; font-weight: 500; white-space: pre; line-height: 1.5; color: #fff; }
+    .excode .ln3 { color: #6d7299; font-size: 16px; display: inline-block; width: 22px; }
+    .exout { margin-top: 8px; display: flex; align-items: center; gap: 12px; }
+    .exout span { font-family: var(--cond); font-size: 16px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mid-grey); }
+    .exout b { font-family: var(--mono); font-size: 22px; background: var(--scr); color: #fff; border-radius: 6px; padding: 3px 12px; }
+    .pat { display: flex; flex-direction: column; gap: 8px; }
+    .pline { font-family: var(--mono); font-size: 24px; font-weight: 500; white-space: pre; }
+    .ph { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-style: italic; font-weight: 700; font-size: 21px; color: var(--pink); border: 2px solid var(--pink); border-radius: 5px; padding: 0 7px; margin: 0 1px; }
+    .pnote { font-size: 19px; font-weight: 600; color: var(--mid-grey); }
+    .card .htxt { font-size: 22px; font-weight: 600; line-height: 1.3; }
+    .mem { flex: 1; min-height: 0; background: #f5f6fa; border-radius: 8px; position: relative; }
+    .mem svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+
+    /* end */
+    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 22px 60px 26px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .scorecard .big { font-family: var(--cond); font-size: 96px; font-weight: 900; color: var(--pink); line-height: 1; margin-top: 8px; }
+    .scorecard .dlbl { margin-top: 8px; }
+    .dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+    .dots span { width: 34px; height: 34px; border-radius: 6px; border: 3px solid var(--navy); font-family: var(--cond); font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .dots span.y { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .again { margin-top: 26px; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 8px 22px; cursor: pointer; }
+    /* buckles */
+    .hright { display: flex; align-items: flex-end; gap: 28px; }
+    .bcount { display: flex; align-items: center; gap: 10px; }
+    .counter-icon { width: 34px; height: 34px; display: block; }
+    .bcount .num { font-family: var(--cond); font-size: 34px; font-weight: 900; line-height: 1; }
+    .bcount .lbl { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .done-buckle { width: 90px; height: 90px; }
+    .scorecard .sub { margin-top: 22px; }
+    .award { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.8); opacity: 0; pointer-events: none; z-index: 30;
+        background: #fff; border: 3px solid var(--pink); border-radius: 12px; padding: 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        box-shadow: 0 20px 50px rgba(27,31,69,.25); transition: opacity .3s, transform .35s var(--ease); }
+    .award.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .award.hide { opacity: 0; transform: translate(-50%, -60%) scale(.95); }
+    .award-img { width: 140px; height: auto; }
+    .award-text { font-family: var(--cond); font-size: 40px; font-weight: 900; color: var(--pink); text-transform: uppercase; letter-spacing: .04em; }
+    .confetti-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 29; }
+    @media (prefers-reduced-motion: reduce) { .caption .in, .pop-in, .curs { animation: none; } .award { transition: none; } }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Coding <span>variables</span></h1>
+        <div class="hright">
+            <div class="counter" id="counter"></div>
+            <div class="bcount" title="Buckles earned">
+                <img src="buckle.svg" alt="" class="counter-icon" onerror="this.style.visibility='hidden'">
+                <div class="num" id="buckleCount">0</div>
+                <div class="lbl">Buckles</div>
+            </div>
+        </div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Run</button></div>
+    <div class="progress" id="progress"></div>
+</div>
+
+<div class="award" id="award" role="status" aria-live="polite">
+    <img src="penguin-with-buckle.svg" alt="" class="award-img" onerror="this.style.display='none'">
+    <div class="award-text" id="awardText">+1 Buckle!</div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), btn = $('#next'), counter = $('#counter'), progress = $('#progress');
+const PK = '#ea008a', NV = '#1b1f45', GR = '#c9ccd6', LT = '#f0f3f6', NS = 'http://www.w3.org/2000/svg';
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function sel(tag, attrs = {}, html) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const RUN_ICON = '<svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg>';
+
+/* ---------- animation helpers ---------- */
+let runId = 0;
+const easeOut = t => 1 - (1 - t) * (1 - t), easeInOut = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function play(dur, step, guard) {
+    const id = runId, ok = guard || (() => id === runId);
+    return new Promise(res => {
+        const st = performance.now();
+        const f = n => { if (!ok()) return; const t = Math.min(1, (n - st) / dur); step(t); if (t < 1) requestAnimationFrame(f); else res(); };
+        requestAnimationFrame(f);
+    });
+}
+function wait(ms) { const id = runId; return new Promise(r => setTimeout(() => { if (id === runId) r(); }, ms)); }
+
+/* ---------- syntax colouring ---------- */
+function tokens(line) {
+    const re = /("[^"]*"?|'[^']*'?)|(-?\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(\s+)|(.)/g, out = [];
+    let m;
+    while ((m = re.exec(line))) { const t = m[0]; out.push({ t, k: m[1] ? 's' : m[2] ? 'n' : m[3] ? (t === 'print' ? 'f' : 'v') : m[4] ? 'w' : 'o' }); }
+    return out;
+}
+const codeHTML = line => tokens(line).map(x => x.k === 'w' ? x.t : `<span class="${x.k}">${esc(x.t)}</span>`).join('');
+
+/* ---------- memory box ---------- */
+const REST = -18;
+function chipSVG(val) {
+    const w = Math.max(64, String(val).length * 14.4 + 30), str = /^["']/.test(val);
+    return `<rect x="${-w / 2}" y="-22" width="${w}" height="44" rx="8" fill="#fff" stroke="${NV}" stroke-width="3"/><text class="vval" y="8" text-anchor="middle" fill="${str ? PK : NV}">${esc(val)}</text>`;
+}
+function boxShape(name, o = {}) {
+    const pw = Math.max(96, name.length * 14.4 + 30), fw = Math.max(170, pw + 36), hw = fw / 2, ins = 22;
+    const fill = o.ghost ? 'none' : LT, st = o.ghost ? `stroke="#b8bcc8" stroke-dasharray="7 6"` : `stroke="${NV}"`;
+    const flap = sx => `<polygon points="${sx * hw},0 ${sx * (hw - ins)},-24 ${sx * (hw + 12)},-38 ${sx * (hw + 34)},-14" fill="${fill}" ${st} stroke-width="3" stroke-linejoin="round"/>`;
+    return { pw, fw, hw,
+        back: `${flap(-1)}${flap(1)}<polygon points="${-hw},0 ${-hw + ins},-24 ${hw - ins},-24 ${hw},0" fill="${o.ghost ? 'none' : '#cfd3df'}" ${st} stroke-width="3" stroke-linejoin="round"/>`,
+        front: `<rect x="${-hw}" y="0" width="${fw}" height="96" fill="${o.ghost ? '#fff' : LT}" ${st} stroke-width="4" stroke-linejoin="round"/>
+            <rect x="${-pw / 2}" y="30" width="${pw}" height="40" rx="6" fill="#fff" stroke="${o.ghost ? '#b8bcc8' : PK}" stroke-width="3" ${o.ghost ? 'stroke-dasharray="6 5"' : ''}/>
+            <text class="${o.ghost ? 'ghostlbl' : 'vname'}" x="0" y="58" text-anchor="middle">${esc(name)}</text>` };
+}
+function vbox(layer, cx, ry, name, s = 1) {
+    const sh = boxShape(name);
+    const g = sel('g', { transform: `translate(${cx} ${ry}) scale(${s})` });
+    g.innerHTML = `${sh.back}<g class="vals"></g>${sh.front}`;
+    layer.appendChild(g);
+    const vals = g.querySelector('.vals');
+    const B = {
+        g, cur: null, val: null,
+        set(val) { vals.innerHTML = ''; this.cur = null; this.val = null; if (val === undefined) return; const c = sel('g', { transform: `translate(0 ${REST})` }, chipSVG(val)); vals.appendChild(c); this.cur = c; this.val = val; },
+        appear() { return play(380, k => { const e = easeOut(k); g.setAttribute('opacity', k); g.setAttribute('transform', `translate(${cx} ${ry + 14 * (1 - e)}) scale(${s})`); }); },
+        async put(val, from) {
+            const old = this.cur, c = sel('g', {}, chipSVG(val));
+            vals.appendChild(c); this.cur = c; this.val = val;
+            const fx = from ? from.x : 0, fy = from ? from.y : -170;
+            c.setAttribute('transform', `translate(${fx} ${fy})`); c.setAttribute('opacity', from ? 1 : 0);
+            const outP = old ? play(480, k => { const e = easeInOut(k); old.setAttribute('transform', `translate(${150 * e} ${REST - 110 * easeOut(k)}) rotate(${18 * e})`); old.setAttribute('opacity', 1 - k); }).then(() => old.remove()) : Promise.resolve();
+            if (old) await wait(260);
+            await play(from ? 700 : 520, k => { const e = easeInOut(k); c.setAttribute('transform', `translate(${fx * (1 - e)} ${fy + (REST - fy) * (from ? e : easeOut(k))})`); if (!from) c.setAttribute('opacity', Math.min(1, k * 2.5)); });
+            await outP;
+        },
+        pulse() {
+            const r = this.cur && this.cur.querySelector('rect'); if (!r) return Promise.resolve();
+            return play(600, k => { const p = Math.sin(k * Math.PI); r.setAttribute('stroke', p > .15 ? PK : NV); r.setAttribute('stroke-width', 3 + 3 * p); });
+        }
+    };
+    return B;
+}
+function ghostBox(cx, ry, name, s = 1) {
+    const sh = boxShape(name, { ghost: true });
+    return `<g transform="translate(${cx} ${ry}) scale(${s})">${sh.back}${sh.front}
+        <g transform="translate(${sh.hw - 6} -6)"><circle r="20" fill="${PK}"/><path d="M-8 -8 L8 8 M8 -8 L-8 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+        <text class="note" x="0" y="126" text-anchor="middle" style="fill:${PK};font-weight:700">No box with this name</text></g>`;
+}
+
+
+/* =========================================================
+   MINI PYTHON: variables, print, + - * / // % **, str and numbers
+   ========================================================= */
+const PyErr = (type, msg) => ({ py: true, type, msg });
+const PRINT = { t: 'builtin_function_or_method' }, NONE = { t: 'NoneType' };
+function lex(s) {
+    const T = []; let i = 0;
+    while (i < s.length) {
+        const c = s[i];
+        if (c === ' ' || c === '\t') { i++; continue; }
+        if (c === '#') break;
+        if (c === '"' || c === "'") { let j = i + 1; while (j < s.length && s[j] !== c) j++; if (j >= s.length) throw PyErr('SyntaxError', 'unterminated string literal'); T.push({ k: 'str', v: s.slice(i + 1, j) }); i = j + 1; continue; }
+        const num = s.slice(i).match(/^(\d+\.\d*|\.\d+|\d+)/);
+        if (num) { i += num[0].length; if (/[A-Za-z_]/.test(s[i] || '')) throw PyErr('SyntaxError', 'invalid decimal literal'); T.push({ k: 'num', v: num[0].includes('.') ? { t: 'float', v: parseFloat(num[0]) } : { t: 'int', v: parseInt(num[0], 10) } }); continue; }
+        const nm = s.slice(i).match(/^[A-Za-z_]\w*/);
+        if (nm) { T.push({ k: 'name', v: nm[0] }); i += nm[0].length; continue; }
+        const two = s.slice(i, i + 2);
+        if (['==', '//', '**'].includes(two)) { T.push({ k: 'op', v: two }); i += 2; continue; }
+        if ('+-*/%(),='.includes(c)) { T.push({ k: 'op', v: c }); i++; continue; }
+        throw PyErr('SyntaxError', `invalid character '${c}'`);
+    }
+    return T;
+}
+function parseLine(src) {
+    if (/^\s+\S/.test(src)) throw PyErr('IndentationError', 'unexpected indent');
+    const T = lex(src);
+    if (!T.length) return null;
+    let p = 0;
+    const syn = () => PyErr('SyntaxError', 'invalid syntax');
+    const isOp = v => T[p] && T[p].k === 'op' && T[p].v === v;
+    const expr = () => { let l = term(); while (isOp('+') || isOp('-')) { const o = T[p++].v; l = { k: 'bin', o, l, r: term() }; } return l; };
+    const term = () => { let l = unary(); while (isOp('*') || isOp('/') || isOp('//') || isOp('%')) { const o = T[p++].v; l = { k: 'bin', o, l, r: unary() }; } return l; };
+    const unary = () => { if (isOp('-') || isOp('+')) { const o = T[p++].v; return { k: 'neg', o, e: unary() }; } return power(); };
+    const power = () => { const b = postfix(); if (isOp('**')) { p++; return { k: 'bin', o: '**', l: b, r: unary() }; } return b; };
+    const postfix = () => {
+        let e = atom();
+        while (isOp('(')) {
+            p++; const args = [];
+            if (!isOp(')')) { args.push(expr()); while (isOp(',')) { p++; if (isOp(')')) break; args.push(expr()); } }
+            if (!isOp(')')) throw p >= T.length ? PyErr('SyntaxError', "'(' was never closed") : syn();
+            p++; e = { k: 'call', f: e, args };
+        }
+        return e;
+    };
+    const atom = () => {
+        const t = T[p++];
+        if (!t) throw syn();
+        if (t.k === 'num') return { k: 'lit', v: t.v };
+        if (t.k === 'str') return { k: 'lit', v: { t: 'str', v: t.v } };
+        if (t.k === 'name') return { k: 'name', n: t.v };
+        if (t.k === 'op' && t.v === '(') { const e = expr(); if (!isOp(')')) throw p >= T.length ? PyErr('SyntaxError', "'(' was never closed") : syn(); p++; return e; }
+        throw syn();
+    };
+    if (T[0].k === 'name' && T[0].v === 'print' && T[1] && !(T[1].k === 'op' && (T[1].v === '(' || T[1].v === '='))) throw PyErr('SyntaxError', "Missing parentheses in call to 'print'");
+    const eq = T.findIndex(t => t.k === 'op' && t.v === '=');
+    if (eq >= 0) {
+        if (eq !== 1 || T[0].k !== 'name') throw (T[0].k === 'str' || T[0].k === 'num') ? PyErr('SyntaxError', 'cannot assign to literal') : syn();
+        p = 2; if (p >= T.length) throw syn();
+        const e = expr(); if (p < T.length) throw syn();
+        return { k: 'assign', n: T[0].v, e };
+    }
+    const e = expr(); if (p < T.length) throw syn();
+    return { k: 'expr', e };
+}
+const isNum = v => v.t === 'int' || v.t === 'float';
+function binop(o, a, b) {
+    if (isNum(a) && isNum(b)) {
+        const fl = a.t === 'float' || b.t === 'float', T = fl ? 'float' : 'int';
+        if (o === '+') return { t: T, v: a.v + b.v };
+        if (o === '-') return { t: T, v: a.v - b.v };
+        if (o === '*') return { t: T, v: a.v * b.v };
+        if (o === '/') { if (b.v === 0) throw PyErr('ZeroDivisionError', 'division by zero'); return { t: 'float', v: a.v / b.v }; }
+        if (o === '//') { if (b.v === 0) throw PyErr('ZeroDivisionError', 'integer division or modulo by zero'); return { t: T, v: Math.floor(a.v / b.v) }; }
+        if (o === '%') { if (b.v === 0) throw PyErr('ZeroDivisionError', 'integer modulo by zero'); return { t: T, v: ((a.v % b.v) + b.v) % b.v }; }
+        if (o === '**') return { t: (fl || b.v < 0) ? 'float' : 'int', v: Math.pow(a.v, b.v) };
+    }
+    if (o === '+' && a.t === 'str' && b.t === 'str') return { t: 'str', v: a.v + b.v };
+    if (o === '*' && a.t === 'str' && b.t === 'int') return { t: 'str', v: a.v.repeat(Math.max(0, b.v)) };
+    if (o === '*' && a.t === 'int' && b.t === 'str') return { t: 'str', v: b.v.repeat(Math.max(0, a.v)) };
+    if (o === '+' && a.t === 'str') throw PyErr('TypeError', `can only concatenate str (not "${b.t}") to str`);
+    if (o === '*' && (a.t === 'str' || b.t === 'str')) throw PyErr('TypeError', `can't multiply sequence by non-int of type '${a.t === 'str' ? b.t : a.t}'`);
+    throw PyErr('TypeError', `unsupported operand type(s) for ${o}: '${a.t}' and '${b.t}'`);
+}
+function fmtFloat(x) { if (!isFinite(x)) return x > 0 ? 'inf' : '-inf'; if (Number.isInteger(x) && Math.abs(x) < 1e16) return x.toFixed(1); return String(x); }
+function pyStr(v) { return v.t === 'str' ? v.v : v.t === 'int' ? String(v.v) : v.t === 'float' ? fmtFloat(v.v) : v === PRINT ? '<built-in function print>' : 'None'; }
+function pyRepr(v) { return v.t === 'str' ? (v.v.includes('"') ? `'${v.v}'` : `"${v.v}"`) : pyStr(v); }
+function pyRun(lines) {
+    const parsed = [];
+    for (let i = 0; i < lines.length; i++) {
+        try { parsed.push(lines[i].trim() ? parseLine(lines[i]) : null); }
+        catch (e) { if (e.py) return { events: [], out: [], env: {}, err: { ...e, line: i } }; throw e; }
+    }
+    const env = {}, events = [], out = [];
+    const ev = n => {
+        if (n.k === 'lit') return n.v;
+        if (n.k === 'name') { if (n.n in env) return env[n.n]; if (n.n === 'print') return PRINT; throw PyErr('NameError', `name '${n.n}' is not defined`); }
+        if (n.k === 'neg') { const v = ev(n.e); if (isNum(v)) return { t: v.t, v: n.o === '-' ? -v.v : v.v }; throw PyErr('TypeError', `bad operand type for unary ${n.o}: '${v.t}'`); }
+        if (n.k === 'bin') return binop(n.o, ev(n.l), ev(n.r));
+        if (n.k === 'call') {
+            const f = ev(n.f), args = n.args.map(ev);
+            if (f !== PRINT) throw PyErr('TypeError', `'${f.t}' object is not callable`);
+            const text = args.map(pyStr).join(' '); out.push(text); events.push({ i: cur_line, text }); return NONE;
+        }
+    };
+    let cur_line = 0;
+    for (let i = 0; i < parsed.length; i++) {
+        const st = parsed[i]; if (!st) continue; cur_line = i;
+        try {
+            if (st.k === 'assign') { const v = ev(st.e); env[st.n] = v; events.push({ i, a: true, name: st.n, disp: pyRepr(v) }); }
+            else ev(st.e);
+        } catch (e) { if (e.py) return { events, out, env, err: { ...e, line: i } }; throw e; }
+    }
+    return { events, out, env, err: null };
+}
+
+/* ---------- feedback ---------- */
+function lev(a, b) {
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+}
+function errHint(err, q, lines) {
+    const L = `Line ${err.line + 1}: `, m = err.msg, line = lines[err.line] || '';
+    const assigned = lines.map(l => (l.match(/^\s*([A-Za-z_]\w*)\s*=(?!=)/) || [])[1]).filter(Boolean);
+    if (err.type === 'IndentationError') return L + 'remove the spaces at the start of the line.';
+    if (err.type === 'SyntaxError') {
+        if (/'\u00d7'/.test(m)) return L + 'Python multiplies with <code>*</code>, not \u00d7.';
+        if (/'\u00f7'/.test(m)) return L + 'Python divides with <code>/</code>, not \u00f7.';
+        if (/unterminated/.test(m)) return L + 'text needs a quote at the start and at the end.';
+        if (/never closed/.test(m)) return L + 'every <code>(</code> needs a matching <code>)</code>.';
+        if (/Missing parentheses/.test(m)) return L + '<code>print</code> needs brackets around what it shows, like <code>print(name)</code>.';
+        if (/assign to literal/.test(m)) return L + 'the name goes on the left of the <code>=</code>, without quotes.';
+        if (/decimal literal/.test(m)) return L + 'names can\u2019t start with a number, and Python needs a symbol like <code>*</code> between a number and a name.';
+        if (/\w\s+x\s+\w/.test(line)) return L + 'Python doesn\u2019t use x to multiply. Use <code>*</code>.';
+        if (/=\s*$/.test(line)) return L + 'something needs to go on the right of the <code>=</code>.';
+        if (/^\s*[A-Za-z_]\w*\s+[A-Za-z_"'\d]/.test(line) && !/=/.test(line)) return L + 'to store a value, put an <code>=</code> between the name and the value.';
+        return L + 'Python can\u2019t read this line. Check each symbol, quote and bracket.';
+    }
+    if (err.type === 'NameError') {
+        const name = (m.match(/'(.+)'/) || [])[1] || '';
+        if (name.toLowerCase() === 'print') return L + '<code>print</code> is all lowercase.';
+        if (/==/.test(lines.join('\n'))) return 'Use one <code>=</code> to store a value. Two equals signs compare instead of storing.';
+        if ((q.text || []).some(t => t.toLowerCase() === name.toLowerCase())) return L + `text needs quotes. Without them, Python thinks <code>${esc(name)}</code> is the name of a variable.`;
+        const caseHit = assigned.find(a => a !== name && a.toLowerCase() === name.toLowerCase());
+        if (caseHit) return L + `Python is case sensitive. <code>${esc(name)}</code> and <code>${esc(caseHit)}</code> are different names.`;
+        const typo = assigned.find(a => lev(a, name) <= 2);
+        if (typo) return L + `check the spelling. Python found <code>${esc(typo)}</code> but not <code>${esc(name)}</code>.`;
+        return L + `Python can\u2019t find a variable called <code>${esc(name)}</code>. Create it on an earlier line, spelled exactly the same.`;
+    }
+    if (err.type === 'TypeError') {
+        if (/concatenate/.test(m)) return L + 'you can\u2019t join text and a number with <code>+</code>. Inside <code>print</code>, use a comma instead.';
+        if (/unsupported operand|non-int/.test(m)) return L + 'one of these values is text in quotes, so Python can\u2019t do maths with it. Remove the quotes from numbers.';
+        if (/not callable/.test(m)) return L + 'only <code>print</code> uses brackets like this.';
+        return L + esc(m);
+    }
+    if (err.type === 'ZeroDivisionError') return L + 'you can\u2019t divide by zero.';
+    return L + esc(err.type + ': ' + m);
+}
+function judge(q, lines, res) {
+    if (res.err) return { ok: false, hint: errHint(res.err, q, lines) };
+    const ctx = { src: lines.join('\n'), lines, env: res.env, out: res.out };
+    for (const [test, h] of (q.rules || [])) if (test(ctx)) return { ok: false, hint: h };
+    const out = res.out, exp = q.expect;
+    if (out.length === exp.length && out.every((l, i) => l === exp[i])) return { ok: true };
+    if (!out.length) return { ok: false, hint: 'Nothing appeared on the screen. Use <code>print</code> to show the value.' };
+    if (out.length > exp.length) return { ok: false, hint: `Your code shows ${out.length} lines, but the goal only has ${exp.length}.` };
+    return { ok: false, hint: `Your screen shows <code>${esc(out.join(' / '))}</code>, but the goal is <code>${esc(exp.join(' / '))}</code>.` };
+}
+
+/* =========================================================
+   STAGES AND QUESTIONS
+   ========================================================= */
+const STAGES = [
+    { name: 'Worked example', chip: 'Worked example', instr: 'Complete the code, then press <b>Run</b>. Stuck? Try <b>Show example</b>.',
+      },
+    { name: 'Fill the blanks', chip: 'Fill the blanks', instr: 'Fill every blank, then press <b>Run</b>.',
+      blurb: 'The examples are gone. Use the pattern card to fill in the missing pieces.' },
+    { name: 'Fix and finish', chip: 'Fix and finish', instr: 'Fix or finish the code, then press <b>Run</b>.',
+      blurb: 'No pattern this time. Fix or finish the code yourself. A hint unlocks if you need it.' },
+    { name: 'On your own', chip: 'On your own', instr: 'Write the code, then press <b>Run</b>.',
+      blurb: 'No example, pattern or hint. Write every line and match the goal on the screen.' }
+];
+const E = (ph = '') => ({ e: '', ph });
+const B = w => ({ b: w });
+const QS = [
+    { st: 1, title: 'Store and print', prompt: 'Store <code>Brisbane</code> in a variable called <code>city</code>, then print it.',
+      pattern: ['\u2039name\u203a = "\u2039text\u203a"', 'print(\u2039name\u203a)'],
+      lines: [{ p: [B(6), ' = "Brisbane"'] }, { p: ['print(', B(6), ')'] }], expect: ['Brisbane'], text: ['Brisbane'],
+      rules: [[c => /print\(\s*["']/.test(c.lines[1]), 'Print the variable <code>city</code>, not the text itself.']],
+      msg: 'city holds "Brisbane", and <code>print(city)</code> shows it without the quotes.' },
+    { st: 1, title: 'Two numbers', prompt: '<code>height</code> should hold 1.52 and <code>year</code> should hold 2026.',
+      pattern: ['\u2039name\u203a = \u2039number\u203a', '# Numbers don\u2019t go in quotes'],
+      lines: [{ p: ['height = ', B(5)] }, { p: ['year = ', B(5)] }, 'print(height, year)'], expect: ['1.52 2026'],
+      rules: [[c => (c.env.height && c.env.height.t === 'str') || (c.env.year && c.env.year.t === 'str'), 'Numbers you do maths with don\u2019t go in quotes.']],
+      msg: 'height is a float and year is an integer. The comma in <code>print</code> adds a space between them.' },
+    { st: 1, title: 'Say hello', prompt: 'Make the screen show <code>Hello Ada</code>.',
+      pattern: ['print("\u2039text\u203a", \u2039name\u203a)', '# The comma adds a space'],
+      lines: ['name = "Ada"', { p: ['print(', B(7), ', ', B(4), ')'] }], expect: ['Hello Ada'], text: ['Hello'],
+      rules: [[c => /["']Ada["']/.test(c.lines[1]), 'That shows Ada, but use the variable <code>name</code> in the second blank.'],
+              [c => c.out[0] === 'Hello  Ada', 'The comma already adds a space, so leave the space out of the text.']],
+      msg: 'Text in quotes prints as written, then the comma adds a space before the value of name.' },
+    { st: 1, title: 'Lose a life', prompt: 'Take 1 away from <code>lives</code>.',
+      pattern: ['\u2039name\u203a = \u2039name\u203a + \u2039number\u203a', '\u2039name\u203a = \u2039name\u203a - \u2039number\u203a'],
+      lines: ['lives = 3', { p: ['lives = ', B(5), ' ', B(1), ' 1'] }, 'print(lives)'], expect: ['2'],
+      rules: [[c => !/^\s*lives\s*=\s*lives\b/.test(c.lines[1]), 'Use <code>lives</code> in the first blank so Python works out lives - 1.'],
+              [c => /lives\s*\+/.test(c.lines[1]), '<code>+</code> adds. Which symbol takes away?'],
+              [c => /lives\s*\*/.test(c.lines[1]), '<code>*</code> multiplies. Which symbol takes away?']],
+      msg: 'Python works out 3 - 1 = 2, then stores 2 back in lives.' },
+    { st: 0, title: 'Store some text', prompt: 'Store the text <code>pink</code> in a variable called <code>colour</code>.',
+      example: { code: ['pet = "dog"', 'print(pet)'], out: 'dog' },
+      lines: [E('Type line 1'), 'print(colour)'], expect: ['pink'], text: ['pink'],
+      msg: 'Text goes in quotes. <code>print(colour)</code> looks inside the box and shows pink.' },
+    { st: 0, title: 'Store a number', prompt: 'Store the whole number <code>3</code> in <code>lives</code>, then print it.',
+      example: { code: ['age = 12', 'print(age)'], out: '12' },
+      lines: [E('Type line 1'), E('Type line 2')], expect: ['3'],
+      rules: [[c => c.env.lives && c.env.lives.t === 'str', 'lives holds the text "3". Numbers don\u2019t need quotes, so leave them off.'],
+              [c => !/print\(\s*lives\s*\)/.test(c.lines[1]), 'Line 2 should print the variable <code>lives</code>, like <code>print(age)</code> in the example.']],
+      msg: 'No quotes, so lives holds the integer 3.' },
+    { st: 0, title: 'Add to a variable', prompt: 'Add 2 to <code>coins</code>, using coins on the right side.',
+      example: { code: ['score = 10', 'score = score + 5', 'print(score)'], out: '15' },
+      lines: ['coins = 4', E('Type line 2'), 'print(coins)'], expect: ['6'],
+      rules: [[c => !/^\s*coins\s*=.*\bcoins\b/.test(c.lines[1]), 'Follow the example: put <code>coins</code> on the right side too, so it works whatever coins holds.'],
+              [c => /-/.test(c.lines[1]), '<code>-</code> takes away. Which symbol adds?']],
+      msg: 'Python works out coins + 2 = 6 on the right, then stores 6 back in coins.' },
+    { st: 0, title: 'Share it out', prompt: 'Store <code>cookies</code> divided by 2 in a new variable called <code>each</code>.',
+      example: { code: ['pizza = 12', 'each = pizza / 4', 'print(each)'], out: '3.0' },
+      lines: ['cookies = 10', E('Type line 2'), 'print(each)'], expect: ['5.0'],
+      rules: [[c => /\/\//.test(c.lines[1]), 'Use a single <code>/</code> to divide, like the example.'],
+              [c => !/\bcookies\b/.test(c.lines[1]), 'Use the variable <code>cookies</code> on the right side, like pizza in the example.'],
+              [c => /\*/.test(c.lines[1]), '<code>*</code> multiplies. Which symbol divides?']],
+      msg: '10 / 2 gives 5.0. Dividing with <code>/</code> always gives a float.' },
+    { st: 2, title: 'Case matters', prompt: 'This code crashes. Fix it so it shows <code>Mia</code>.', fix: true,
+      lines: [{ e: 'Name = "Mia"' }, { e: 'print(name)' }], expect: ['Mia'],
+      hint: 'Python is case sensitive. The name on line 1 and line 2 must match exactly, capital letters and all.',
+      rules: [[c => /print\(\s*["']/.test(c.lines[1]), 'That shows Mia, but print the variable instead of the text.']],
+      msg: 'Once both names match exactly, Python can find the box.' },
+    { st: 2, title: 'Something missing', prompt: 'This code crashes. Fix it so it shows <code>sushi</code>.', fix: true,
+      lines: [{ e: 'food = sushi' }, { e: 'print(food)' }], expect: ['sushi'], text: ['sushi'],
+      hint: 'Look at line 1. How does Python know that sushi is text, and not the name of another variable?',
+      rules: [[c => /print\(\s*["']/.test(c.lines[1]), 'That shows sushi, but print the variable instead of the text.']],
+      msg: 'Quotes tell Python that sushi is text, so food can store it.' },
+    { st: 2, title: 'Warmer', prompt: 'Make <code>temp</code> 5 degrees warmer.',
+      lines: ['temp = 20', E('Type line 2'), 'print(temp)'], expect: ['25'],
+      hint: 'Work out temp + 5 on the right, then store the answer back in temp on the left.',
+      rules: [[c => !/^\s*temp\s*=.*\btemp\b/.test(c.lines[1]), 'Use <code>temp</code> on the right side so it works whatever the temperature is.']],
+      msg: '20 + 5 = 25 is stored back in temp.' },
+    { st: 2, title: 'Split the bill', prompt: 'Store each person\u2019s share of the bill in <code>share</code>.',
+      lines: ['bill = 12', 'people = 4', E('Type line 3'), 'print(share)'], expect: ['3.0'],
+      hint: 'share is the bill divided by the number of people. Use both variables and <code>/</code>.',
+      rules: [[c => /\*/.test(c.lines[2]), '<code>*</code> multiplies. Which symbol divides?'],
+              [c => !/\bbill\b/.test(c.lines[2]) || !/\bpeople\b/.test(c.lines[2]), 'Use both variables, <code>bill</code> and <code>people</code>, on the right side.']],
+      msg: '12 / 4 gives 3.0, a float, because <code>/</code> always gives a float.' },
+    { st: 3, title: 'Your band', prompt: 'Create a variable called <code>band</code> that stores the text <code>Rainbow</code>, then print it.',
+      lines: [E(), E()], expect: ['Rainbow'], text: ['Rainbow'],
+      rules: [[c => !('band' in c.env), 'Create a variable called <code>band</code>.'],
+              [c => !/print\(\s*band\s*\)/.test(c.src), 'Print the variable <code>band</code>, not the text itself.']],
+      msg: 'band stores "Rainbow" and <code>print(band)</code> shows it.' },
+    { st: 3, title: 'Goals', prompt: 'Store <code>7</code> in <code>goals</code>. Add 2 more goals, then print goals.',
+      lines: [E(), E(), E()], expect: ['9'],
+      rules: [[c => c.env.goals && c.env.goals.t === 'str', 'Numbers don\u2019t go in quotes.'],
+              [c => !/^\s*goals\s*=\s*7\s*$/.test(c.lines[0]), 'Start by storing 7 in <code>goals</code> on line 1.'],
+              [c => !/^\s*goals\s*=.*\bgoals\b.*\+|^\s*goals\s*=.*\+.*\bgoals\b/.test(c.lines[1]), 'Line 2 should add 2 to goals, using goals on the right side.']],
+      msg: 'goals starts at 7, then goals + 2 makes 9.' },
+    { st: 3, title: 'Tickets', prompt: 'Store 15 in <code>price</code> and 3 in <code>tickets</code>. Store price times tickets in <code>total</code>, then print total.',
+      lines: [E(), E(), E(), E()], expect: ['45'],
+      rules: [[c => !('price' in c.env) || !('tickets' in c.env), 'Create both <code>price</code> and <code>tickets</code> first.'],
+              [c => { const t = c.lines.find(l => /^\s*total\s*=/.test(l)); return !t || !/\bprice\b/.test(t) || !/\btickets\b/.test(t) || !/\*/.test(t); }, 'Work out <code>total</code> from price and tickets using <code>*</code>.']],
+      msg: 'Python works out 15 * 3 = 45 and stores it in total.' },
+    { st: 3, title: 'Group size', prompt: 'Store 24 in <code>students</code> and 4 in <code>groups</code>. Store students divided by groups in <code>size</code>, then match the goal.',
+      lines: [E(), E(), E(), E()], expect: ['Group size: 6.0'], text: ['Group'],
+      rules: [[c => !('students' in c.env) || !('groups' in c.env), 'Create both <code>students</code> and <code>groups</code> first.'],
+              [c => { const t = c.lines.find(l => /^\s*size\s*=/.test(l)); return !t || !/\bstudents\b/.test(t) || !/\bgroups\b/.test(t) || !/\//.test(t); }, 'Work out <code>size</code> from students and groups using <code>/</code>.'],
+              [c => !/print\(.*,\s*size\s*\)/.test(c.src), 'Print the text <code>"Group size:"</code>, then a comma, then the variable <code>size</code>.']],
+      msg: '24 / 4 gives 6.0, and the comma joins the text and the value with a space.' }
+];
+const SEQ = []; let qn = 0;
+QS.forEach(q => { q.num = ++qn; SEQ.push(q); });
+const TOTAL = QS.length;
+
+/* ---------- support pieces ---------- */
+function patHTML(line) {
+    if (line.startsWith('#')) return `<div class="pnote">${esc(line.slice(2))}</div>`;
+    return `<div class="pline lt">${line.split(/\u2039([^\u203a]+)\u203a/).map((s, i) => i % 2 ? `<span class="ph">${esc(s)}</span>` : codeHTML(s)).join('')}</div>`;
+}
+function supportCard(q) {
+    if (q.st === 0) return el('div', 'card', `<div class="lab2">Example</div>
+        <div class="excode dk">${q.example.code.map((c, i) => `<span class="ln3">${i + 1}</span>${codeHTML(c)}`).join('\n')}</div>
+        <div class="exout"><span>Screen shows</span><b>${esc(q.example.out)}</b></div>`);
+    if (q.st === 1) return el('div', 'card', `<div class="lab2">Pattern</div><div class="pat">${q.pattern.map(patHTML).join('')}</div>`);
+    return null;
+}
+/* ========================== Buckles (localStorage) ======================= */
+const PAGE_ID = 'variables-coding';
+QS.forEach(q => { q.id = q.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'); q.buckles = 1; });
+const Buckles = {
+    key: 'buckles-shared',
+    posKey: 'pos-' + PAGE_ID,
+    ns(id) { return PAGE_ID + ':' + id; },
+    load() { try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { return {}; } },
+    save(d) { try { localStorage.setItem(this.key, JSON.stringify(d)); } catch (e) {} },
+    isDone(id) { return !!this.load()[this.ns(id)]; },
+    award(id, n) { const d = this.load(); const k = this.ns(id); if (!d[k]) { d[k] = n; this.save(d); } },
+    total() { return Object.values(this.load()).reduce((a, b) => a + b, 0); },
+    setPos(i) { try { localStorage.setItem(this.posKey, String(i)); } catch (e) {} },
+    getPos() { try { const v = parseInt(localStorage.getItem(this.posKey), 10); return isNaN(v) ? 0 : v; } catch (e) { return 0; } }
+};
+function refreshCount() { $('#buckleCount').textContent = Buckles.total(); }
+function celebrate(n) {
+    const a = $('#award');
+    $('#awardText').textContent = '+' + n + ' Buckle' + (n > 1 ? 's' : '') + '!';
+    a.classList.remove('hide'); a.classList.add('show');
+    burstConfetti();
+    setTimeout(() => { a.classList.remove('show'); a.classList.add('hide'); setTimeout(() => a.classList.remove('hide'), 360); }, 1100);
+}
+function burstConfetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const canvas = document.createElement('canvas');
+    canvas.className = 'confetti-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ea008a', '#1b1f45', '#f7a8d4', '#c3c6d0'], cx = innerWidth / 2, cy = innerHeight / 2, parts = [];
+    for (let i = 0; i < 150; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = 4 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: 5 + Math.random() * 7,
+            color: colors[Math.floor(Math.random() * colors.length)], rot: Math.random() * Math.PI, vrot: (Math.random() - .5) * .3, life: 0 });
+    }
+    const gravity = 0.22, drag = 0.992; let frame = 0;
+    (function tick() {
+        frame++;
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        parts.forEach(p => {
+            p.vx *= drag; p.vy = p.vy * drag + gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, 1 - p.life / 95);
+            ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6); ctx.restore();
+        });
+        if (frame < 95) requestAnimationFrame(tick); else canvas.remove();
+    })();
+}
+
+/* ---------- flow ---------- */
+let si = 0, firstTry = [], tries = 0, mode = 'check', cur = null;
+function header(q) { return `<div class="qhead"><div class="qtitle">${q.title}</div></div>`; }
+function render() {
+    runId++;
+    content.innerHTML = ''; tries = 0;
+    const item = SEQ[si];
+    btn.hidden = false;
+    const q = item;
+    mode = 'check';
+    counter.innerHTML = `Question <b>${q.num}</b> / ${TOTAL}`;
+    Buckles.setPos(si);
+    progress.style.width = ((q.num - 1) / TOTAL * 100) + '%';
+    const wrap = el('div', 'q');
+    wrap.insertAdjacentHTML('beforeend', header(q));
+    wrap.appendChild(el('div', 'prompt', q.prompt));
+    const body = el('div', 'body'); wrap.appendChild(body); content.appendChild(wrap);
+    cur = buildQ(q, body);
+    say(Buckles.isDone(q.id) ? `${STAGES[q.st].instr} You\u2019ve already earned this buckle.` : STAGES[q.st].instr);
+    btn.innerHTML = `${RUN_ICON}Run`;
+    refresh();
+}
+function refresh() { if (mode === 'check') btn.disabled = !cur.ready(); }
+async function run() {
+    const q = SEQ[si];
+    tries++; mode = 'running'; btn.disabled = true;
+    const lines = cur.lines(), res = pyRun(lines);
+    say('Running\u2026');
+    await cur.animate(res);
+    const v = judge(q, lines, res);
+    if (v.ok) {
+        if (tries === 1) firstTry[q.num - 1] = true;
+        if (!Buckles.isDone(q.id)) { Buckles.award(q.id, q.buckles); refreshCount(); celebrate(q.buckles); }
+        cur.lock();
+        say(`<b>Correct.</b> ${q.msg}`);
+        mode = 'next'; btn.disabled = false; btn.innerHTML = q.num === TOTAL ? 'Finish' : 'Next';
+        btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
+        btn.focus({ preventScroll: true });
+    } else {
+        say(`<b class="no">Not quite.</b> ${v.hint}`);
+        if (q.st === 2) cur.unlock();
+        mode = 'check'; refresh();
+    }
+}
+btn.onclick = () => {
+    if (btn.disabled) return;
+    if (mode === 'check') run();
+    else if (mode === 'next') { if (si === SEQ.length - 1) finish(); else { si++; render(); } }
+};
+function finish() {
+    runId++;
+    content.innerHTML = '';
+    btn.hidden = true;
+    counter.innerHTML = '<b>Complete</b>';
+    progress.style.width = '100%';
+    const n = firstTry.filter(Boolean).length;
+    Buckles.setPos(SEQ.length);
+    say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
+    const c = el('div', 'center');
+    const groups = QS.map(q => `<span class="${firstTry[q.num - 1] ? 'y' : ''}">${q.num}</span>`).join('');
+    const earned = QS.filter(q => Buckles.isDone(q.id)).length;
+    const card = el('div', 'scorecard pop-in', `<img src="buckle.svg" alt="" class="done-buckle" onerror="this.style.display='none'"><div class="big">${earned} / ${TOTAL}</div><div class="dlbl">Buckles earned</div>
+        <div class="dlbl sub">Correct on the first run: ${n} / ${TOTAL}</div><div class="dots">${groups}</div>`);
+    const again = el('button', 'again', 'Start again');
+    again.onclick = () => { si = 0; firstTry = []; Buckles.setPos(0); render(); };
+    c.append(card, again); content.appendChild(c);
+}
+
+/* ---------- question builder ---------- */
+const fixQuotes = s => s.replace(/[\u201c\u201d\u201e\u2033]/g, '"').replace(/[\u2018\u2019\u201a\u2032]/g, "'");
+function buildQ(q, body) {
+    const left = el('div', 'left'), right = el('div', 'right');
+    const ed = el('div', 'editor dk' + (q.lines.length > 3 ? ' compact' : ''));
+    const head = el('div', 'ehead', '<span class="lab">Code</span>'), rst = el('button', 'reset', 'Reset');
+    const tools = el('div', 'tools');
+    let exBtn = null;
+    if (q.example) { exBtn = el('button', 'reset', 'Show example'); tools.appendChild(exBtn); }
+    tools.appendChild(rst); head.appendChild(tools); ed.appendChild(head);
+    const rows = [], inputs = [];
+    const mkInput = (cls, val, ph, w) => {
+        const i = el('input', cls); i.value = val || ''; i.placeholder = ph || ''; i.spellcheck = false; i.autocomplete = 'off';
+        i.setAttribute('autocapitalize', 'off'); i.setAttribute('autocorrect', 'off'); i.dataset.init = val || '';
+        if (w) { i.dataset.w = w; i.style.width = (w + 1) + 'ch'; }
+        i.addEventListener('input', () => {
+            const p = i.selectionStart, v = fixQuotes(i.value); if (v !== i.value) { i.value = v; i.setSelectionRange(p, p); }
+            if (i.dataset.w) i.style.width = (Math.max(+i.dataset.w, i.value.length) + 1) + 'ch';
+            refresh();
+        });
+        i.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return; e.preventDefault();
+            const k = inputs.indexOf(i);
+            if (k < inputs.length - 1) inputs[k + 1].focus(); else if (!btn.disabled && mode === 'check') run();
+        });
+        inputs.push(i); return i;
+    };
+    const getters = q.lines.map((ln, li) => {
+        const r = el('div', 'erow', `<span class="ln2">${li + 1}</span>`); rows.push(r); ed.appendChild(r);
+        if (typeof ln === 'string') { r.appendChild(el('span', 'code', codeHTML(ln))); return () => ln; }
+        if ('e' in ln) { const i = mkInput('full', ln.e, ln.ph); i.setAttribute('aria-label', 'Line ' + (li + 1)); r.appendChild(i); return () => i.value; }
+        const holder = el('span', 'code'), parts = ln.p.map(pt => {
+            if (typeof pt === 'string') { holder.appendChild(el('span', '', codeHTML(pt))); return () => pt; }
+            const i = mkInput('blank', '', '', pt.b); i.setAttribute('aria-label', 'Blank on line ' + (li + 1)); holder.appendChild(i); return () => i.value;
+        });
+        r.appendChild(holder); return () => parts.map(f => f()).join('');
+    });
+    const scr = el('div', 'screen'), outEl = el('div', 'outp'), goalEl = el('div', 'goal');
+    goalEl.innerHTML = `<span class="lab">Goal</span>${esc(q.expect.join('\n'))}`;
+    const clearOut = () => { outEl.innerHTML = `<span class="lab">Your screen</span><span class="curs"></span>`; };
+    clearOut(); scr.append(outEl, goalEl);
+    left.append(ed, scr);
+    const card = supportCard(q), mem = el('div', 'mem');
+    if (card && !q.example) right.appendChild(card);
+    if (card && q.example) {
+        const x = el('button', 'xbtn', '<svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg>'); x.setAttribute('aria-label', 'Hide example');
+        card.classList.add('ex'); card.appendChild(x);
+        const toggle = on => {
+            if (on === !!card.parentNode) return;
+            if (on) { right.insertBefore(card, right.firstChild); card.classList.remove('pop-in'); void card.offsetWidth; card.classList.add('pop-in'); } else card.remove();
+            exBtn.textContent = on ? 'Hide example' : 'Show example';
+            const oldH = H; remeasure(); const t = (memG.getAttribute('transform') || '').match(/-?[\d.]+\)$/);
+            memG.setAttribute('transform', `translate(0 ${(t ? parseFloat(t[0]) : 0) + (H - oldH) / 2})`);
+        };
+        exBtn.onclick = () => toggle(!card.parentNode);
+        x.onclick = () => toggle(false);
+    }
+    right.appendChild(mem);
+    body.append(left, right);
+    let H = mem.offsetHeight || 180, W = mem.offsetWidth || 500;
+    mem.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><text class="plab" x="14" y="26">Memory</text><text class="note emp" x="${W / 2}" y="${H / 2 + 6}" text-anchor="middle">Empty until your code runs</text><g class="m"></g></svg>`;
+    const memG = mem.querySelector('.m'), emp = mem.querySelector('.emp');
+    const resetMem = () => { memG.innerHTML = ''; memG.removeAttribute('transform'); emp.style.display = ''; };
+    const remeasure = () => { H = mem.offsetHeight || H; W = mem.offsetWidth || W; mem.querySelector('svg').setAttribute('viewBox', `0 0 ${W} ${H}`); emp.setAttribute('x', W / 2); emp.setAttribute('y', H / 2 + 6); };
+    rst.onclick = () => { if (mode !== 'check') return; inputs.forEach(i => { i.value = i.dataset.init; i.dispatchEvent(new Event('input')); }); rows.forEach(r => r.classList.remove('on', 'bad')); clearOut(); resetMem(); refresh(); inputs[0] && inputs[0].focus(); };
+    setTimeout(() => { const f = inputs.find(i => !i.value) || inputs[0]; if (f) f.focus({ preventScroll: true }); }, 60);
+    const layout = n => {
+        const s = Math.min(n <= 2 ? .74 : n === 3 ? .6 : .5, (H - 56) / 140), gapX = W / n;
+        return [...Array(n)].map((_, i) => ({ x: gapX * (i + .5), y: H / 2 + 12 - 26 * s, s }));
+    };
+    return {
+        ready: () => inputs.every(i => i.value.trim() !== '') && (!q.fix || inputs.some(i => i.value !== i.dataset.init)),
+        lines: () => getters.map(g => g()),
+        async animate(res) {
+            rows.forEach(r => r.classList.remove('on', 'bad'));
+            outEl.innerHTML = '<span class="lab">Your screen</span>'; resetMem();
+            remeasure();
+            const names = [...new Set(res.events.filter(e => e.a).map(e => e.name))], pos = layout(names.length), boxes = {};
+            if (names.length) emp.style.display = 'none';
+            for (const e of res.events) {
+                rows.forEach(r => r.classList.remove('on')); rows[e.i].classList.add('on');
+                await wait(170);
+                if (e.a) {
+                    let b = boxes[e.name];
+                    if (!b) { const p = pos[names.indexOf(e.name)]; b = boxes[e.name] = vbox(memG, p.x, p.y, e.name, p.s); b.g.setAttribute('opacity', 0); await b.appear(); }
+                    await b.put(e.disp);
+                } else {
+                    const d = el('div', ''); outEl.appendChild(d);
+                    await play(Math.max(200, e.text.length * 40), k => { d.textContent = e.text.slice(0, Math.round(k * e.text.length)); });
+                }
+                await wait(140);
+            }
+            rows.forEach(r => r.classList.remove('on'));
+            if (res.err) {
+                rows[res.err.line].classList.add('bad');
+                outEl.insertAdjacentHTML('beforeend', `<div class="err">${esc(res.err.type)}: ${esc(res.err.msg)}</div><div class="errl">Error on line ${res.err.line + 1}</div>`);
+            } else if (judge(q, getters.map(g => g()), res).ok) goalEl.classList.add('match');
+        },
+        lock() { inputs.forEach(i => { i.readOnly = true; i.classList.add('done'); }); },
+        unlock() {
+            if (right.querySelector('.card')) return;
+            right.insertBefore(el('div', 'card pop-in', `<div class="lab2">Hint</div><div class="htxt">${q.hint}</div>`), mem);
+            const oldH = H; remeasure(); memG.setAttribute('transform', `translate(0 ${(H - oldH) / 2})`);
+        }
+    };
+}
+
+/* ---------- scale to window ---------- */
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+    fit(); refreshCount();
+    const pos = Buckles.getPos();
+    if (pos >= SEQ.length) { si = SEQ.length - 1; finish(); } else { si = Math.max(0, pos); render(); }
+});
+</script>
+</body>
+</html>
