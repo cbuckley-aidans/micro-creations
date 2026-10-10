@@ -251,8 +251,8 @@
     .seg button:disabled { cursor: default; }
 
     /* end */
-    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 30px 60px; text-align: center; }
-    .scorecard .big { font-family: var(--cond); font-size: 120px; font-weight: 900; color: var(--pink); line-height: 1; }
+    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 22px 60px 26px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .scorecard .big { font-family: var(--cond); font-size: 96px; font-weight: 900; color: var(--pink); line-height: 1; margin-top: 8px; }
     .scorecard .dlbl { margin-top: 8px; }
     .dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
     .dots span { width: 34px; height: 34px; border-radius: 6px; border: 3px solid var(--navy); font-family: var(--cond); font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
@@ -260,6 +260,23 @@
     .again { margin-top: 26px; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
         background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 8px 22px; cursor: pointer; }
 
+    /* buckles */
+    .hright { display: flex; align-items: flex-end; gap: 28px; }
+    .bcount { display: flex; align-items: center; gap: 10px; }
+    .counter-icon { width: 34px; height: 34px; display: block; }
+    .bcount .num { font-family: var(--cond); font-size: 34px; font-weight: 900; line-height: 1; }
+    .bcount .lbl { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .done-buckle { width: 90px; height: 90px; }
+    .scorecard .sub { margin-top: 22px; }
+    .award { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.8); opacity: 0; pointer-events: none; z-index: 30;
+        background: #fff; border: 3px solid var(--pink); border-radius: 12px; padding: 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        box-shadow: 0 20px 50px rgba(27,31,69,.25); transition: opacity .3s, transform .35s var(--ease); }
+    .award.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .award.hide { opacity: 0; transform: translate(-50%, -60%) scale(.95); }
+    .award-img { width: 140px; height: auto; }
+    .award-text { font-family: var(--cond); font-size: 40px; font-weight: 900; color: var(--pink); text-transform: uppercase; letter-spacing: .04em; }
+    .confetti-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 29; }
+    @media (prefers-reduced-motion: reduce) { .award { transition: none; } }
     @media (prefers-reduced-motion: reduce) { .caption .in, .pop-in, .opt.wrong, .tile.wrong, .tok.wrong, .lbtn.wrong, .codein.wrong, .numin.wrong, .seg button.wrong { animation: none; } }
 </style>
 </head>
@@ -267,11 +284,23 @@
 <div class="stage" id="stage">
     <div class="top">
         <h1 class="sheet-title">Checking <span>variables</span></h1>
-        <div class="counter" id="counter"></div>
+        <div class="hright">
+            <div class="counter" id="counter"></div>
+            <div class="bcount" title="Buckles earned">
+                <img src="buckle.svg" alt="" class="counter-icon" onerror="this.style.visibility='hidden'">
+                <div class="num" id="buckleCount">0</div>
+                <div class="lbl">Buckles</div>
+            </div>
+        </div>
     </div>
     <div class="content" id="content"></div>
     <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Check</button></div>
     <div class="progress" id="progress"></div>
+</div>
+
+<div class="award" id="award" role="status" aria-live="polite">
+    <img src="penguin-with-buckle.svg" alt="" class="award-img" onerror="this.style.display='none'">
+    <div class="award-text" id="awardText">+1 Buckle!</div>
 </div>
 
 <script>
@@ -590,6 +619,55 @@ const CHIP = { tap: 'Tap to select', cloze: 'Fill the gaps', trace: 'Predict', m
     label: 'Drag and drop', sort3: 'Sort', order: 'Put in order', table: 'Trace table', match: 'Match', write: 'Write code' };
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+/* ========================== Buckles (localStorage) ======================= */
+const PAGE_ID = 'variables-cfu';
+QS.forEach(q => { q.id = q.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'); q.buckles = 1; });
+const Buckles = {
+    key: 'buckles-shared',
+    posKey: 'pos-' + PAGE_ID,
+    ns(id) { return PAGE_ID + ':' + id; },
+    load() { try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { return {}; } },
+    save(d) { try { localStorage.setItem(this.key, JSON.stringify(d)); } catch (e) {} },
+    isDone(id) { return !!this.load()[this.ns(id)]; },
+    award(id, n) { const d = this.load(); const k = this.ns(id); if (!d[k]) { d[k] = n; this.save(d); } },
+    total() { return Object.values(this.load()).reduce((a, b) => a + b, 0); },
+    setPos(i) { try { localStorage.setItem(this.posKey, String(i)); } catch (e) {} },
+    getPos() { try { const v = parseInt(localStorage.getItem(this.posKey), 10); return isNaN(v) ? 0 : v; } catch (e) { return 0; } }
+};
+function refreshCount() { $('#buckleCount').textContent = Buckles.total(); }
+function celebrate(n) {
+    const a = $('#award');
+    $('#awardText').textContent = '+' + n + ' Buckle' + (n > 1 ? 's' : '') + '!';
+    a.classList.remove('hide'); a.classList.add('show');
+    burstConfetti();
+    setTimeout(() => { a.classList.remove('show'); a.classList.add('hide'); setTimeout(() => a.classList.remove('hide'), 360); }, 1100);
+}
+function burstConfetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const canvas = document.createElement('canvas');
+    canvas.className = 'confetti-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ea008a', '#1b1f45', '#f7a8d4', '#c3c6d0'], cx = innerWidth / 2, cy = innerHeight / 2, parts = [];
+    for (let i = 0; i < 150; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = 4 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: 5 + Math.random() * 7,
+            color: colors[Math.floor(Math.random() * colors.length)], rot: Math.random() * Math.PI, vrot: (Math.random() - .5) * .3, life: 0 });
+    }
+    const gravity = 0.22, drag = 0.992; let frame = 0;
+    (function tick() {
+        frame++;
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        parts.forEach(p => {
+            p.vx *= drag; p.vy = p.vy * drag + gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, 1 - p.life / 95);
+            ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6); ctx.restore();
+        });
+        if (frame < 95) requestAnimationFrame(tick); else canvas.remove();
+    })();
+}
+
 /* ---------- flow ---------- */
 let qi = 0, firstTry = [], tries = 0, mode = 'check', cur = null;
 function render() {
@@ -597,13 +675,14 @@ function render() {
     content.innerHTML = ''; tries = 0; mode = 'check';
     const q = QS[qi];
     counter.innerHTML = `Question <b>${qi + 1}</b> / ${TOTAL}`;
+    Buckles.setPos(qi);
     progress.style.width = (qi / TOTAL * 100) + '%';
     const wrap = el('div', 'q');
     wrap.appendChild(el('div', 'qhead', `<div class="qtitle">${q.title}</div><div class="tchip">${q.chip || CHIP[q.kind]}</div><div class="sctag">${q.sc}</div>`));
     wrap.appendChild(el('div', 'prompt', q.prompt));
     const body = el('div', 'body'); wrap.appendChild(body); content.appendChild(wrap);
     cur = KINDS[q.kind](q, body);
-    say(cur.instr);
+    say(Buckles.isDone(q.id) ? `${cur.instr} You\u2019ve already earned this buckle.` : cur.instr);
     btn.hidden = false; btn.textContent = 'Check';
     refresh();
 }
@@ -613,6 +692,7 @@ function check() {
     const r = cur.check();
     if (r.ok) {
         if (tries === 1) firstTry[qi] = true;
+        { const q = QS[qi]; if (!Buckles.isDone(q.id)) { Buckles.award(q.id, q.buckles); refreshCount(); celebrate(q.buckles); } }
         say(`<b>Correct.</b> ${QS[qi].msg}`);
         mode = 'next'; btn.disabled = false; btn.textContent = qi === TOTAL - 1 ? 'Finish' : 'Next';
         btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
@@ -637,12 +717,15 @@ function finish() {
     counter.innerHTML = '<b>Complete</b>';
     progress.style.width = '100%';
     const n = firstTry.filter(Boolean).length;
+    Buckles.setPos(TOTAL);
     say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
     const c = el('div', 'center');
     const dots = QS.map((_, i) => `<span class="${firstTry[i] ? 'y' : ''}">${i + 1}</span>`).join('');
-    const card = el('div', 'scorecard pop-in', `<div class="big">${n} / ${TOTAL}</div><div class="dlbl">Correct on the first try</div><div class="dots">${dots}</div>`);
+    const earned = QS.filter(q => Buckles.isDone(q.id)).length;
+    const card = el('div', 'scorecard pop-in', `<img src="buckle.svg" alt="" class="done-buckle" onerror="this.style.display='none'"><div class="big">${earned} / ${TOTAL}</div><div class="dlbl">Buckles earned</div>
+        <div class="dlbl sub">Correct on the first try: ${n} / ${TOTAL}</div><div class="dots">${dots}</div>`);
     const again = el('button', 'again', 'Start again');
-    again.onclick = () => { qi = 0; firstTry = []; render(); };
+    again.onclick = () => { qi = 0; firstTry = []; Buckles.setPos(0); render(); };
     c.append(card, again); content.appendChild(c);
 }
 
@@ -1180,7 +1263,11 @@ function fit() {
 }
 window.addEventListener('resize', fit);
 fit();
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); render(); });
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+    fit(); refreshCount();
+    const pos = Buckles.getPos();
+    if (pos >= TOTAL) finish(); else { qi = Math.max(0, pos); render(); }
+});
 </script>
 </body>
 </html>
