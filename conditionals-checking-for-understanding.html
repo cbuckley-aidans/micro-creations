@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conditional Statements: Checking for Understanding</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --tint: #e9ecf5;
+        --scr: #10132c;
+        --cond: 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --mono: 'JetBrains Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; }
+    .sheet-title { font-family: var(--cond); font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .counter { font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; }
+    .counter b { color: var(--navy); }
+    .content { position: absolute; left: 64px; right: 64px; top: 124px; bottom: 108px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 28px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 25px; font-weight: 500; line-height: 1.32; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption b.no { color: var(--navy); }
+    .caption code { font-family: var(--mono); font-size: .88em; font-weight: 700; }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+
+    .next { font-family: var(--cond); font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: var(--pink); color: #fff;
+        border: none; border-radius: 8px; padding: 12px 30px; cursor: pointer; flex-shrink: 0; }
+    .next[hidden] { display: none; }
+    .next:disabled { background: #c3c6d0; cursor: default; }
+    button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .next:focus-visible { outline-color: var(--navy); }
+    .pop-in { animation: capIn .45s var(--ease); }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* question frame */
+    .q { display: flex; flex-direction: column; height: 100%; }
+    .qhead { display: flex; align-items: center; gap: 18px; }
+    .qtitle { font-size: 40px; font-weight: 800; line-height: 1.15; }
+    .tchip { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); border: 3px solid var(--pink); border-radius: 6px; padding: 3px 12px 2px; }
+    .sctag { margin-left: auto; font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--navy); box-shadow: inset 0 0 0 3px var(--navy); border-radius: 6px; padding: 6px 12px 5px; line-height: 1; }
+    .prompt { font-size: 28px; font-weight: 600; margin-top: 6px; line-height: 1.3; }
+    .prompt b { color: var(--pink); font-weight: 800; }
+    .prompt code, .quote code, .opt code { font-family: var(--mono); font-size: .88em; font-weight: 700; color: var(--pink); }
+    .body { flex: 1; min-height: 0; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 30px; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .dlbl { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* code colouring: dark panels, light panels, svg dark, svg light */
+    .dk .k { color: #ff5cb3; font-weight: 700; } .dk .s { color: #ffb0d9; } .dk .n, .dk .v { color: #fff; } .dk .f, .dk .o { color: #9aa3cf; }
+    .lt .k { color: var(--pink); font-weight: 800; } .lt .s { color: #c2307f; } .lt .n, .lt .v { color: var(--navy); } .lt .f, .lt .o { color: #6b7199; }
+    .c-k { fill: #ff5cb3; font-weight: 700; } .c-s { fill: #ffb0d9; } .c-n, .c-v { fill: #fff; } .c-f, .c-o { fill: #9aa3cf; }
+    .l-k { fill: var(--pink); font-weight: 800; } .l-s { fill: #c2307f; } .l-n, .l-v { fill: var(--navy); } .l-f, .l-o { fill: #6b7199; }
+
+    /* svg classes */
+    svg { overflow: visible; display: block; }
+    .cd { font-family: var(--mono); font-size: 22px; font-weight: 500; white-space: pre; }
+    .ln { font-family: var(--mono); font-size: 17px; fill: #6d7299; }
+    .plab { font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; fill: #8a90b8; }
+    .plab.dk { fill: var(--mid-grey); }
+    .otxt { font-family: var(--mono); font-size: 21px; font-weight: 700; fill: #fff; white-space: pre; }
+    .otxt.err { fill: #ff5cb3; font-size: 18px; }
+    .vname { font-family: var(--mono); font-size: 24px; font-weight: 700; fill: var(--pink); }
+    .vval { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+    .note { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 600; fill: var(--mid-grey); }
+    .pt { font-family: var(--mono); font-size: 19px; font-weight: 700; }
+    .dtxt { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 700; fill: var(--navy); }
+    .yn { font-family: var(--cond); font-size: 21px; font-weight: 800; letter-spacing: .1em; fill: var(--pink); }
+    .btxt { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; fill: #fff; }
+    .bnum { font-family: var(--cond); font-size: 19px; font-weight: 900; fill: #fff; }
+    .tick { font-family: var(--cond); font-size: 18px; font-weight: 800; fill: var(--mid-grey); }
+    .cur { animation: blink 1s steps(1) infinite; }
+
+    /* multiple choice */
+    .opts { display: grid; gap: 10px; }
+    .col .opt { font-size: 23px; padding: 9px 18px; }
+    .opt { display: flex; align-items: center; gap: 16px; border: 3px solid var(--navy); border-radius: 8px; background: #fff; padding: 12px 20px;
+        font-family: inherit; font-size: 25px; font-weight: 600; color: var(--navy); text-align: left; line-height: 1.25; cursor: pointer;
+        transition: background-color .2s, border-color .2s, color .2s, opacity .2s; }
+    .opt .l { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 24px; font-weight: 900;
+        display: flex; align-items: center; justify-content: center; transition: background-color .2s, color .2s; }
+    .opt:hover:not(:disabled) { background: #f6f7fb; }
+    .opt.sel { background: var(--tint); }
+    .opt.sel .l { background: var(--pink); }
+    .opt.right, .opt.right:hover { background: var(--pink); border-color: var(--pink); color: #fff; opacity: 1; }
+    .opt.right .l { background: #fff; color: var(--pink); }
+    .opt.right code { color: #fff; }
+    .opt.wrong { border-style: dashed; opacity: .5; animation: shake .4s; cursor: default; }
+    .opt:disabled { cursor: default; }
+    .pred .opts { width: 380px; gap: 8px; }
+    .pred .opt { min-height: 64px; padding: 7px 14px; }
+    .mini { font-family: var(--mono); font-size: 22px; font-weight: 700; background: var(--scr); color: #fff; border-radius: 6px; padding: 8px 14px; flex: 1;
+        min-height: 46px; white-space: pre; line-height: 1.25; display: flex; align-items: center; }
+    .mini.empty { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 600; font-style: italic; color: #8a90b8; }
+    .opt.right .mini { background: #fff; color: var(--pink); }
+
+    /* quote */
+    .quote { border-left: 8px solid var(--pink); padding: 4px 0 4px 20px; font-size: 25px; font-weight: 600; font-style: italic; line-height: 1.3; margin-bottom: 14px; }
+    .quote code { font-style: normal; }
+    .col { display: flex; flex-direction: column; }
+
+    /* scenes */
+    .scene { position: relative; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; flex-shrink: 0; background: #fff; }
+    .scene > svg { overflow: hidden; }
+    .scene.flat { border: none; background: transparent; }
+    .replay { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; gap: 6px; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 6px; padding: 5px 12px 4px 9px; cursor: pointer; }
+    .replay svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .replay:hover { background: var(--blank); }
+
+    /* flowchart buttons */
+    .fbtn { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-family: inherit; font-size: 24px; font-weight: 700; line-height: 1.15;
+        color: #fff; background: var(--navy); border: 3px solid var(--navy); border-radius: 6px; cursor: pointer; padding: 4px 10px;
+        transition: background-color .2s, border-color .2s, box-shadow .2s, opacity .2s; }
+    .fbtn:hover:not(:disabled) { background: #2b3166; }
+    .fbtn.sel { box-shadow: 0 0 0 5px rgba(234,0,138,.45); border-color: var(--pink); }
+    .fbtn.right, .fbtn.right:hover { background: var(--pink); border-color: var(--pink); box-shadow: 0 0 0 5px rgba(234,0,138,.18); }
+    .fbtn.wrong { background: #fff; color: var(--navy); border-style: dashed; opacity: .5; animation: shake .4s; }
+    .fbtn:disabled { cursor: default; }
+
+    /* tap a line */
+    .lines { background: var(--navy); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; width: 580px; flex-shrink: 0; }
+    .lbtn { display: flex; align-items: center; gap: 16px; font-family: var(--mono); font-size: 26px; font-weight: 500; color: #fff; background: transparent; border: 3px solid transparent;
+        border-radius: 6px; padding: 5px 12px; cursor: pointer; text-align: left; white-space: pre; transition: background-color .25s, border-color .2s, opacity .25s; }
+    .lbtn .ln2 { color: #6d7299; font-size: 20px; width: 24px; text-align: right; }
+    .lbtn:hover:not(:disabled) { background: rgba(255,255,255,.07); }
+    .lbtn.sel { border-color: #fff; background: rgba(255,255,255,.12); }
+    .lbtn.right { background: var(--pink); border-color: var(--pink); }
+    .lbtn.right span { color: #fff !important; }
+    .lbtn.wrong { border-style: dashed; border-color: #6d7299; opacity: .45; animation: shake .4s; }
+    .lbtn.on { box-shadow: inset 6px 0 0 var(--pink); background: rgba(234,0,138,.3); }
+    .lbtn.skip { opacity: .3; }
+    .lbtn:disabled { cursor: default; }
+
+    /* screens and editors */
+    .screen { background: var(--scr); border-radius: 8px; padding: 10px 18px 14px; font-family: var(--mono); color: #fff; font-size: 23px; font-weight: 700; line-height: 1.4; white-space: pre-wrap; }
+    .screen .err { color: #ff5cb3; font-size: 19px; }
+    .lab { display: block; font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #8a90b8; margin-bottom: 4px; white-space: normal; }
+    .curs { display: inline-block; width: 12px; height: 22px; background: var(--pink); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+    .editor { background: var(--navy); border-radius: 8px; padding: 8px 16px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .erow { display: flex; align-items: center; gap: 12px; min-height: 42px; border-radius: 6px; padding-right: 6px; transition: background-color .25s, box-shadow .25s, opacity .25s; }
+    .erow .ln2 { color: #6d7299; font-family: var(--mono); font-size: 20px; width: 26px; text-align: right; flex-shrink: 0; }
+    .erow .static { font-family: var(--mono); font-size: 24px; font-weight: 500; padding: 2px 14px; white-space: pre; }
+    .erow.on { background: rgba(234,0,138,.3); box-shadow: inset 6px 0 0 var(--pink); }
+    .erow.bad { background: rgba(255,92,179,.14); box-shadow: inset 6px 0 0 #ff5cb3; }
+    .erow.skip { opacity: .3; }
+    .ind { font-family: var(--mono); font-size: 24px; color: #4c5285; white-space: pre; margin-left: 14px; margin-right: -6px; }
+    .codein { flex: 1; min-width: 0; font-family: var(--mono); font-size: 24px; font-weight: 500; color: #fff; background: rgba(255,255,255,.06); border: 3px solid #3b4170; border-radius: 6px;
+        padding: 1px 11px; caret-color: var(--pink); outline: none; -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s; }
+    .codein:focus { border-color: var(--pink); }
+    .codein:focus-visible { outline: none; }
+    .codein::placeholder { color: #5d6390; }
+    .codein.right { border-color: var(--pink); background: rgba(234,0,138,.25); }
+    .codein.wrong { border-style: dashed; border-color: #8a90b8; animation: shake .4s; }
+    .minicode { background: var(--navy); border-radius: 8px; padding: 10px 16px; font-family: var(--mono); font-size: 20px; font-weight: 500; color: #fff; white-space: pre; line-height: 1.5; }
+
+    /* drag tiles */
+    .tile { font-family: inherit; font-size: 24px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 16px; line-height: 1.25;
+        cursor: grab; touch-action: none; position: relative; z-index: 2; transition: transform .3s var(--ease), box-shadow .2s, border-color .2s; box-shadow: 0 4px 0 #c3c6d0; white-space: nowrap; text-align: center; }
+    .tile.sm { font-size: 22px; padding: 6px 14px; }
+    .tile.code { font-family: var(--mono); font-size: 22px; padding: 5px 12px; }
+    .tile.sel { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(234,0,138,.22); }
+    .tile.drag { transition: none; cursor: grabbing; z-index: 30; box-shadow: 0 14px 30px rgba(27,31,69,.25); border-color: var(--pink); }
+    .tile.right { background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: none; cursor: default; }
+    .tile.wrong { border-style: dashed; background: var(--tint); box-shadow: none; animation: shake .4s; }
+
+    /* sort */
+    .sort { display: grid; grid-template-columns: 1fr 400px 1fr; gap: 18px; width: 100%; height: 100%; }
+    .bin { border: 3px solid var(--navy); border-radius: 8px; display: flex; flex-direction: column; overflow: visible; transition: box-shadow .2s; }
+    .bin.pk { border-color: var(--pink); }
+    .bin h3 { margin: 0; padding: 8px 16px 7px; font-family: var(--mono); font-size: 28px; font-weight: 700; color: #fff; background: var(--navy); }
+    .bin.pk h3 { background: var(--pink); }
+    .bin .sub { font-size: 18px; font-weight: 600; color: var(--mid-grey); padding: 8px 16px 0; }
+    .bin .area { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; align-items: center; border-radius: 0 0 6px 6px; transition: background-color .2s; }
+    .bin.hover .area, .bin.armed:hover .area { background: rgba(234,0,138,.06); }
+    .bin.armed { box-shadow: 0 0 0 4px rgba(234,0,138,.15); cursor: pointer; }
+    .pool { background: var(--blank); border-radius: 8px; padding: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-content: center; justify-content: center; transition: background-color .2s; }
+    .pool.hover { background: #e3e7ee; }
+    .midcol { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+    .midcol .pool { flex: 1; }
+    .given { align-self: center; font-family: var(--mono); font-size: 24px; font-weight: 700; color: #fff; background: var(--navy); border-radius: 6px; padding: 6px 16px; }
+    .given .n { color: #ff5cb3; }
+
+    /* slots */
+    .bwrap { position: relative; width: 806px; height: 336px; border: 3px solid var(--navy); border-radius: 8px; flex-shrink: 0; }
+    .bwrap > svg { position: absolute; left: 0; top: 0; }
+    .slot, .gap, .oslot { border: 3px dashed #c3c6d0; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: border-color .2s, background-color .2s; }
+    .slot { position: absolute; width: 200px; height: 50px; background: #fff; }
+    .slot.hover, .slot.armed:hover, .gap.hover, .gap.armed:hover, .oslot.hover, .oslot.armed:hover { border-color: var(--pink); background: rgba(234,0,138,.06); }
+    .slot.armed, .gap.armed, .oslot.armed { border-color: #e7a3c9; cursor: pointer; }
+    .slot.filled, .gap.filled, .oslot.filled { border-color: transparent; background: none; }
+    .slot .tile, .gap .tile { box-shadow: none; padding: 5px 14px; font-size: 23px; }
+    .slot .tile.code { font-size: 21px; padding: 4px 10px; }
+    .bside { width: 320px; display: flex; flex-direction: column; gap: 10px; height: 336px; flex-shrink: 0; }
+    .bside .pool { flex: 1; }
+    .bside .pool.colm { flex-direction: column; flex-wrap: nowrap; align-items: center; }
+
+    /* cloze */
+    .cloze { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .crow { display: flex; align-items: stretch; border: 3px solid var(--navy); border-radius: 8px; min-height: 70px; }
+    .crow .num { width: 56px; flex-shrink: 0; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 30px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .crow .sent { flex: 1; align-self: center; padding: 8px 18px; font-size: 27px; font-weight: 600; line-height: 58px; }
+    .cz { font-family: var(--mono); font-size: 25px; font-weight: 500; background: var(--blank); border-radius: 6px; padding: 4px 12px; white-space: pre; }
+    .tile.op { min-width: 64px; font-size: 26px; }
+    .gap { display: inline-flex; vertical-align: middle; min-width: 140px; height: 54px; margin: 0 2px; }
+    .gap.sym { min-width: 84px; }
+    .bside .pool.wrap { flex-direction: row; flex-wrap: wrap; align-content: center; gap: 14px; }
+
+    /* working out */
+    .ttab { border-collapse: separate; border-spacing: 0; border: 3px solid var(--navy); border-radius: 8px; overflow: hidden; }
+    .ttab th { background: var(--navy); color: #fff; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 9px 18px 8px; text-align: left; }
+    .ttab td { padding: 12px 18px; border-top: 2px solid var(--light-grey); font-size: 24px; font-weight: 600; }
+    .ttab tr:first-child td { border-top: none; }
+    .ttab td.lno { font-family: var(--cond); font-size: 26px; font-weight: 900; color: #fff; background: var(--navy); text-align: center; width: 52px; padding: 12px 8px; }
+    .ttab .cz { font-size: 24px; }
+    .numin { width: 110px; font-family: var(--mono); font-size: 25px; font-weight: 700; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 3px 8px; text-align: center; outline: none;
+        -webkit-user-select: text; user-select: text; transition: border-color .2s, background-color .2s, color .2s; vertical-align: middle; }
+    .numin:focus { border-color: var(--pink); }
+    .numin.right { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .numin.wrong { border-style: dashed; animation: shake .4s; }
+    .seg { display: flex; gap: 8px; }
+    .seg button { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 6px;
+        padding: 6px 0 5px; width: 116px; cursor: pointer; transition: background-color .2s, border-color .2s, color .2s, opacity .2s; }
+    .seg button:hover:not(:disabled) { background: #f6f7fb; }
+    .seg button.sel { background: var(--tint); border-color: var(--pink); }
+    .seg button.right { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .seg button.wrong { border-style: dashed; opacity: .45; animation: shake .4s; }
+    .seg button:disabled { cursor: default; }
+
+    /* order */
+    .ordwrap { display: grid; grid-template-columns: 420px 1fr; gap: 26px; width: 100%; height: 100%; }
+    .ordright { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+    .srow { display: flex; align-items: center; gap: 14px; }
+    .srow .num { width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 25px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .oslot { flex: 1; height: 48px; justify-content: flex-start; padding: 0 4px; }
+    .ordright .tile.sm { font-size: 20px; padding: 4px 12px; }
+    .oslot .tile { box-shadow: none; }
+    .ordright .pool { flex: 1; align-content: center; }
+
+    /* slider */
+    .rng { position: absolute; -webkit-appearance: none; appearance: none; background: transparent; height: 40px; margin: 0; cursor: pointer; }
+    .rng::-webkit-slider-runnable-track { height: 40px; background: transparent; }
+    .rng::-moz-range-track { height: 40px; background: transparent; }
+    .rng::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: 5px; border-radius: 50%; background: var(--pink); border: 4px solid #fff; box-shadow: 0 0 0 3px var(--pink); }
+    .rng::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--pink); border: 4px solid #fff; box-shadow: 0 0 0 3px var(--pink); }
+    .rng:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; border-radius: 6px; }
+
+    /* end */
+    .scorecard { border: 3px solid var(--pink); border-radius: 8px; padding: 22px 60px 26px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .scorecard .big { font-family: var(--cond); font-size: 96px; font-weight: 900; color: var(--pink); line-height: 1; margin-top: 8px; }
+    .scorecard .dlbl { margin-top: 8px; }
+    .dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+    .dots span { width: 34px; height: 34px; border-radius: 6px; border: 3px solid var(--navy); font-family: var(--cond); font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .dots span.y { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .again { margin-top: 26px; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 8px; padding: 8px 22px; cursor: pointer; }
+
+    /* buckles */
+    .hright { display: flex; align-items: flex-end; gap: 28px; }
+    .bcount { display: flex; align-items: center; gap: 10px; }
+    .counter-icon { width: 34px; height: 34px; display: block; }
+    .bcount .num { font-family: var(--cond); font-size: 34px; font-weight: 900; line-height: 1; }
+    .bcount .lbl { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .done-buckle { width: 90px; height: 90px; }
+    .scorecard .sub { margin-top: 22px; }
+    .award { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.8); opacity: 0; pointer-events: none; z-index: 30;
+        background: #fff; border: 3px solid var(--pink); border-radius: 12px; padding: 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        box-shadow: 0 20px 50px rgba(27,31,69,.25); transition: opacity .3s, transform .35s var(--ease); }
+    .award.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .award.hide { opacity: 0; transform: translate(-50%, -60%) scale(.95); }
+    .award-img { width: 140px; height: auto; }
+    .award-text { font-family: var(--cond); font-size: 40px; font-weight: 900; color: var(--pink); text-transform: uppercase; letter-spacing: .04em; }
+    .confetti-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 29; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Checking <span>conditionals</span></h1>
+        <div class="hright">
+            <div class="counter" id="counter"></div>
+            <div class="bcount" title="Buckles earned">
+                <img src="buckle.svg" alt="" class="counter-icon" onerror="this.style.visibility='hidden'">
+                <div class="num" id="buckleCount">0</div>
+                <div class="lbl">Buckles</div>
+            </div>
+        </div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><button class="next" id="next" hidden>Check</button></div>
+    <div class="progress" id="progress"></div>
+</div>
+
+<div class="award" id="award" role="status" aria-live="polite">
+    <img src="penguin-with-buckle.svg" alt="" class="award-img" onerror="this.style.display='none'">
+    <div class="award-text" id="awardText">+1 Buckle!</div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const content = $('#content'), cap = $('#cap'), btn = $('#next'), counter = $('#counter'), progress = $('#progress');
+const PK = '#ea008a', NV = '#1b1f45', GR = '#c9ccd6', LT = '#f0f3f6', SC = '#10132c', NS = 'http://www.w3.org/2000/svg';
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function sel(tag, attrs = {}, html) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* ---------- animation helpers ---------- */
+let runId = 0;
+const easeOut = t => 1 - (1 - t) * (1 - t), easeInOut = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function play(dur, step, guard) {
+    const id = runId, ok = guard || (() => id === runId);
+    return new Promise(res => {
+        const st = performance.now();
+        const f = n => { if (!ok()) return; const t = Math.min(1, (n - st) / dur); step(t); if (t < 1) requestAnimationFrame(f); else res(); };
+        requestAnimationFrame(f);
+    });
+}
+function wait(ms) { const id = runId; return new Promise(r => setTimeout(() => { if (id === runId) r(); }, ms)); }
+const fadeIn = (node, d = 300) => { node.setAttribute('opacity', 0); return play(d, k => node.setAttribute('opacity', k)); };
+
+/* ---------- code helpers ---------- */
+const KW = new Set(['if', 'else', 'elif', 'True', 'False', 'and', 'or', 'not']);
+function tokens(line) {
+    const re = /("[^"]*"?|'[^']*'?)|(-?\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(\s+)|(==|!=|<=|>=|.)/g, out = [];
+    let m;
+    while ((m = re.exec(line))) { const t = m[0]; out.push({ t, k: m[1] ? 's' : m[2] ? 'n' : m[3] ? (KW.has(t) ? 'k' : t === 'print' ? 'f' : 'v') : m[4] ? 'w' : 'o' }); }
+    return out;
+}
+const codeHTML = line => tokens(line).map(x => x.k === 'w' ? x.t : `<span class="${x.k}">${esc(x.t)}</span>`).join('');
+const codeTS = (line, p = 'c-') => tokens(line).map(x => x.k === 'w' ? x.t : `<tspan class="${p}${x.k}">${esc(x.t)}</tspan>`).join('');
+/* working out: [value] marks a swapped-in value */
+const subTS = (s, p = 'l-') => s.split(/\[(.+?)\]/).map((x, i) => i % 2 ? `<tspan fill="${PK}" font-weight="700">${esc(x)}</tspan>` : codeTS(x, p)).join('');
+const subHTML = s => s.split(/\[(.+?)\]/).map((x, i) => i % 2 ? `<b style="color:${PK}">${esc(x)}</b>` : esc(x)).join('');
+
+/* ---------- memory box ---------- */
+const REST = -18;
+function chipSVG(val) {
+    const w = Math.max(64, String(val).length * 14.4 + 30), str = /^["']/.test(val);
+    return `<rect x="${-w / 2}" y="-22" width="${w}" height="44" rx="8" fill="#fff" stroke="${NV}" stroke-width="3"/><text class="vval" y="8" text-anchor="middle" fill="${str ? PK : NV}">${esc(val)}</text>`;
+}
+function boxShape(name) {
+    const pw = Math.max(96, name.length * 14.4 + 30), fw = Math.max(170, pw + 36), hw = fw / 2, ins = 22;
+    const flap = sx => `<polygon points="${sx * hw},0 ${sx * (hw - ins)},-24 ${sx * (hw + 12)},-38 ${sx * (hw + 34)},-14" fill="${LT}" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/>`;
+    return { pw, fw, hw,
+        back: `${flap(-1)}${flap(1)}<polygon points="${-hw},0 ${-hw + ins},-24 ${hw - ins},-24 ${hw},0" fill="#cfd3df" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/>`,
+        front: `<rect x="${-hw}" y="0" width="${fw}" height="96" fill="${LT}" stroke="${NV}" stroke-width="4" stroke-linejoin="round"/>
+            <rect x="${-pw / 2}" y="30" width="${pw}" height="40" rx="6" fill="#fff" stroke="${PK}" stroke-width="3"/>
+            <text class="vname" x="0" y="58" text-anchor="middle">${esc(name)}</text>` };
+}
+function vbox(layer, cx, ry, name, s = 1) {
+    const sh = boxShape(name);
+    const g = sel('g', { transform: `translate(${cx} ${ry}) scale(${s})` });
+    g.innerHTML = `${sh.back}<g class="vals"></g>${sh.front}`;
+    layer.appendChild(g);
+    const vals = g.querySelector('.vals');
+    return {
+        g, cur: null, val: null,
+        set(val) { vals.innerHTML = ''; this.cur = null; this.val = null; if (val === undefined) return; const c = sel('g', { transform: `translate(0 ${REST})` }, chipSVG(val)); vals.appendChild(c); this.cur = c; this.val = val; },
+        appear() { return play(380, k => { const e = easeOut(k); g.setAttribute('opacity', k); g.setAttribute('transform', `translate(${cx} ${ry + 14 * (1 - e)}) scale(${s})`); }); },
+        async put(val, from) {
+            const old = this.cur, c = sel('g', {}, chipSVG(val));
+            vals.appendChild(c); this.cur = c; this.val = val;
+            const fx = from ? from.x : 0, fy = from ? from.y : -170;
+            c.setAttribute('transform', `translate(${fx} ${fy})`); c.setAttribute('opacity', from ? 1 : 0);
+            const outP = old ? play(480, k => { const e = easeInOut(k); old.setAttribute('transform', `translate(${150 * e} ${REST - 110 * easeOut(k)}) rotate(${18 * e})`); old.setAttribute('opacity', 1 - k); }).then(() => old.remove()) : Promise.resolve();
+            if (old) await wait(260);
+            await play(from ? 700 : 520, k => { const e = easeInOut(k); c.setAttribute('transform', `translate(${fx * (1 - e)} ${fy + (REST - fy) * (from ? e : easeOut(k))})`); if (!from) c.setAttribute('opacity', Math.min(1, k * 2.5)); });
+            await outP;
+        },
+        pulse() {
+            const r = this.cur && this.cur.querySelector('rect'); if (!r) return Promise.resolve();
+            return play(600, k => { const p = Math.sin(k * Math.PI); r.setAttribute('stroke', p > .15 ? PK : NV); r.setAttribute('stroke-width', 3 + 3 * p); });
+        }
+    };
+}
+const replayIcon = `<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>`;
+
+/* ---------- True / False pill ---------- */
+function pillSVG(cx, cy, v, small) {
+    const w = small ? 78 : 96, h = small ? 26 : 34, fs = small ? 17 : 20;
+    const fill = v === true ? PK : v === false ? (small ? '#fff' : NV) : '#fff', tf = v === '?' ? '#9aa0bd' : v === false && small ? NV : '#fff', t = v === true ? 'True' : v === false ? 'False' : '?';
+    const st = v === '?' ? `stroke="${GR}" stroke-width="3" stroke-dasharray="6 5"` : v === false && small ? `stroke="${NV}" stroke-width="2"` : '';
+    return `<rect x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}" ${st}/><text class="pt" x="${cx}" y="${cy + fs * .36}" text-anchor="middle" fill="${tf}" style="font-size:${fs}px">${t}</text>`;
+}
+async function popIn(g, cx, cy) {
+    g.setAttribute('opacity', 0);
+    await play(320, k => { const s = .6 + .4 * easeOut(k); g.setAttribute('opacity', Math.min(1, k * 2)); g.setAttribute('transform', `translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`); });
+}
+
+/* ---------- condition working-out panel ---------- */
+function condBox(layer, x, y, w, h) {
+    const g = sel('g'); layer.appendChild(g);
+    const row = h < 90, cx = x + w / 2, top = y + 30, av = h - 30;
+    const ex = Math.max(0, av - 108) / 2, ye = row ? y + h / 2 + 8 : top + ex + 24, ys = row ? ye : top + ex + 58, yp = row ? y + h / 2 : top + ex + 90;
+    const tx = row ? x + 140 : cx, fz = row ? 'style="font-size:19px"' : '', an = row ? 'start' : 'middle', px = row ? x + w - 50 : cx;
+    g.innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#f5f6fa"/><text class="plab dk" x="${x + 14}" y="${row ? y + h / 2 + 6 : y + 24}">Condition</text><g class="e"></g><g class="s"></g><g class="r"></g>`;
+    const E = g.querySelector('.e'), S = g.querySelector('.s'), R = g.querySelector('.r');
+    const B = {
+        hasE: false, hasS: false,
+        reset() { E.innerHTML = S.innerHTML = R.innerHTML = ''; E.removeAttribute('opacity'); this.hasE = this.hasS = false; },
+        async expr(e, now) { this.hasE = true; E.innerHTML = `<text class="cd" x="${tx}" y="${ye}" text-anchor="${an}" ${fz} xml:space="preserve">${codeTS(e, 'l-')}</text>`; if (!now) await fadeIn(E); else E.setAttribute('opacity', 1); },
+        async sub(s, now) {
+            this.hasS = true;
+            if (row && E.innerHTML && !now) await play(200, k => E.setAttribute('opacity', 1 - k));
+            if (row) E.setAttribute('opacity', 0);
+            S.innerHTML = `<text class="cd" x="${tx}" y="${ys}" text-anchor="${an}" ${fz} xml:space="preserve">${subTS(s)}</text>`; if (!now) await fadeIn(S); else S.setAttribute('opacity', 1);
+        },
+        async res(v, now) { R.innerHTML = pillSVG(px, yp, v, row); R.removeAttribute('transform'); if (!now) await popIn(R, px, yp); else R.setAttribute('opacity', 1); }
+    };
+    return B;
+}
+
+/* ---------- memory + condition column ---------- */
+function Side(layer, x, y, w, h, o = {}) {
+    const mh = o.mh || Math.round(h * .47);
+    const g = sel('g'); layer.appendChild(g);
+    g.innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${mh}" rx="8" fill="#f5f6fa"/><text class="plab dk" x="${x + 14}" y="${y + 24}">Memory</text><text class="note sn" text-anchor="middle"></text><g class="mm"></g>`;
+    const mm = g.querySelector('.mm'), sn = g.querySelector('.sn'), boxes = {}, vars = o.vars || [];
+    const cb = condBox(g, x, y + mh + 12, w, h - mh - 12);
+    const pos = name => {
+        const n = Math.max(1, vars.length), i = Math.max(0, vars.indexOf(name)), s = Math.min(n > 1 ? .5 : .66, (mh - 40) / 140), c = y + 30 + (mh - 38) / 2;
+        return { x: x + w * (i + .5) / n, y: c - 28 * s, s };
+    };
+    const mk = name => { const p = pos(name); boxes[name] = vbox(mm, p.x, p.y, name, p.s); return boxes[name]; };
+    return {
+        cb, box: n => boxes[n],
+        note(t) { const ls = (t || '').split('\n'); sn.innerHTML = t ? ls.map((l, i) => `<tspan x="${x + w / 2}" y="${y + mh / 2 + 12 + (i - (ls.length - 1) / 2) * 24}">${esc(l)}</tspan>`).join('') : ''; },
+        reset() { mm.innerHTML = ''; for (const k in boxes) delete boxes[k]; cb.reset(); this.note(''); },
+        async assign(name, val) { let b = boxes[name]; if (!b) { b = mk(name); b.g.setAttribute('opacity', 0); this.note(''); await b.appear(); } await b.put(val); },
+        set(name, val) { (boxes[name] || mk(name)).set(val); this.note(''); }
+    };
+}
+
+/* ---------- code runner scene: code panel, screen, memory, condition ---------- */
+function codeScene(svg, code, o = {}) {
+    const W = o.w || 740, H = o.h || 330, CW = o.cw || 410, FS = o.fs || 21, LH = o.lh || 32, n = code.length, CH = 44 + n * LH + 10;
+    const top = i => 14 + 44 + i * LH, base = i => top(i) + LH / 2 + FS * .36;
+    let SY = 14 + CH + 12, CRY = null;
+    if (o.condRow) { CRY = SY; SY += o.condRow + 12; }
+    const SH = H - 14 - SY, compact = SH < 64;
+    const oy = k => compact ? SY + SH / 2 + 7 : SY + 50 + k * 27, ox = compact ? 128 : 28;
+    let lines = '';
+    code.forEach((ln, i) => { lines += `<g class="cl" data-i="${i}"><text class="ln" x="40" y="${base(i)}" text-anchor="end">${i + 1}</text><text class="cd" x="54" y="${base(i)}" style="font-size:${FS}px" xml:space="preserve">${codeTS(ln)}</text></g>`; });
+    svg.innerHTML = `<rect x="14" y="14" width="${CW}" height="${CH}" rx="8" fill="${NV}"/><text class="plab" x="28" y="37">Code</text>
+        <g class="hl" opacity="0"><rect x="14" y="0" width="${CW}" height="${LH}" fill="rgba(234,0,138,.32)"/><rect x="14" y="0" width="6" height="${LH}" fill="${PK}"/></g>${lines}<g class="pl"></g>
+        <rect x="14" y="${SY}" width="${CW}" height="${SH}" rx="8" fill="${SC}"/><text class="plab" x="28" y="${compact ? SY + SH / 2 + 6 : SY + 24}">Screen</text><g class="out"></g>
+        <rect class="cur" width="12" height="22" fill="${PK}" style="display:none"/><g class="sd"></g>`;
+    const hl = svg.querySelector('.hl'), out = svg.querySelector('.out'), cur = svg.querySelector('.cur'), pl = svg.querySelector('.pl'), sd = svg.querySelector('.sd');
+    const side = o.noMem ? null : Side(sd, CW + 30, 14, W - CW - 44, H - 28, { vars: o.vars });
+    const cb = side ? side.cb : o.condRow ? condBox(sd, 14, CRY, CW, o.condRow) : null;
+    let outN = 0, pillAt = -1;
+    const S = {
+        side, cb, introDone: false,
+        mark(i) { if (i < 0) { hl.setAttribute('opacity', 0); return; } pillAt = i; hl.setAttribute('transform', `translate(0 ${top(i)})`); hl.setAttribute('opacity', 1); },
+        dim(list) { list.forEach(i => { const g = svg.querySelector(`.cl[data-i="${i}"]`); if (g) play(300, k => g.setAttribute('opacity', 1 - .7 * k)); }); },
+        cursor(on) { cur.setAttribute('x', ox); cur.setAttribute('y', oy(outN) - 18); cur.style.display = on ? '' : 'none'; },
+        reset() { out.innerHTML = ''; outN = 0; this.mark(-1); this.cursor(false); pl.innerHTML = ''; svg.querySelectorAll('.cl').forEach(g => g.removeAttribute('opacity')); if (side) side.reset(); else if (cb) cb.reset(); },
+        async type(txt, err) {
+            const t = sel('text', { class: 'otxt' + (err ? ' err' : ''), x: ox, y: oy(outN), 'xml:space': 'preserve' });
+            out.appendChild(t); outN++; this.cursor(false);
+            await play(Math.max(250, txt.length * 45), k => { t.textContent = txt.slice(0, Math.round(k * txt.length)); });
+        },
+        show(lines) { this.cursor(false); [].concat(lines).forEach(l => { out.appendChild(sel('text', { class: 'otxt', x: ox, y: oy(outN), 'xml:space': 'preserve' }, esc(l))); outN++; }); },
+        pill: cb ? null : async v => { const g = sel('g'); pl.appendChild(g); const px = 14 + CW - 52, py = top(pillAt) + LH / 2; g.innerHTML = pillSVG(px, py, v, true); await popIn(g, px, py); }
+    };
+    return S;
+}
+
+/* ---------- one step of a trace (works for svg scenes and html editors) ---------- */
+async function runStep(S, s) {
+    S.mark(s.ln); await wait(420);
+    const sd = S.side;
+    if (s.r && sd && sd.box(s.r)) { await sd.box(s.r).pulse(); await wait(150); }
+    if (s.a && sd) { await sd.assign(s.a[0], s.a[1]); await wait(320); }
+    if (s.c) {
+        const c = s.c, v = c.e.split(' ')[0];
+        if (S.cb) {
+            if (!S.cb.hasE) { await S.cb.expr(c.e); await wait(250); }
+            if (!S.cb.hasS) { if (sd && sd.box(v)) await sd.box(v).pulse(); await S.cb.sub(c.s); await wait(300); }
+            await S.cb.res(c.r);
+        }
+        if (S.pill) await S.pill(c.r);
+        await wait(250);
+        if (s.skip) S.dim(s.skip);
+        await wait(450);
+    }
+    if (s.p !== undefined) { for (const l of [].concat(s.p)) await S.type(l, s.err); await wait(320); }
+}
+async function runAll(S, steps) { S.reset(); await wait(250); for (const s of steps) await runStep(S, s); S.mark(-1); }
+
+/* html editor rows + side svg, driven by the same steps */
+function htmlRunner(rows, scr, side) {
+    let outN = 0;
+    return {
+        side, cb: side ? side.cb : null,
+        mark(i) { rows.forEach((r, k) => r.classList.toggle('on', k === i)); },
+        dim(list) { list.forEach(i => rows[i] && rows[i].classList.add('skip')); },
+        reset() { rows.forEach(r => r.classList.remove('on', 'skip', 'bad')); scr.innerHTML = '<span class="lab">Screen</span>'; outN = 0; if (side) side.reset(); },
+        async type(txt) { const d = el('div', ''); scr.appendChild(d); outN++; await play(Math.max(250, txt.length * 45), k => { d.textContent = txt.slice(0, Math.round(k * txt.length)); }); }
+    };
+}
+
+/* ---------- flowcharts ---------- */
+function flowSVG(F, o = {}) {
+    const { cx, cy, hw, hh, lx, rx, jy, by } = F;
+    const ah = x => `<polygon points="${x - 9},${by - 13} ${x + 9},${by - 13} ${x},${by}" fill="${NV}"/>`;
+    return `<g stroke="${NV}" stroke-width="3" fill="none"><polyline points="${cx},${cy + hh} ${cx},${jy}"/><polyline points="${lx},${by - 12} ${lx},${jy} ${rx},${jy} ${rx},${by - 12}"/></g>${ah(lx)}${ah(rx)}
+        <text class="yn ynl" x="${lx - 12}" y="${by - 10}" text-anchor="end">YES</text><text class="yn ynr" x="${rx + 12}" y="${by - 10}">NO</text>
+        <g class="trc"></g>
+        <path class="dia" d="M${cx} ${cy - hh} L${cx + hw} ${cy} L${cx} ${cy + hh} L${cx - hw} ${cy} Z" fill="#fff" stroke="${PK}" stroke-width="4" stroke-linejoin="round"/>
+        <g class="dt">${o.text ? `<text class="dtxt" x="${cx}" y="${cy + 9}" text-anchor="middle">${o.text}</text>` : ''}</g>`;
+}
+function flowBox(F, side, label, fill = true) {
+    const x = (side ? F.rx : F.lx) - F.bw / 2;
+    return fill ? `<rect class="fb${side}" x="${x}" y="${F.by}" width="${F.bw}" height="${F.bh}" rx="5" fill="${NV}" stroke="${NV}" stroke-width="3"/><text class="btxt" x="${x + F.bw / 2}" y="${F.by + F.bh / 2 + 8}" text-anchor="middle">${esc(label)}</text>`
+        : `<rect x="${x}" y="${F.by}" width="${F.bw}" height="${F.bh}" rx="5" fill="#fff" stroke="${NV}" stroke-width="3"/>`;
+}
+async function tracePath(layer, F, side, dur = 750) {
+    const x = side ? F.rx : F.lx, pts = [[F.cx, F.cy + F.hh], [F.cx, F.jy], [x, F.jy], [x, F.by - 4]];
+    const p = sel('polyline', { points: pts.map(q => q.join(',')).join(' '), fill: 'none', stroke: PK, 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+    layer.appendChild(p); const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+    const dot = sel('circle', { r: 10, fill: PK }); layer.appendChild(dot);
+    await play(dur, k => { const e = easeInOut(k), pt = p.getPointAtLength(len * e); p.style.strokeDashoffset = len * (1 - e); dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y); });
+    dot.remove();
+}
+function yesNo(svg, side) { svg.querySelectorAll('.yn').forEach((t, i) => t.style.fill = i === side ? PK : '#c3c6d0'); }
+
+/* =========================================================
+   QUESTIONS
+   ========================================================= */
+const QS = [
+    { kind: 'flowlabel', title: 'Parts of a decision', sc: 'SC1', prompt: 'Drag a label onto each part of this flowchart.',
+      text: 'Is it raining?', boxes: ['Take an umbrella', 'Wear sunglasses'],
+      tiles: ['Condition', 'If true', 'If false', 'Variable'], keys: { c: 'Condition', t: 'If true', f: 'If false' },
+      hints: { Variable: 'There is no variable in this flowchart. A variable is a named box that stores a value.' },
+      slotHints: { c: 'The diamond holds the true or false question. What is that question called?', t: 'Take an umbrella is on the YES path. YES means the condition is true.', f: 'Wear sunglasses is on the NO path. NO means the condition is false.' },
+      msg: 'The condition is a true or false question. YES leads to the true path and NO leads to the false path.' },
+
+    { kind: 'cloze', title: 'True or false', sc: 'SC1', prompt: 'Complete each sentence using the word bank.',
+      rows: [['A', { a: 'condition' }, 'is', 'a', 'true', 'or', 'false', 'question.'],
+             ['If', 'the', 'condition', 'is', { a: 'true' }, ',', 'the', '`if`', 'branch', 'runs.'],
+             ['If', 'the', 'condition', 'is', { a: 'false' }, ',', 'the', '`else`', 'branch', 'runs.']],
+      words: ['condition', 'true', 'false', 'variable', 'print'],
+      slotHints: { condition: 'Gap 1 needs the word for the question the computer checks.', true: 'The if branch is the YES path. Is the condition true or false there?', false: 'The else branch is the NO path. Is the condition true or false there?' },
+      hints: { variable: 'A variable stores a value. It isn\u2019t the question being asked.', print: '<code>print</code> shows something on the screen. It isn\u2019t part of these sentences.' },
+      msg: 'The computer checks the condition. True runs the if branch and false runs the else branch.' },
+
+    { kind: 'flowtap', title: 'Which way?', sc: 'SC1', prompt: '<code>temp</code> holds 35. Tap the action the computer will take.',
+      v: ['temp', '35'], text: 'Is temp < 20?', boxes: ['Put on a coat', 'Wear a t-shirt'], c: { e: 'temp < 20', s: '[35] < 20', r: false }, ds: 'Is <tspan fill="#ea008a">35</tspan> < 20?',
+      answer: 1, hints: ['35 is not less than 20, so the answer to the question is NO. Follow the NO path.', ''],
+      msg: '35 < 20 is False, so the computer follows the NO path and you wear a t-shirt.' },
+
+    { kind: 'flowbuild', title: 'Code to flowchart', sc: 'SC1', prompt: 'Drag the parts of this code into the flowchart.',
+      code: ['if battery < 30:', '    print("Charge now")', 'else:', '    print("Continue")'],
+      tiles: ['battery < 30', 'Charge now', 'Continue', 'else'], code_t: ['battery < 30', 'else'], keys: { d: 'battery < 30', t: 'Charge now', f: 'Continue' },
+      hints: { 'battery < 30': '<code>battery < 30</code> is the true or false question. Questions go in the diamond.',
+               'Charge now': '<code>Charge now</code> is indented under if, so it runs when the condition is true. That is the YES path.',
+               'Continue': '<code>Continue</code> is under else, so it runs when the condition is false. That is the NO path.',
+               'else': '<code>else</code> isn\u2019t a question or an action. It marks where the NO path starts in the code.' },
+      msg: 'The condition goes in the diamond. The indented line under if is YES, and the line under else is NO.' },
+
+    { kind: 'parts', title: 'Five parts', sc: 'SC2', prompt: 'Every if / else has these parts. Drag a label onto each number.',
+      code: ['if temp > 30:', '    print("hot")', 'else:', '    print("ok")'],
+      parts: [[0, 0, 2, 5, 3], [0, 3, 12, 4, 0], [0, 12, 13, -3, 5], [1, 0, 4, 5, -4], [2, 0, 4, 5, 3]],
+      keys: ['if keyword', 'Condition', 'Colon', 'Indent', 'else keyword'], tiles: ['if keyword', 'Condition', 'Colon', 'Indent', 'else keyword', 'Value'],
+      hints: { 'if keyword': '<code>if</code> is the very first word. It starts the question.', Condition: 'The condition is the true or false question between <code>if</code> and the colon.',
+               Colon: 'The colon is the last character on the if line. It ends the question.', Indent: 'The indent is the space at the start of a line. It shows the line belongs to the if.',
+               'else keyword': '<code>else</code> starts the part that runs when the condition is false.', Value: '30 is a value, but none of the numbered parts is a value on its own.' },
+      msg: 'if starts the question, the condition is tested, the colon ends it, the indent belongs to the if, and else is the otherwise.' },
+
+    { kind: 'trace', title: 'Trace it', sc: 'SC2', prompt: 'Trace the code. What will appear on the screen?', sub: true,
+      code: ['score = 51', 'if score > 50:', '    print("High score!")', 'else:', '    print("Keep trying.")'], vars: ['score'], stop: 1,
+      steps: [{ ln: 0, a: ['score', '51'] }, { ln: 1, c: { e: 'score > 50', s: '[51] > 50', r: true }, skip: [3, 4] }, { ln: 2, p: 'High score!' }],
+      opts: [
+        { s: 'High score!', hint: '' },
+        { s: 'Keep trying.', hint: '51 is bigger than 50, so 51 > 50 is True. The else branch is skipped.' },
+        { s: 'High score!\nKeep trying.', hint: 'Only one branch ever runs. When the condition is True, else is skipped.' },
+        { s: '', hint: 'One of the two print lines always runs. Work out 51 > 50.' }],
+      answer: 0, msg: '51 > 50 is True, so the if branch runs and the else branch is skipped.' },
+
+    { kind: 'trace', title: 'Add, then check', sc: 'SC2', prompt: 'Trace the code. What will appear on the screen?', cw: 430, fs: 19, lh: 30,
+      code: ['lives = 2', 'lives = lives + 1', 'if lives == 3:', '    print("Max lives!")', 'else:', '    print("Picked up a life!")'], vars: ['lives'], stop: 1,
+      steps: [{ ln: 0, a: ['lives', '2'] }, { ln: 1, r: 'lives', a: ['lives', '3'] }, { ln: 2, c: { e: 'lives == 3', s: '[3] == 3', r: true }, skip: [4, 5] }, { ln: 3, p: 'Max lives!' }],
+      opts: [
+        { s: 'Picked up a life!', hint: 'Line 2 changes lives before the check. Work out 2 + 1 first, then the condition.' },
+        { s: 'Max lives!', hint: '' },
+        { s: 'Max lives!\nPicked up a life!', hint: 'Only one branch ever runs. When the condition is True, else is skipped.' },
+        { s: '', hint: 'One of the two print lines always runs. Work out what lives holds at line 3.' }],
+      answer: 1, msg: 'lives becomes 3 on line 2, so 3 == 3 is True and the if branch runs.' },
+
+    { kind: 'proof', title: 'Show your working', sc: 'SC2', prompt: 'Complete the working out for this code.',
+      code: ['money = 5.55', 'if money >= 6.0:', '    print("Here is your chai!")', 'else:', '    print("Not enough money")'],
+      cond: 'money >= 6.0', rest: ' >= 6.0', val: '5.55', res: false, branch: 'else',
+      steps: [{ ln: 0 }, { ln: 1, c: { e: 'money >= 6.0', s: '[5.55] >= 6.0', r: false }, skip: [2] }, { ln: 3 }, { ln: 4, p: 'Not enough money' }],
+      hints: { val: v => v === '6.0' || v === '6' ? '6.0 is already in the condition. Swap <code>money</code> for the value it holds.' : 'Line 1 stores the value of money. Swap it in.',
+               res: '5.55 is less than 6.0, so 5.55 >= 6.0 is False.', branch: 'A False condition skips the if branch and runs else.' },
+      msg: '5.55 >= 6.0 is False, so the else branch runs. No chai this time.' },
+
+    { kind: 'tapline', title: 'Spot the SyntaxError', sc: 'SC2', prompt: 'Python won\u2019t run this code. Tap the line with the mistake.',
+      code: ['score = 70', 'if score > 50', '    print("Pass")', 'else:', '    print("Try again")'], answer: 1, err: 'SyntaxError: expected \':\'',
+      hints: ['Line 1 stores a value. Nothing is missing here.', '', 'Line 3 is indented and has its brackets and quotes. Check the line above it.',
+              'The else line has its colon. Check the if line.', 'Line 5 is indented and has its brackets and quotes. Look at the question line.'],
+      msg: 'The if line is missing its colon. Every if and else line ends with <code>:</code>.' },
+
+    { kind: 'fix', title: 'Compare, don\u2019t store', sc: 'SC2', prompt: 'Line 2 causes a SyntaxError. Edit it so it checks if <code>team</code> is exactly 7.',
+      code: ['team = 7', 'if team = 7:', '    print("Ready to play")', 'else:', '    print("Find more players")'], edit: 1, bug: 'if team = 7:', err: 'SyntaxError: invalid syntax',
+      vars: ['team'], accept: n => n === 'ifteam==7:',
+      hint: n => /===/.test(n) ? 'Use exactly two equals signs to compare.'
+          : /^(If|IF)/.test(n) ? 'Python is case sensitive. <code>if</code> is all lowercase.'
+          : /Team/.test(n) ? 'Python is case sensitive. Use <code>team</code> exactly as line 1 spells it.'
+          : /(>=|<=|=>|=<|!=)/.test(n) ? 'Check if team is <b>exactly</b> 7. Which symbol means equal to?'
+          : /[^=]=[^=]/.test(n) ? 'One <code>=</code> stores a value. To compare, Python uses two: <code>==</code>.'
+          : !/:$/.test(n) ? 'Keep the colon at the end of the if line.'
+          : 'Use the pattern <code>if team == 7:</code>.',
+      steps: () => [{ ln: 0, a: ['team', '7'] }, { ln: 1, c: { e: 'team == 7', s: '[7] == 7', r: true }, skip: [3, 4] }, { ln: 2, p: 'Ready to play' }],
+      msg: 'One <code>=</code> stores a value and two <code>==</code> compare. 7 == 7 is True.' },
+
+    { kind: 'cloze', title: 'Comparison symbols', sc: 'Operators', prompt: 'Drag the correct symbol into each condition.', codeTiles: true,
+      rows: [['Is age 18 or more?', '`if age`', { a: '>=' }, '`18:`'],
+             ['Is team exactly 7?', '`if team`', { a: '==' }, '`7:`'],
+             ['Is lives anything but 0?', '`if lives`', { a: '!=' }, '`0:`'],
+             ['Is temp under 20?', '`if temp`', { a: '<' }, '`20:`']],
+      words: ['>=', '==', '!=', '<', '=', '=>', '>'],
+      slotHints: { '>=': '18 or more includes 18 itself. Which symbol means greater than or equal to?', '==': 'Exactly 7 means equal to. Which symbol compares for equal?', '!=': 'Anything but 0 means not equal to. Which symbol is that?', '<': 'Under 20 means less than. Which way does the symbol point?' },
+      hints: { '=': 'One <code>=</code> stores a value. It can\u2019t be used to compare.', '=>': 'Python writes this one as <code>>=</code>, with the <code>=</code> second.', '>': '<code>></code> means greater than. Check what each question is asking.' },
+      msg: 'Python compares with <code>==</code>, <code>!=</code>, <code><</code>, <code>></code>, <code><=</code> and <code>>=</code>.' },
+
+    { kind: 'sort2', title: 'True or False?', sc: 'Operators', prompt: '<code>score</code> holds 10. Sort each condition into True or False.', given: 'score = 10',
+      items: [
+        ['score == 10', 't', '10 == 10 is True. 10 is exactly equal to 10.'],
+        ['score != 10', 'f', '<code>!=</code> means not equal. 10 is equal to 10, so this is False.'],
+        ['score > 10', 'f', '10 isn\u2019t bigger than itself, so 10 > 10 is False.'],
+        ['score >= 10', 't', '<code>>=</code> includes equal to, so 10 >= 10 is True.'],
+        ['score < 10', 'f', '10 isn\u2019t smaller than itself, so 10 < 10 is False.'],
+        ['score <= 10', 't', '<code><=</code> includes equal to, so 10 <= 10 is True.'],
+        ['score > 9', 't', '10 is bigger than 9, so 10 > 9 is True.'],
+        ['score < 5', 'f', '10 is not smaller than 5, so 10 < 5 is False.']],
+      msg: 'Watch the edges: 10 > 10 is False, but 10 >= 10 and 10 <= 10 are True.' },
+
+    { kind: 'mcside', title: 'Ava\u2019s claim', sc: 'Operators', prompt: 'Ava is reading this code. Is she right?',
+      code: ['age = 18', 'if age > 18:', '    print("Come in")', 'else:', '    print("Too young")'],
+      steps: [{ ln: 0 }, { ln: 1, c: { e: 'age > 18', s: '[18] > 18', r: false }, skip: [2] }, { ln: 3 }, { ln: 4, p: 'Too young' }],
+      quote: '\u201cThis code lets an 18 year old come in.\u201d',
+      opts: [
+        { t: 'Yes. 18 is old enough, so the if branch runs.', hint: 'Work out 18 > 18. Is 18 bigger than itself?' },
+        { t: 'Yes. The else branch runs, so they come in.', hint: 'The else branch prints Too young. Work out 18 > 18 first.' },
+        { t: 'No. 18 > 18 is False, so the else branch runs.', hint: '' },
+        { t: 'No. The code has a syntax error.', hint: 'Every part is there: if, a condition, a colon, indents and else.' }],
+      answer: 2, msg: '18 > 18 is False, so the 18 year old is turned away. Using <code>>=</code> would let them in.' },
+
+    { kind: 'mcside', title: 'Why else?', sc: 'SC3', prompt: 'The screen shows <code>Slow down!</code>. Why did the else branch run?', pre: 'Slow down!',
+      code: ['speed = 45', 'if speed < 41:', '    print("Under limit")', 'else:', '    print("Slow down!")'],
+      steps: [{ ln: 0 }, { ln: 1, c: { e: 'speed < 41', s: '[45] < 41', r: false }, skip: [2] }, { ln: 3 }, { ln: 4, p: 'Slow down!' }],
+      opts: [
+        { t: 'Because 45 < 41 is True.', hint: '45 is bigger than 41, so 45 < 41 is not True.' },
+        { t: 'Because 45 < 41 is False.', hint: '' },
+        { t: 'Because else always runs last.', hint: 'Only one branch runs. else only runs when the condition is False.' },
+        { t: 'Because speed is a variable.', hint: 'Lots of conditions use variables. What matters is the value inside it.' }],
+      answer: 1, msg: 'speed holds 45, and 45 < 41 is False. A False condition sends the computer to else.' },
+
+    { kind: 'tapmulti', title: 'Which lines print?', sc: 'SC3', prompt: 'Tap <b>every</b> line that prints something when this code runs.',
+      code: ['battery = 10', 'if battery == 100:', '    print("Fully charged")', 'else:', '    print("Need to charge")', 'print("Done")'],
+      answer: [4, 5], prints: [2, 4, 5], vars: ['battery'],
+      steps: [{ ln: 0, a: ['battery', '10'] }, { ln: 1, c: { e: 'battery == 100', s: '[10] == 100', r: false }, skip: [2] }, { ln: 3 }, { ln: 4, p: 'Need to charge' }, { ln: 5, p: 'Done' }],
+      hints: { 2: '10 == 100 is False, so the if branch on line 3 is skipped.', miss4: 'Good so far, but the else branch prints too. 10 == 100 is False, so line 5 runs.',
+               miss5: 'Good so far, but one more line prints. Line 6 isn\u2019t indented, so it runs after the if / else no matter what.' },
+      msg: 'The else branch prints, then line 6 runs too. Lines that aren\u2019t indented run whatever the condition is.' },
+
+    { kind: 'order', title: 'Step by step', sc: 'SC3', prompt: 'Put the steps the computer follows in order.',
+      code: ['temp = 37.9', 'if temp >= 37.5:', '    print("Fever")', 'else:', '    print("Healthy")'],
+      run: [{ ln: 0 }, { ln: 1, c: { e: 'temp >= 37.5', s: '[37.9] >= 37.5', r: true }, skip: [3, 4] }, { ln: 2, p: 'Fever' }],
+      steps: [
+        ['Store 37.9 in temp', 'Python runs from the top. Line 1 stores the value first.'],
+        ['Swap in the value: 37.9 >= 37.5', 'Before it can decide, Python swaps temp for the value it holds.'],
+        ['Decide the condition is True', 'Python can only decide once it knows the values to compare.'],
+        ['Run the if branch and skip else', 'Running a branch comes last, after the decision.']],
+      extra: ['Run the else branch as well', 'Only one branch runs. When the condition is True, else is skipped.'],
+      msg: 'Store, swap in the value, decide True or False, then run just one branch.' },
+
+    { kind: 'slider', title: 'Just old enough', sc: 'SC4', prompt: 'Set <code>age</code> to the <b>smallest</b> value that makes <code>Allow entry</code> run.',
+      name: 'age', min: 10, max: 25, start: 12, target: 18, op: '>=', text: 'Is age >= 18?', boxes: ['Allow entry', 'Turn away'],
+      msg: '18 >= 18 is True, so 18 is the smallest age that gets in. <code>>=</code> includes 18 itself.' },
+
+    { kind: 'fix', chip: 'Change the code', title: 'Make it win', sc: 'SC4', prompt: 'Change the value on line 1 so the program prints <code>You win!</code>',
+      code: ['score = 45', 'if score > 100:', '    print("You win!")', 'else:', '    print("Try again")'], edit: 0, bug: 'score = 45', vars: ['score'],
+      pre: { a: ['score', '45'], c: { e: 'score > 100', s: '[45] > 100', r: false }, skip: [2], out: 'Try again' },
+      accept: n => { const m = n.match(/^score=(\d+(?:\.\d+)?)$/); return !!m && +m[1] > 100; },
+      hint: n => {
+          const m = n.match(/^score=(-?\d+(?:\.\d+)?)$/);
+          if (m && +m[1] === 100) return '100 > 100 is False. 100 isn\u2019t bigger than itself. Try a bigger number.';
+          if (m) return `${m[1]} > 100 is False, so else still runs. Choose a number bigger than 100.`;
+          if (/^score=["']/.test(n)) return 'Numbers don\u2019t go in quotes. Text can\u2019t be compared with 100.';
+          if (!/^score=/.test(n)) return 'Keep the name <code>score</code> on the left of the <code>=</code>.';
+          return 'Line 1 should be <code>score =</code> followed by a number.';
+      },
+      steps: n => { const v = n.replace(/^score=/, ''); return [{ ln: 0, a: ['score', v] }, { ln: 1, c: { e: 'score > 100', s: `[${v}] > 100`, r: true }, skip: [3, 4] }, { ln: 2, p: 'You win!' }]; },
+      msg: 'Any number bigger than 100 makes score > 100 True, so the if branch runs.' },
+
+    { kind: 'fix', chip: 'Change the code', title: 'Fix the alarm', sc: 'SC4', prompt: 'The phone should show <code>Charge now</code> when the battery is <b>below 20</b>. Fix the condition on line 2.',
+      code: ['battery = 15', 'if battery > 20:', '    print("Charge now")', 'else:', '    print("Battery OK")'], edit: 1, bug: 'if battery > 20:', vars: ['battery'],
+      pre: { a: ['battery', '15'], c: { e: 'battery > 20', s: '[15] > 20', r: false }, skip: [2], out: 'Battery OK' },
+      accept: n => /^(ifbattery<20:|if20>battery:|ifbattery<=19:)$/.test(n),
+      hint: n => !/:$/.test(n) ? 'Keep the colon at the end of the if line.'
+          : /^ifbattery<=20:$/.test(n) ? '<code><=</code> would warn at exactly 20 too. Below 20 means less than.'
+          : /^ifbattery(>|>=|==|!=)20:$/.test(n) ? 'Below 20 means less than. Which symbol is that?'
+          : /^ifbattery<\d+:$/.test(n) ? 'Right symbol! Keep 20 as the number, because the warning is for anything below 20.'
+          : /Battery/.test(n) ? 'Python is case sensitive. Use <code>battery</code> exactly as line 1 spells it.'
+          : /[^=!<>]=[^=]/.test(n) ? 'One <code>=</code> stores a value. Use a comparison symbol instead.'
+          : 'Change the symbol so the condition asks: is battery less than 20?',
+      steps: n => [{ ln: 0, a: ['battery', '15'] }, { ln: 1, c: { e: n === 'if20>battery:' ? '20 > battery' : n === 'ifbattery<=19:' ? 'battery <= 19' : 'battery < 20', s: n === 'if20>battery:' ? '20 > [15]' : n === 'ifbattery<=19:' ? '[15] <= 19' : '[15] < 20', r: true }, skip: [3, 4] }, { ln: 2, p: 'Charge now' }],
+      msg: '15 < 20 is True, so the phone now shows Charge now.' },
+
+    { kind: 'write', title: 'Write it yourself', sc: 'SC4', prompt: 'If <code>lives</code> is 0, print <code>Game over</code>. Otherwise, print <code>Keep going</code>.',
+      steps: [{ ln: 0, a: ['lives', '0'] }, { ln: 1, c: { e: 'lives == 0', s: '[0] == 0', r: true }, skip: [3, 4] }, { ln: 2, p: 'Game over' }],
+      msg: '0 == 0 is True, so Game over prints and the else branch is skipped.' }
+];
+const TOTAL = QS.length;
+const CHIP = { flowlabel: 'Drag and drop', cloze: 'Fill the gaps', flowtap: 'Predict', flowbuild: 'Drag and drop', parts: 'Label', trace: 'Predict', proof: 'Show working out',
+    tapline: 'Spot the error', fix: 'Fix the code', sort2: 'Sort', mcside: 'Multiple choice', tapmulti: 'Tap to select', order: 'Put in order', slider: 'Slide to set', write: 'Write code' };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ========================== Buckles (localStorage) ======================= */
+const PAGE_ID = 'conditionals-cfu';
+QS.forEach(q => { q.id = q.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'); q.buckles = 1; });
+const Buckles = {
+    key: 'buckles-shared',
+    posKey: 'pos-' + PAGE_ID,
+    ns(id) { return PAGE_ID + ':' + id; },
+    load() { try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { return {}; } },
+    save(d) { try { localStorage.setItem(this.key, JSON.stringify(d)); } catch (e) {} },
+    isDone(id) { return !!this.load()[this.ns(id)]; },
+    award(id, n) { const d = this.load(); const k = this.ns(id); if (!d[k]) { d[k] = n; this.save(d); } },
+    total() { return Object.values(this.load()).reduce((a, b) => a + b, 0); },
+    setPos(i) { try { localStorage.setItem(this.posKey, String(i)); } catch (e) {} },
+    getPos() { try { const v = parseInt(localStorage.getItem(this.posKey), 10); return isNaN(v) ? 0 : v; } catch (e) { return 0; } }
+};
+function refreshCount() { $('#buckleCount').textContent = Buckles.total(); }
+function celebrate(n) {
+    const a = $('#award');
+    $('#awardText').textContent = '+' + n + ' Buckle' + (n > 1 ? 's' : '') + '!';
+    a.classList.remove('hide'); a.classList.add('show');
+    burstConfetti();
+    setTimeout(() => { a.classList.remove('show'); a.classList.add('hide'); setTimeout(() => a.classList.remove('hide'), 360); }, 1100);
+}
+function burstConfetti() {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'confetti-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ea008a', '#1b1f45', '#f7a8d4', '#c3c6d0'], cx = innerWidth / 2, cy = innerHeight / 2, parts = [];
+    for (let i = 0; i < 150; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = 4 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: 5 + Math.random() * 7,
+            color: colors[Math.floor(Math.random() * colors.length)], rot: Math.random() * Math.PI, vrot: (Math.random() - .5) * .3, life: 0 });
+    }
+    const gravity = 0.22, drag = 0.992; let frame = 0;
+    (function tick() {
+        frame++;
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        parts.forEach(p => {
+            p.vx *= drag; p.vy = p.vy * drag + gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, 1 - p.life / 95);
+            ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6); ctx.restore();
+        });
+        if (frame < 95) requestAnimationFrame(tick); else canvas.remove();
+    })();
+}
+
+/* ---------- flow ---------- */
+let qi = 0, firstTry = [], tries = 0, mode = 'check', cur = null;
+function render() {
+    runId++;
+    content.innerHTML = ''; tries = 0; mode = 'check';
+    const q = QS[qi];
+    counter.innerHTML = `Question <b>${qi + 1}</b> / ${TOTAL}`;
+    Buckles.setPos(qi);
+    progress.style.width = (qi / TOTAL * 100) + '%';
+    const wrap = el('div', 'q');
+    wrap.appendChild(el('div', 'qhead', `<div class="qtitle">${q.title}</div><div class="tchip">${q.chip || CHIP[q.kind]}</div><div class="sctag">${q.sc}</div>`));
+    wrap.appendChild(el('div', 'prompt', q.prompt));
+    const body = el('div', 'body'); wrap.appendChild(body); content.appendChild(wrap);
+    cur = KINDS[q.kind](q, body);
+    say(Buckles.isDone(q.id) ? `${cur.instr} You\u2019ve already earned this buckle.` : cur.instr);
+    btn.hidden = false; btn.textContent = 'Check';
+    refresh();
+}
+function refresh() { if (mode === 'check') btn.disabled = !cur.ready(); }
+function check() {
+    tries++;
+    const r = cur.check();
+    if (r.ok) {
+        if (tries === 1) firstTry[qi] = true;
+        { const q = QS[qi]; if (!Buckles.isDone(q.id)) { Buckles.award(q.id, q.buckles); refreshCount(); celebrate(q.buckles); } }
+        say(`<b>Correct.</b> ${QS[qi].msg}`);
+        mode = 'next'; btn.disabled = false; btn.textContent = qi === TOTAL - 1 ? 'Finish' : 'Next';
+        btn.classList.remove('pop-in'); void btn.offsetWidth; btn.classList.add('pop-in');
+        if (cur.done) cur.done();
+        btn.focus({ preventScroll: true });
+    } else {
+        say(`<b class="no">Not quite.</b> ${r.hint}`);
+        refresh();
+    }
+}
+btn.onclick = () => {
+    if (btn.disabled) return;
+    if (mode === 'check') check();
+    else if (qi === TOTAL - 1) finish();
+    else { qi++; render(); }
+};
+const enterSubmits = inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!btn.disabled && mode === 'check') check(); } });
+function finish() {
+    runId++;
+    content.innerHTML = '';
+    btn.hidden = true;
+    counter.innerHTML = '<b>Complete</b>';
+    progress.style.width = '100%';
+    const n = firstTry.filter(Boolean).length;
+    Buckles.setPos(TOTAL);
+    say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
+    const c = el('div', 'center');
+    const dots = QS.map((_, i) => `<span class="${firstTry[i] ? 'y' : ''}">${i + 1}</span>`).join('');
+    const earned = QS.filter(q => Buckles.isDone(q.id)).length;
+    const card = el('div', 'scorecard pop-in', `<img src="buckle.svg" alt="" class="done-buckle" onerror="this.style.display='none'"><div class="big">${earned} / ${TOTAL}</div><div class="dlbl">Buckles earned</div>
+        <div class="dlbl sub">Correct on the first try: ${n} / ${TOTAL}</div><div class="dots">${dots}</div>`);
+    const again = el('button', 'again', 'Start again');
+    again.onclick = () => { qi = 0; firstTry = []; Buckles.setPos(0); render(); };
+    c.append(card, again); content.appendChild(c);
+}
+
+/* ---------- multiple choice core ---------- */
+function mcCore(els, q, extra = {}) {
+    let s = null;
+    els.forEach((b, i) => b.onclick = () => {
+        if (mode !== 'check' || b.classList.contains('wrong')) return;
+        els.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); s = i; refresh();
+    });
+    return {
+        instr: extra.instr || 'Choose an answer, then press <b>Check</b>.',
+        ready: () => s !== null,
+        check() {
+            const b = els[s];
+            b.classList.remove('sel');
+            if (s === q.answer) { b.classList.add('right'); els.forEach(x => x.disabled = true); return { ok: true }; }
+            b.classList.add('wrong'); b.disabled = true;
+            const h = (q.opts || q.hints)[s]; s = null; return { ok: false, hint: typeof h === 'string' ? h : h.hint };
+        },
+        done: extra.done
+    };
+}
+const L = 'ABCD';
+function screenOpt(o, i) {
+    const inner = o.s === '' ? `<span class="mini empty">Nothing appears</span>` : `<span class="mini">${esc(o.s)}</span>`;
+    return el('button', 'opt', `<span class="l">${L[i]}</span>${inner}`);
+}
+/* slot zone helper for drag and drop */
+function slotZone(parent, x, y, w, key, label) {
+    const z = el('div', 'slot'); z.style.left = x + 'px'; z.style.top = y + 'px'; z.style.width = w + 'px'; z.tabIndex = 0; z.setAttribute('aria-label', label || 'Drop space');
+    parent.appendChild(z);
+    return { el: z, box: z, cap: 1, key, onPut: () => z.classList.add('filled'), onTake: () => z.classList.remove('filled') };
+}
+function gradeSlots(zones, hintFor) {
+    let bad = 0, hint = null;
+    zones.forEach(z => {
+        const t = z.box.querySelector('.tile'); if (!t || z.locked) return;
+        t.classList.remove('wrong'); void t.offsetWidth;
+        if (t.textContent === z.key) { t.classList.add('right'); z.locked = true; }
+        else { bad++; t.classList.add('wrong'); if (!hint) hint = hintFor(t.textContent, z); }
+    });
+    return { bad, hint };
+}
+
+const KINDS = {
+    /* label the parts of a flowchart */
+    flowlabel(q, body) {
+        const F = { cx: 470, cy: 92, hw: 160, hh: 62, lx: 310, rx: 630, jy: 168, by: 204, bw: 230, bh: 58 };
+        const wrap = el('div', 'bwrap');
+        wrap.innerHTML = `<svg viewBox="0 0 806 336" width="806" height="336">${flowSVG(F, { text: q.text })}${flowBox(F, 0, q.boxes[0])}${flowBox(F, 1, q.boxes[1])}
+            <line x1="228" y1="92" x2="${F.cx - F.hw - 14}" y2="92" stroke="${NV}" stroke-width="3"/><polygon points="${F.cx - F.hw - 2},92 ${F.cx - F.hw - 16},84 ${F.cx - F.hw - 16},100" fill="${NV}"/>
+            <line x1="${F.lx}" y1="282" x2="${F.lx}" y2="${F.by + F.bh + 16}" stroke="${NV}" stroke-width="3"/><polygon points="${F.lx},${F.by + F.bh + 3} ${F.lx - 8},${F.by + F.bh + 17} ${F.lx + 8},${F.by + F.bh + 17}" fill="${NV}"/>
+            <line x1="${F.rx}" y1="282" x2="${F.rx}" y2="${F.by + F.bh + 16}" stroke="${NV}" stroke-width="3"/><polygon points="${F.rx},${F.by + F.bh + 3} ${F.rx - 8},${F.by + F.bh + 17} ${F.rx + 8},${F.by + F.bh + 17}" fill="${NV}"/></svg>`;
+        const side = el('div', 'bside', '<div class="dlbl">Labels</div>'), pool = el('div', 'pool colm'); side.appendChild(pool);
+        body.append(wrap, side);
+        const zones = [slotZone(wrap, 24, 67, 200, q.keys.c, 'Condition label'), slotZone(wrap, F.lx - 100, 282, 200, q.keys.t, 'YES box label'), slotZone(wrap, F.rx - 100, 282, 200, q.keys.f, 'NO box label')];
+        const kmap = { [q.keys.c]: 'c', [q.keys.t]: 't', [q.keys.f]: 'f' };
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.tiles).forEach(t => pool.appendChild(D.tile(t)));
+        return {
+            instr: 'Drag each label to a space (or tap a label, then a space), then press <b>Check</b>.',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                const { bad, hint } = gradeSlots(zones, (t, z) => q.hints[t] || q.slotHints[kmap[z.key]]);
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} labels need changing. ` : '') + hint } : { ok: true };
+            },
+            async done() { yesNo(wrap, 0); await tracePath(wrap.querySelector('.trc'), F, 0); }
+        };
+    },
+
+    /* cloze with word bank */
+    cloze(q, body) {
+        const box = el('div', 'cloze'), zones = [];
+        q.rows.forEach((r, i) => {
+            const row = el('div', 'crow', `<div class="num">${i + 1}</div>`), sent = el('div', 'sent');
+            r.forEach(p => {
+                if (typeof p === 'string') { if (p[0] === '`') sent.append(el('code', 'cz lt', codeHTML(p.slice(1, -1))), ' '); else sent.append(p + ' '); return; }
+                const g = el('span', 'gap' + (q.codeTiles ? ' sym' : '')); g.tabIndex = 0; g.setAttribute('aria-label', 'Gap'); sent.append(g, ' ');
+                zones.push({ el: g, box: g, cap: 1, key: p.a, onPut: () => g.classList.add('filled'), onTake: () => g.classList.remove('filled') });
+            });
+            sent.innerHTML = sent.innerHTML.replace(/ ,/g, ',');
+            row.appendChild(sent); box.appendChild(row);
+        });
+        /* re-bind gaps after innerHTML rewrite */
+        const gaps = box.querySelectorAll('.gap'); zones.forEach((z, i) => { z.el = z.box = gaps[i]; const g = gaps[i]; z.onPut = () => g.classList.add('filled'); z.onTake = () => g.classList.remove('filled'); });
+        const side = el('div', 'bside', `<div class="dlbl">${q.codeTiles ? 'Symbols' : 'Word bank'}</div>`), pool = el('div', 'pool' + (q.codeTiles ? ' wrap' : ' colm')); side.appendChild(pool);
+        side.style.height = 'auto'; side.style.alignSelf = 'stretch';
+        if (q.codeTiles) side.style.width = '260px';
+        body.append(box, side);
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.words).forEach(w => { const t = D.tile(w); if (q.codeTiles) t.classList.add('code', 'op'); pool.appendChild(t); });
+        return {
+            instr: `Drag each ${q.codeTiles ? 'symbol' : 'word'} into a gap (or tap a ${q.codeTiles ? 'symbol' : 'word'}, then a gap), then press <b>Check</b>.`,
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                const { bad, hint } = gradeSlots(zones, (t, z) => q.hints[t] || q.slotHints[z.key]);
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} gaps need changing. ` : '') + hint } : { ok: true };
+            }
+        };
+    },
+
+    /* tap the box on a flowchart */
+    flowtap(q, body) {
+        const F = { cx: 403, cy: 98, hw: 180, hh: 66, lx: 223, rx: 583, jy: 196, by: 238, bw: 250, bh: 76 };
+        const wrap = el('div', 'bwrap');
+        wrap.innerHTML = `<svg viewBox="0 0 806 336" width="806" height="336">${flowSVG(F, { text: q.text })}<g class="rp"></g></svg>`;
+        const els = q.boxes.map((t, i) => {
+            const b = el('button', 'fbtn', esc(t)); const x = (i ? F.rx : F.lx) - F.bw / 2;
+            Object.assign(b.style, { left: x + 'px', top: F.by + 'px', width: F.bw + 'px', height: F.bh + 'px' });
+            wrap.appendChild(b); return b;
+        });
+        const sideW = el('div', 'scene flat');
+        sideW.innerHTML = `<svg viewBox="0 0 320 336" width="320" height="336"></svg>`;
+        body.append(wrap, sideW);
+        const side = Side(sideW.querySelector('svg'), 0, 0, 320, 336, { vars: [q.v[0]] });
+        side.set(q.v[0], q.v[1]);
+        side.cb.expr(q.c.e, true);
+        const svg = wrap.querySelector('svg');
+        return mcCore(els, { answer: q.answer, hints: q.hints }, { instr: 'Tap the action that runs, then press <b>Check</b>.', async done() {
+            runId++;
+            await side.box(q.v[0]).pulse();
+            await side.cb.sub(q.c.s);
+            const dt = svg.querySelector('.dt');
+            await play(200, k => dt.setAttribute('opacity', 1 - k));
+            dt.innerHTML = `<text class="dtxt" x="${F.cx}" y="${F.cy + 9}" text-anchor="middle">${q.ds}</text>`;
+            await play(250, k => dt.setAttribute('opacity', k));
+            await side.cb.res(q.c.r);
+            const rp = svg.querySelector('.rp'); rp.innerHTML = pillSVG(F.cx + F.hw + 64, F.cy, q.c.r); await popIn(rp, F.cx + F.hw + 64, F.cy);
+            const sd = q.c.r ? 0 : 1; yesNo(svg, sd);
+            await tracePath(svg.querySelector('.trc'), F, sd);
+        } });
+    },
+
+    /* code into flowchart */
+    flowbuild(q, body) {
+        const F = { cx: 380, cy: 96, hw: 190, hh: 70, lx: 200, rx: 560, jy: 196, by: 240, bw: 250, bh: 74 };
+        const wrap = el('div', 'bwrap'); wrap.style.width = '760px';
+        wrap.innerHTML = `<svg viewBox="0 0 760 336" width="760" height="336">${flowSVG(F)}${flowBox(F, 0, '', false)}${flowBox(F, 1, '', false)}</svg>`;
+        const side = el('div', 'bside'); side.style.width = '360px';
+        side.append(el('div', 'dlbl', 'Code'), el('div', 'minicode dk', q.code.map(codeHTML).join('\n')), el('div', 'dlbl', 'Parts'));
+        const pool = el('div', 'pool wrap'); side.appendChild(pool);
+        body.append(wrap, side);
+        const zones = [slotZone(wrap, F.cx - 100, F.cy - 25, 200, q.keys.d, 'Diamond'), slotZone(wrap, F.lx - 110, F.by + 12, 220, q.keys.t, 'YES box'), slotZone(wrap, F.rx - 110, F.by + 12, 220, q.keys.f, 'NO box')];
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.tiles).forEach(t => { const tl = D.tile(t); if (q.code_t.includes(t)) tl.classList.add('code'); pool.appendChild(tl); });
+        return {
+            instr: 'Drag each part into the flowchart, then press <b>Check</b>. One part is not needed.',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                const { bad, hint } = gradeSlots(zones, t => q.hints[t]);
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} parts need moving. ` : '') + hint } : { ok: true };
+            },
+            async done() { yesNo(wrap, 0); await tracePath(wrap.querySelector('.trc'), F, 0); await wait(300); yesNo(wrap, 1); await tracePath(wrap.querySelector('.trc'), F, 1); wrap.querySelectorAll('.yn').forEach(t => t.style.fill = PK); }
+        };
+    },
+
+    /* numbered parts of an if / else */
+    parts(q, body) {
+        const wrap = el('div', 'bwrap'), X0 = 66, B = i => 96 + i * 64;
+        let lines = '';
+        q.code.forEach((c, i) => { lines += `<text class="cd" x="${X0}" y="${B(i)}" style="font-size:34px" xml:space="preserve">${codeTS(c)}</text>`; });
+        wrap.innerHTML = `<svg viewBox="0 0 806 336" width="806" height="336"><rect x="18" y="18" width="438" height="300" rx="8" fill="${NV}"/>${lines}<g class="mk"></g><g class="nums"></g></svg>`;
+        const side = el('div', 'bside', '<div class="dlbl">Labels</div>'), pool = el('div', 'pool wrap'); side.appendChild(pool);
+        body.append(wrap, side);
+        const svg = wrap.querySelector('svg'), txts = svg.querySelectorAll('.cd'), mk = svg.querySelector('.mk'), nums = svg.querySelector('.nums');
+        const rects = q.parts.map(([li, a, b, pl, pr], i) => {
+            const t = txts[li], off = a ? t.getSubStringLength(0, a) : 0, w = t.getSubStringLength(a, b - a);
+            const x = X0 + off - pl, y = B(li) - 33, rw = w + pl + pr;
+            const r = sel('rect', { x, y, width: rw, height: 46, rx: 5, fill: 'none', stroke: '#8a90b8', 'stroke-width': 3, 'stroke-dasharray': '6 4' }); mk.appendChild(r);
+            mk.appendChild(sel('g', {}, `<circle cx="${x + rw / 2}" cy="${y - 4}" r="13" fill="${PK}"/><text class="bnum" x="${x + rw / 2}" y="${y + 3}" text-anchor="middle" style="font-size:18px">${i + 1}</text>`));
+            return r;
+        });
+        const zones = q.keys.map((k, i) => {
+            const y = 26 + i * 58;
+            nums.insertAdjacentHTML('beforeend', `<circle cx="504" cy="${y + 25}" r="17" fill="${PK}"/><text class="bnum" x="504" y="${y + 32}" text-anchor="middle" style="font-size:21px">${i + 1}</text>`);
+            return slotZone(wrap, 532, y, 250, k, 'Label for part ' + (i + 1));
+        });
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.tiles).forEach(t => pool.appendChild(D.tile(t)));
+        return {
+            instr: 'Drag each label next to its number (or tap a label, then a space), then press <b>Check</b>.',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                const { bad, hint } = gradeSlots(zones, t => q.hints[t]);
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} labels need changing. ` : '') + hint } : { ok: true };
+            },
+            async done() {
+                for (const r of rects) { r.setAttribute('stroke-dasharray', ''); await play(260, k => { r.setAttribute('stroke', PK); r.setAttribute('fill', `rgba(234,0,138,${.35 * k})`); }); }
+            }
+        };
+    },
+
+    /* predict output with animated tracer */
+    trace(q, body) {
+        body.classList.add('pred');
+        const sc = el('div', 'scene');
+        sc.innerHTML = `<svg viewBox="0 0 740 330" width="734" height="327"></svg>`;
+        const rp = el('button', 'replay', `${replayIcon}<span>Replay</span>`); sc.appendChild(rp);
+        const g = el('div', 'opts');
+        const els = q.opts.map((o, i) => { const b = screenOpt(o, i); g.appendChild(b); return b; });
+        body.append(sc, g);
+        const S = codeScene(sc.querySelector('svg'), q.code, { vars: q.vars, cw: q.cw, fs: q.fs, lh: q.lh });
+        const stop = q.stop;
+        let solved = false;
+        S.run = async function (full, skip) {
+            if (!skip) {
+                this.introDone = false; this.reset(); await wait(350);
+                for (let i = 0; i < stop; i++) await runStep(this, q.steps[i]);
+                const h = q.steps[stop];
+                this.mark(h.ln); await wait(300);
+                if (h.c) { await this.cb.expr(h.c.e); if (q.sub) { await wait(200); const b = this.side.box(h.c.e.split(' ')[0]); if (b) await b.pulse(); await this.cb.sub(h.c.s); } await this.cb.res('?'); }
+                this.cursor(true); this.introDone = true;
+            }
+            if (!full) return;
+            await wait(skip ? 150 : 600);
+            for (let i = stop; i < q.steps.length; i++) await runStep(this, q.steps[i]);
+            this.mark(-1);
+        };
+        rp.onclick = () => { runId++; S.run(solved); };
+        S.run(false);
+        return mcCore(els, q, { instr: 'Watch the trace, then choose what appears on the screen.', done: () => { solved = true; runId++; S.run(true, S.introDone); } });
+    },
+
+    /* working out table */
+    proof(q, body) {
+        const sc = el('div', 'scene');
+        sc.innerHTML = `<svg viewBox="0 0 500 330" width="497" height="327"></svg>`;
+        const S = codeScene(sc.querySelector('svg'), q.code, { w: 500, cw: 472, noMem: true, fs: 21, lh: 34 });
+        S.cursor(true);
+        const tbl = el('table', 'ttab lt'), tb = el('tbody');
+        tbl.innerHTML = `<thead><tr><th></th><th>Step</th><th>Working out</th></tr></thead>`;
+        const r1 = el('tr', '', `<td class="lno">1</td><td>Swap in the value</td><td></td>`), inp = el('input', 'numin');
+        inp.inputMode = 'decimal'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Value of money');
+        r1.lastChild.append(inp, el('code', 'cz lt', codeHTML(q.rest)));
+        const segRow = (n, label, opts) => {
+            const tr = el('tr', '', `<td class="lno">${n}</td><td>${label}</td><td></td>`), sg = el('div', 'seg'), R = { pick: null, bs: {}, done: false };
+            opts.forEach(o => { const b = el('button', '', o); R.bs[o] = b; sg.appendChild(b); b.onclick = () => { if (mode !== 'check' || b.disabled) return; Object.values(R.bs).forEach(x => x.classList.remove('sel')); b.classList.add('sel'); R.pick = o; refresh(); }; });
+            tr.lastChild.appendChild(sg); tb.appendChild(tr); return R;
+        };
+        tb.appendChild(r1);
+        const R2 = segRow(2, 'True or False?', ['True', 'False']), R3 = segRow(3, 'Which branch runs?', ['if', 'else']);
+        tbl.appendChild(tb); body.append(sc, tbl);
+        inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); }); enterSubmits(inp);
+        const gradeSeg = (R, ans, h) => {
+            if (R.done) return null;
+            const b = R.bs[R.pick]; b.classList.remove('sel');
+            if (R.pick === ans) { b.classList.add('right'); R.done = true; Object.values(R.bs).forEach(x => x.disabled = true); return null; }
+            b.classList.add('wrong'); b.disabled = true; R.pick = null; return h;
+        };
+        return {
+            instr: 'Complete every step, then press <b>Check</b>.',
+            ready: () => inp.value.trim() !== '' && (R2.done || R2.pick) && (R3.done || R3.pick),
+            check() {
+                let hint = null;
+                if (!inp.readOnly) { const v = inp.value.trim(); if (v === q.val) { inp.classList.add('right'); inp.readOnly = true; } else { inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong'); hint = 'Step 1: ' + q.hints.val(v); } }
+                const h2 = gradeSeg(R2, q.res ? 'True' : 'False', q.hints.res); if (h2 && !hint) hint = 'Step 2: ' + h2;
+                const h3 = gradeSeg(R3, q.branch, q.hints.branch); if (h3 && !hint) hint = 'Step 3: ' + h3;
+                return hint ? { ok: false, hint } : { ok: true };
+            },
+            done: () => { runId++; runAll(S, q.steps); }
+        };
+    },
+
+    /* tap the line that causes the error */
+    tapline(q, body) {
+        const panel = el('div', 'lines dk');
+        const els = q.code.map((c, i) => { const b = el('button', 'lbtn', `<span class="ln2">${i + 1}</span><span>${codeHTML(c)}</span>`); panel.appendChild(b); return b; });
+        const right = el('div', 'col'); right.style.cssText = 'gap:14px;width:500px';
+        const scr = el('div', 'screen', `<span class="lab">Screen</span><span class="err">SyntaxError ...</span>`);
+        const memS = el('div', 'scene flat');
+        memS.innerHTML = `<svg viewBox="0 0 500 200" width="500" height="200"></svg>`;
+        right.append(scr, memS); body.append(panel, right);
+        const sv = memS.querySelector('svg');
+        sv.innerHTML = `<rect width="500" height="200" rx="8" fill="#f5f6fa"/><text class="plab dk" x="14" y="24">Memory</text>
+            <text class="note" text-anchor="middle"><tspan x="250" y="96">Empty. Python checks every line for</tspan><tspan x="250" y="122">syntax errors before it runs any of them.</tspan></text>`;
+        return mcCore(els, { answer: q.answer, hints: q.hints }, { instr: 'Tap a line of code, then press <b>Check</b>.', done: () => {
+            scr.innerHTML = `<span class="lab">Screen</span><span class="err">${esc(q.err)}</span>`;
+        } });
+    },
+
+    /* edit one line, then run */
+    fix(q, body) {
+        const left = el('div', 'col'); left.style.cssText = 'gap:12px;width:620px';
+        const ed = el('div', 'editor dk', `<span class="lab">Code</span>`), rows = [];
+        let inp;
+        q.code.forEach((c, i) => {
+            const r = el('div', 'erow', `<span class="ln2">${i + 1}</span>`); rows.push(r);
+            if (i === q.edit) {
+                inp = el('input', 'codein'); inp.value = q.bug; inp.spellcheck = false; inp.autocomplete = 'off';
+                inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('aria-label', 'Line ' + (i + 1)); r.appendChild(inp);
+            } else r.insertAdjacentHTML('beforeend', `<span class="static">${codeHTML(c)}</span>`);
+            ed.appendChild(r);
+        });
+        const scr = el('div', 'screen', `<span class="lab">Screen</span>`); scr.style.minHeight = '84px';
+        left.append(ed, scr);
+        const memS = el('div', 'scene flat');
+        memS.innerHTML = `<svg viewBox="0 0 470 330" width="470" height="330"></svg>`;
+        body.append(left, memS);
+        const side = Side(memS.querySelector('svg'), 0, 0, 470, 330, { vars: q.vars });
+        const R = htmlRunner(rows, scr, side);
+        if (q.err) {
+            scr.insertAdjacentHTML('beforeend', `<span class="err">${esc(q.err)}</span>`); rows[q.edit].classList.add('bad');
+            side.note('Empty. Python found a syntax error,\nso no lines have run.');
+        } else if (q.pre) {
+            side.set(...q.pre.a); side.cb.expr(q.pre.c.e, true); side.cb.sub(q.pre.c.s, true); side.cb.res(q.pre.c.r, true);
+            q.pre.skip.forEach(i => rows[i].classList.add('skip')); scr.insertAdjacentHTML('beforeend', `<div>${esc(q.pre.out)}</div>`);
+        }
+        inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); });
+        enterSubmits(inp);
+        setTimeout(() => inp.focus({ preventScroll: true }), 50);
+        let last = '';
+        return {
+            instr: `Edit line ${q.edit + 1}, then press <b>Check</b> to run it.`,
+            ready: () => inp.value.trim() !== '' && inp.value.trim() !== q.bug && inp.value !== last,
+            check() {
+                last = inp.value;
+                const n = inp.value.trim().replace(/\s+/g, '');
+                if (q.accept(n)) { inp.classList.add('right'); inp.readOnly = true; return { ok: true }; }
+                inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong');
+                return { ok: false, hint: q.hint(n) };
+            },
+            done() { runId++; runAll(R, q.steps(inp.value.trim().replace(/\s+/g, ''))); }
+        };
+    },
+
+    /* sort conditions into True / False */
+    sort2(q, body) {
+        const wrap = el('div', 'sort');
+        const mk = (cls, h, sub) => { const b = el('div', 'bin ' + cls, `<h3>${h}</h3><div class="sub">${sub}</div><div class="area"></div>`); b.tabIndex = 0; return b; };
+        const bt = mk('pk', 'True', 'The if branch would run'), bf = mk('', 'False', 'The else branch would run');
+        const mid = el('div', 'midcol'), pool = el('div', 'pool');
+        mid.append(el('div', 'given', `score = <span class="n">10</span>`), pool);
+        wrap.append(bt, mid, bf); body.appendChild(wrap);
+        const zones = [{ el: bt, box: bt.querySelector('.area'), cap: Infinity, key: 't' }, { el: bf, box: bf.querySelector('.area'), cap: Infinity, key: 'f' }];
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle(q.items).forEach(([t, k, h]) => { const tl = D.tile(t); tl.classList.add('code'); tl.k = k; tl.h = h; pool.appendChild(tl); });
+        return {
+            instr: 'Drag each condition into a group (or tap it, then a group), then press <b>Check</b>.',
+            ready: () => !pool.querySelector('.tile'),
+            check() {
+                const wrong = [];
+                zones.forEach(z => z.box.querySelectorAll('.tile').forEach(t => {
+                    if (t.classList.contains('right')) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.k === z.key) t.classList.add('right'); else { t.classList.add('wrong'); wrong.push(t.h); }
+                }));
+                return wrong.length ? { ok: false, hint: (wrong.length > 1 ? `${wrong.length} conditions need moving. ` : '') + wrong[0] } : { ok: true };
+            }
+        };
+    },
+
+    /* code panel + quote + multiple choice */
+    mcside(q, body) {
+        const side = el('div', 'scene');
+        side.innerHTML = `<svg viewBox="0 0 400 330" width="397" height="327"></svg>`;
+        const col = el('div', 'col'); col.style.flex = '1';
+        if (q.quote) col.appendChild(el('div', 'quote', q.quote));
+        const g = el('div', 'opts');
+        const els = q.opts.map((o, i) => { const b = el('button', 'opt', `<span class="l">${L[i]}</span><span>${o.t}</span>`); g.appendChild(b); return b; });
+        col.appendChild(g); body.append(side, col);
+        body.style.justifyContent = 'flex-start';
+        const S = codeScene(side.querySelector('svg'), q.code, { noMem: true, cw: 372, w: 400, fs: 20, lh: 32 });
+        if (q.pre) S.show(q.pre); else S.cursor(true);
+        return mcCore(els, q, { done: () => { runId++; runAll(S, q.steps); } });
+    },
+
+    /* tap every line that prints */
+    tapmulti(q, body) {
+        const panel = el('div', 'lines dk');
+        const els = q.code.map((c, i) => {
+            const b = el('button', 'lbtn', `<span class="ln2">${i + 1}</span><span>${codeHTML(c)}</span>`); panel.appendChild(b);
+            b.onclick = () => { if (mode !== 'check' || b.disabled) return; b.classList.toggle('sel'); refresh(); };
+            return b;
+        });
+        const right = el('div', 'col'); right.style.cssText = 'gap:12px;width:480px';
+        const scr = el('div', 'screen', `<span class="lab">Screen</span><span class="curs"></span>`); scr.style.minHeight = '92px';
+        const memS = el('div', 'scene flat');
+        memS.innerHTML = `<svg viewBox="0 0 480 262" width="480" height="262"></svg>`;
+        right.append(scr, memS); body.append(panel, right);
+        const side = Side(memS.querySelector('svg'), 0, 0, 480, 262, { vars: q.vars, mh: 106 });
+        side.note('Empty until the code runs');
+        const R = htmlRunner(els, scr, side);
+        return {
+            instr: 'Tap to select (tap again to undo), then press <b>Check</b>.',
+            ready: () => els.some(b => b.classList.contains('sel')),
+            check() {
+                let hint = null;
+                els.forEach((b, i) => {
+                    if (!b.classList.contains('sel')) return;
+                    b.classList.remove('sel');
+                    if (q.answer.includes(i)) { b.classList.add('right'); b.disabled = true; }
+                    else { b.classList.remove('wrong'); void b.offsetWidth; b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900);
+                        if (!hint) hint = q.hints[i] || `Line ${i + 1} doesn\u2019t print anything. Only tap lines that show something on the screen.`; }
+                });
+                if (hint) return { ok: false, hint };
+                const miss = q.answer.find(i => !els[i].classList.contains('right'));
+                if (miss !== undefined) return { ok: false, hint: q.hints['miss' + miss] };
+                els.forEach(b => b.disabled = true);
+                return { ok: true };
+            },
+            done() { runId++; els.forEach(b => b.classList.remove('right')); runAll(R, q.steps).then(() => q.answer.forEach(i => els[i].classList.add('right'))); }
+        };
+    },
+
+    /* order the steps */
+    order(q, body) {
+        const wrap = el('div', 'ordwrap');
+        const sc = el('div', 'scene');
+        sc.innerHTML = `<svg viewBox="0 0 414 350" width="414" height="350"></svg>`;
+        const S = codeScene(sc.querySelector('svg'), q.code, { w: 414, h: 350, cw: 386, noMem: true, fs: 20, lh: 30, condRow: 62 });
+        S.cursor(true);
+        const rightCol = el('div', 'ordright'), zones = [];
+        q.steps.forEach((_, i) => {
+            const row = el('div', 'srow', `<span class="num">${i + 1}</span>`), z = el('div', 'oslot'); z.tabIndex = 0; z.setAttribute('aria-label', 'Step ' + (i + 1));
+            row.appendChild(z); rightCol.appendChild(row);
+            zones.push({ el: z, box: z, cap: 1, key: i, onPut: () => z.classList.add('filled'), onTake: () => z.classList.remove('filled') });
+        });
+        const pool = el('div', 'pool'); rightCol.appendChild(pool);
+        wrap.append(sc, rightCol); body.appendChild(wrap);
+        const D = dnd({ el: pool, box: pool, cap: Infinity, pool: true }, zones, () => refresh());
+        shuffle([...q.steps.map((s, i) => [s[0], i, s[1]]), [q.extra[0], -1, q.extra[1]]]).forEach(([t, k, h]) => { const tl = D.tile(t); tl.classList.add('sm'); tl.k = k; tl.h = h; pool.appendChild(tl); });
+        return {
+            instr: 'Drag the steps into order (or tap a step, then a space). One step is not needed.',
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                let bad = 0, hint = null;
+                zones.forEach(z => {
+                    const t = z.box.querySelector('.tile'); if (!t || z.locked) return;
+                    t.classList.remove('wrong'); void t.offsetWidth;
+                    if (t.k === z.key) { t.classList.add('right'); z.locked = true; }
+                    else { bad++; t.classList.add('wrong'); if (!hint) hint = t.h; }
+                });
+                return bad ? { ok: false, hint: (bad > 1 ? `${bad} steps need moving. ` : '') + hint } : { ok: true };
+            },
+            done: () => { runId++; runAll(S, q.run); }
+        };
+    },
+
+    /* slide a value to the boundary */
+    slider(q, body) {
+        const F = { cx: 380, cy: 74, hw: 180, hh: 56, lx: 200, rx: 560, jy: 152, by: 182, bw: 240, bh: 62 };
+        const NX0 = 60, NX1 = 700, NY = 292, span = q.max - q.min, nx = v => NX0 + (v - q.min) * (NX1 - NX0) / span;
+        const wrap = el('div', 'bwrap'); wrap.style.width = '760px';
+        let ticks = '';
+        for (let v = q.min; v <= q.max; v++) ticks += `<line x1="${nx(v)}" x2="${nx(v)}" y1="${NY - 9}" y2="${NY + 9}" stroke="${GR}" stroke-width="3"/><text class="tick" x="${nx(v)}" y="${NY + 34}" text-anchor="middle">${v}</text>`;
+        wrap.innerHTML = `<svg viewBox="0 0 760 336" width="760" height="336">${flowSVG(F, { text: q.text })}${flowBox(F, 0, q.boxes[0])}${flowBox(F, 1, q.boxes[1])}<g class="hi"></g>
+            <line x1="${NX0}" x2="${NX1}" y1="${NY}" y2="${NY}" stroke="${NV}" stroke-width="3"/>${ticks}</svg>`;
+        const rng = el('input', 'rng'); rng.type = 'range'; rng.min = q.min; rng.max = q.max; rng.step = 1; rng.value = q.start; rng.setAttribute('aria-label', 'Value of ' + q.name);
+        Object.assign(rng.style, { left: (NX0 - 15) + 'px', width: (NX1 - NX0 + 30) + 'px', top: (NY - 20) + 'px' });
+        wrap.appendChild(rng);
+        const sideW = el('div', 'scene flat'); sideW.innerHTML = `<svg viewBox="0 0 360 336" width="360" height="336"></svg>`;
+        body.append(wrap, sideW);
+        const svg = wrap.querySelector('svg'), hi = svg.querySelector('.hi'), trc = svg.querySelector('.trc');
+        const side = Side(sideW.querySelector('svg'), 0, 0, 360, 336, { vars: [q.name] });
+        const cmp = v => q.op === '>=' ? v >= q.target : v > q.target;
+        let moved = false, last = null;
+        const show = () => {
+            runId++; const v = +rng.value;
+            side.set(q.name, String(v)); side.cb.expr(`${q.name} ${q.op} ${q.target}`, true); side.cb.sub(`[${v}] ${q.op} ${q.target}`, true); side.cb.res('?', true);
+            hi.innerHTML = ''; trc.innerHTML = ''; svg.querySelectorAll('.yn').forEach(t => t.style.fill = '');
+        };
+        const animate = async v => {
+            show(); const r = cmp(v), sd = r ? 0 : 1;
+            await side.box(q.name).pulse(); await side.cb.res(r); yesNo(svg, sd);
+            await tracePath(trc, F, sd);
+            hi.innerHTML = `<rect x="${(sd ? F.rx : F.lx) - F.bw / 2 - 6}" y="${F.by - 6}" width="${F.bw + 12}" height="${F.bh + 12}" rx="9" fill="none" stroke="${PK}" stroke-width="5"/>`;
+        };
+        rng.addEventListener('input', () => { moved = true; show(); refresh(); });
+        show();
+        return {
+            instr: 'Drag the slider (or use the arrow keys), then press <b>Check</b>.',
+            ready: () => moved && +rng.value !== last,
+            check() {
+                const v = +rng.value; last = v; animate(v);
+                if (v === q.target) { rng.disabled = true; return { ok: true }; }
+                if (!cmp(v)) return { ok: false, hint: `${v} ${q.op} ${q.target} is False, so ${q.boxes[1]} runs. Try a bigger ${q.name}.` };
+                return { ok: false, hint: `${v} works, but a smaller ${q.name} also makes the condition True. Remember <code>${q.op}</code> includes ${q.target}.` };
+            }
+        };
+    },
+
+    /* write the if / else */
+    write(q, body) {
+        const left = el('div', 'col'); left.style.cssText = 'gap:12px;width:620px';
+        const ed = el('div', 'editor dk', `<span class="lab">Your code</span>`), rows = [], ins = [];
+        const r0 = el('div', 'erow', `<span class="ln2">1</span><span class="static">${codeHTML('lives = 0')}</span>`); rows.push(r0); ed.appendChild(r0);
+        [false, true, false, true].forEach((indent, k) => {
+            const r = el('div', 'erow', `<span class="ln2">${k + 2}</span>${indent ? '<span class="ind" title="Indent">\u00b7\u00b7\u00b7\u00b7</span>' : ''}`), inp = el('input', 'codein');
+            inp.spellcheck = false; inp.autocomplete = 'off'; inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('aria-label', 'Line ' + (k + 2));
+            inp.addEventListener('input', () => { inp.classList.remove('wrong'); refresh(); });
+            inp.addEventListener('keydown', e => { if (e.key !== 'Enter') return; e.preventDefault(); if (k < 3) ins[k + 1].focus(); else if (!btn.disabled && mode === 'check') check(); });
+            r.appendChild(inp); ed.appendChild(r); rows.push(r); ins.push(inp);
+        });
+        const scr = el('div', 'screen', `<span class="lab">Screen</span>`); scr.style.minHeight = '84px';
+        left.append(ed, scr);
+        const memS = el('div', 'scene flat'); memS.innerHTML = `<svg viewBox="0 0 470 330" width="470" height="330"></svg>`;
+        body.append(left, memS);
+        const side = Side(memS.querySelector('svg'), 0, 0, 470, 330, { vars: ['lives'] });
+        side.note('Empty until your code runs');
+        const R = htmlRunner(rows, scr, side);
+        setTimeout(() => ins[0].focus({ preventScroll: true }), 50);
+        const pr = (v, want) => {
+            if (!v) return `This line is empty. Print <code>${want}</code>.`;
+            if (/^print/i.test(v) && !/^print/.test(v)) return 'Python is case sensitive. <code>print</code> is all lowercase.';
+            if (!/^print/.test(v)) return `Use <code>print</code> to show <code>${want}</code>.`;
+            if (!/\(/.test(v) || !/\)$/.test(v)) return '<code>print</code> needs brackets around what it shows.';
+            if (!/["']/.test(v)) return 'Text needs quotes, at the start and at the end.';
+            return `Check the text. It should be exactly <code>${want}</code>, in quotes.`;
+        };
+        const H = [
+            v => !v ? 'This line is empty. Start with <code>if</code>.'
+                : /^if/i.test(v) && !/^if/.test(v) ? 'Python is case sensitive. <code>if</code> is all lowercase.'
+                : !/^if\b/.test(v) ? 'Line 2 asks the question, so it starts with <code>if</code>.'
+                : !/:\s*$/.test(v) ? 'End the if line with a colon.'
+                : !/\blives\b/.test(v) ? 'The condition should check the variable <code>lives</code>.'
+                : /[^=!<>]=[^=]/.test(v) ? 'One <code>=</code> stores a value. To check if lives is 0, use <code>==</code>.'
+                : /(>=|<=|!=|>|<)/.test(v) ? 'Check if lives is <b>exactly</b> 0. Which symbol means equal to?'
+                : 'Use the pattern <code>if lives == 0:</code>.',
+            v => pr(v, 'Game over'),
+            v => !v ? 'This line is empty. Type <code>else:</code>.'
+                : /^else/i.test(v) && !/^else/.test(v) ? 'Python is case sensitive. <code>else</code> is all lowercase.'
+                : /^else\s*$/.test(v) ? '<code>else</code> needs a colon at the end too.'
+                : /^else\s*\w/.test(v) ? '<code>else</code> never has a condition. It catches everything else.'
+                : 'Type <code>else</code> followed by a colon.',
+            v => pr(v, 'Keep going')
+        ];
+        const OK = [/^if\s+lives\s*==\s*0\s*:$/, /^print\(\s*(["'])Game over\1\s*\)$/, /^else\s*:$/, /^print\(\s*(["'])Keep going\1\s*\)$/];
+        return {
+            instr: 'Type lines 2 to 5, then press <b>Check</b> to run your code.',
+            ready: () => ins.every(i => i.value.trim() !== ''),
+            check() {
+                let hint = null;
+                ins.forEach((inp, i) => {
+                    if (inp.readOnly) return;
+                    const v = inp.value.trim();
+                    if (OK[i].test(v)) { inp.classList.add('right'); inp.readOnly = true; }
+                    else { inp.classList.remove('wrong'); void inp.offsetWidth; inp.classList.add('wrong'); if (!hint) hint = `Line ${i + 2}: ` + H[i](v); }
+                });
+                return hint ? { ok: false, hint } : { ok: true };
+            },
+            done() { runId++; runAll(R, q.steps); }
+        };
+    }
+};
+
+/* ---------- drag and drop (drag, or tap a tile then tap a target) ---------- */
+function dnd(pool, zones, onChange) {
+    let sl = null;
+    const all = () => [pool, ...zones];
+    const zoneOf = t => all().find(z => z.box.contains(t));
+    const armAll = on => zones.forEach(z => z.el.classList.toggle('armed', on && !z.locked));
+    const deselect = () => { if (sl) sl.classList.remove('sel'); sl = null; armAll(false); };
+    function moveTo(t, z) {
+        const from = zoneOf(t);
+        t.style.transform = ''; t.classList.remove('wrong');
+        z.box.appendChild(t);
+        if (from && from !== z && from.onTake) from.onTake(t);
+        if (z.onPut) z.onPut(t);
+        deselect(); onChange();
+    }
+    function put(t, z) {
+        const from = zoneOf(t);
+        if (z.locked || from === z) { t.style.transform = ''; return; }
+        if (z.cap === 1) {
+            const ex = z.box.querySelector('.tile');
+            if (ex) { if (ex.classList.contains('right')) { t.style.transform = ''; return; } moveTo(ex, pool); }
+        }
+        moveTo(t, z);
+    }
+    const hit = (x, y) => all().find(z => { const r = z.el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    all().forEach(z => {
+        const act = () => { if (sl && !z.locked) put(sl, z); };
+        z.el.addEventListener('click', act);
+        z.el.addEventListener('keydown', e => { if (e.target === z.el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); act(); } });
+    });
+    function tile(text) {
+        const t = el('span', 'tile', esc(text));
+        t.tabIndex = 0; t.setAttribute('role', 'button');
+        const tap = () => {
+            if (t.classList.contains('right') || mode !== 'check') return;
+            t.style.transform = '';
+            const z = zoneOf(t);
+            if (z !== pool) { if (sl && sl !== t && !z.locked) { put(sl, z); return; } put(t, pool); return; }
+            if (sl === t) { deselect(); return; }
+            deselect(); sl = t; t.classList.add('sel'); armAll(true);
+        };
+        t.addEventListener('click', e => e.stopPropagation());
+        t.addEventListener('pointerdown', e => {
+            if (t.classList.contains('right') || mode !== 'check' || e.button > 0) return;
+            e.preventDefault(); e.stopPropagation(); t.setPointerCapture(e.pointerId);
+            const sx = e.clientX, sy = e.clientY; let moved = false;
+            const move = ev => {
+                const dx = ev.clientX - sx, dy = ev.clientY - sy;
+                if (!moved && Math.hypot(dx, dy) > 6) { moved = true; t.classList.add('drag'); }
+                if (!moved) return;
+                t.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px)`;
+                const h = hit(ev.clientX, ev.clientY);
+                all().forEach(z => z.el.classList.toggle('hover', z === h));
+            };
+            const up = ev => {
+                t.removeEventListener('pointermove', move); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up);
+                t.classList.remove('drag'); all().forEach(z => z.el.classList.remove('hover'));
+                if (!moved) { tap(); return; }
+                const h = hit(ev.clientX, ev.clientY);
+                if (h) put(t, h); else t.style.transform = '';
+            };
+            t.addEventListener('pointermove', move); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
+        });
+        t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); tap(); } });
+        return t;
+    }
+    return { tile };
+}
+
+/* ---------- scale to window ---------- */
+function fit() {
+    const st = $('#stage');
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    st.style.transform = `scale(${scaleK})`;
+    st.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+fit();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+    fit(); refreshCount();
+    const pos = Buckles.getPos();
+    if (pos >= TOTAL) finish(); else { qi = Math.max(0, pos); render(); }
+});
+</script>
+</body>
+</html>
