@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micro Creations Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --navy: #1b1f45;
+        --pink: #ea008a;
+        --mid-grey: #9a9a9a;
+        --light-grey: #e8e8e8;
+        --blank: #f0f3f6;
+        --tint: #e9ecf5;
+        --cond: 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #eaeaea; color: var(--navy);
+        display: flex; align-items: center; justify-content: center; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    .stage { width: 1280px; height: 720px; background: #fff; border-top: 6px solid var(--navy); position: relative; padding: 36px 64px 0; flex-shrink: 0; overflow: hidden; transform-origin: center; }
+    .top { gap: 24px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--navy); padding-bottom: 12px; height: 70px; }
+    .sheet-title { white-space: nowrap; flex: 1; min-width: 0; overflow: hidden; font-family: var(--cond); font-size: 42px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; margin: 0; line-height: 1; }
+    .sheet-title span { color: var(--pink); }
+    .topr { display: flex; align-items: center; gap: 22px; }
+    .counter { white-space: nowrap; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); text-transform: uppercase; display: flex; align-items: center; gap: 22px; }
+    .counter b { color: var(--navy); }
+    .snd { width: 40px; height: 40px; border: 3px solid var(--navy); border-radius: 8px; background: #fff; color: var(--navy); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .snd svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .snd.on { background: var(--navy); color: #fff; }
+    .content { position: absolute; left: 64px; right: 64px; top: 124px; bottom: 108px; }
+    .caption { position: absolute; left: 64px; right: 64px; bottom: 28px; min-height: 60px; display: flex; align-items: center; gap: 16px; font-size: 25px; font-weight: 500; line-height: 1.32; }
+    .caption::before { content: ''; width: 10px; height: 10px; background: var(--pink); flex-shrink: 0; }
+    .caption .txt { flex: 1; }
+    .caption b { color: var(--pink); font-weight: 800; }
+    .caption b.no { color: var(--navy); }
+    .caption .in { animation: capIn .45s var(--ease); display: block; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .progress { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--pink); width: 0; transition: width .6s var(--ease); }
+    .btns { display: flex; gap: 12px; flex-shrink: 0; }
+    .next, .btn2 { font-family: var(--cond); font-size: 26px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; border-radius: 8px; padding: 12px 30px; cursor: pointer; }
+    .next { background: var(--pink); color: #fff; border: 3px solid var(--pink); }
+    .next:disabled { background: #c3c6d0; border-color: #c3c6d0; cursor: default; }
+    .btn2 { background: #fff; color: var(--navy); border: 3px solid var(--navy); }
+    .btn2:hover { background: var(--blank); }
+    button:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+    .next:focus-visible { outline-color: var(--navy); }
+    .pop-in { animation: capIn .45s var(--ease); }
+    @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    /* svg text */
+    svg { display: block; }
+    .vis { overflow: hidden; }
+    .halo { paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
+    .num { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 800; fill: var(--navy); }
+    .lb { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; fill: var(--navy); }
+    .lbg { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; fill: var(--mid-grey); }
+    .lbs { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; fill: var(--navy); }
+    .lg { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 600; fill: var(--navy); }
+    .tiny { font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; fill: var(--navy); }
+    .bd { font-family: var(--cond); font-size: 19px; font-weight: 900; }
+    .big { font-family: var(--cond); font-size: 44px; font-weight: 900; }
+    .sm { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; }
+    .qm { font-family: var(--cond); font-size: 28px; font-weight: 900; }
+    .ax { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; fill: var(--mid-grey); }
+    .axp { font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: var(--pink); }
+    .bigl { font-family: var(--cond); font-size: 36px; font-weight: 900; fill: var(--navy); }
+
+    /* home */
+    .decks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; height: 100%; align-items: center; padding-right: 12px; }
+    .deck { position: relative; height: 430px; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; color: var(--navy); text-align: left; }
+    .deck::before, .deck::after { content: ''; position: absolute; inset: 0; border: 3px solid var(--navy); border-radius: 14px; transition: transform .35s var(--ease); }
+    .deck::before { transform: translate(12px, 12px); background: var(--navy); }
+    .deck::after { transform: translate(6px, 6px); background: #fff; }
+    .dface { position: absolute; inset: 0; z-index: 1; border: 3px solid var(--navy); border-radius: 14px; background: #fff; padding: 20px 20px 18px; display: flex; flex-direction: column; transition: transform .35s var(--ease), border-color .2s; }
+    .deck:hover .dface, .deck:focus-visible .dface { transform: translate(-4px, -10px) rotate(-1.5deg); border-color: var(--pink); }
+    .deck:hover::after { transform: translate(9px, 4px) rotate(1.5deg); }
+    .deck:focus-visible { outline: none; }
+    .dface svg { width: 100%; height: 112px; }
+    .dcode { font-family: var(--cond); font-size: 66px; font-weight: 900; color: var(--pink); line-height: 1; margin-top: auto; }
+    .dname { font-size: 25px; font-weight: 800; line-height: 1.15; margin-top: 4px; min-height: 58px; }
+    .dmeta span { white-space: nowrap; }
+    .dmeta { gap: 8px; font-size: 17px !important; display: flex; justify-content: space-between; border-top: 3px solid var(--navy); margin-top: 14px; padding-top: 10px; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--mid-grey); }
+
+    /* deck screen */
+    .dscreen { display: grid; grid-template-columns: 340px 1fr; gap: 48px; height: 100%; }
+    .dscreen .deck { height: 470px; cursor: default; }
+    .dscreen .deck:hover .dface { transform: none; border-color: var(--navy); }
+    .dscreen .deck:hover::after { transform: translate(6px, 6px); }
+    .dstate { font-size: 19px; font-weight: 600; line-height: 1.3; margin-top: 10px; }
+    .sccol { display: flex; flex-direction: column; min-height: 0; }
+    .sch { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .sch button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--navy); background: none; border: none; cursor: pointer; padding: 0; }
+    .sclist { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding: 2px 8px 4px 2px; }
+    .scrow { display: grid; grid-template-columns: 30px 60px 1fr auto auto; align-items: center; gap: 14px; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 14px; background: #fff; font-family: inherit;
+        font-size: 17px; font-weight: 600; color: var(--navy); text-align: left; cursor: pointer; line-height: 1.2; min-height: 58px; transition: opacity .2s, background-color .2s; }
+    .scrow:hover { background: #f6f7fb; }
+    .scrow .box { width: 30px; height: 30px; border: 3px solid var(--navy); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background-color .2s, border-color .2s; }
+    .scrow .box svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+    .scrow.on .box { background: var(--pink); border-color: var(--pink); }
+    .scrow.on .box svg { opacity: 1; }
+    .scrow:not(.on) { opacity: .5; border-style: dashed; }
+    .scrow .code { font-family: var(--cond); font-size: 25px; font-weight: 900; }
+    .scrow .n { font-family: var(--cond); font-size: 18px; font-weight: 800; color: var(--mid-grey); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+
+    /* play */
+    .play { display: grid; grid-template-columns: 612px 1fr; gap: 32px; height: 100%; align-items: center; }
+    .cwrap { position: relative; width: 584px; height: 470px; perspective: 1800px; }
+    .stk { position: absolute; inset: 0; border-radius: 14px; background: var(--navy); border: 3px solid var(--navy); transition: transform .4s var(--ease), opacity .3s; }
+    .stk::after { content: ''; position: absolute; inset: 8px; border: 2px solid rgba(234,0,138,.5); border-radius: 8px; }
+    .card { position: absolute; inset: 0; transform-style: preserve-3d; z-index: 5; }
+    .face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; border: 3px solid var(--navy); border-radius: 14px; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+    .face.back { transform: rotateY(180deg); }
+    .front { padding: 22px 28px 20px; }
+    .fmeta { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+    .sctag { font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--navy); border-radius: 6px; padding: 5px 12px 4px; line-height: 1; }
+    .tchip { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); border: 3px solid var(--pink); border-radius: 6px; padding: 2px 10px 1px; }
+    .lgc { margin-left: auto; font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .08em; color: var(--mid-grey); }
+    .fq { font-size: 26px; font-weight: 700; line-height: 1.25; margin-top: 14px; position: relative; z-index: 1; }
+    .front.t .fq { font-size: 37px; font-weight: 800; line-height: 1.18; margin: auto 0; padding-bottom: 30px; }
+    .ghost { position: absolute; right: 16px; bottom: -40px; font-family: var(--cond); font-weight: 900; font-size: 210px; color: var(--blank); line-height: 1; pointer-events: none; }
+    .fvis { flex: 1; min-height: 0; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
+    .fvis svg { width: 100%; height: 100%; }
+    .pat { background: var(--navy); border-color: var(--navy); }
+    .pat svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .pcode { position: absolute; left: 30px; top: 22px; font-family: var(--cond); font-size: 70px; font-weight: 900; color: #fff; line-height: 1; }
+    .bhead { display: flex; align-items: center; gap: 12px; padding: 14px 26px; color: #fff; font-family: var(--cond); font-size: 40px; font-weight: 900; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+    .bhead.ok { background: var(--pink); }
+    .bhead.no { background: var(--navy); }
+    .bhead svg { width: 36px; height: 36px; fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .bsc { margin-left: auto; font-size: 22px; letter-spacing: .08em; opacity: .85; }
+    .bbody { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 16px 28px 18px; }
+    .alab { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mid-grey); }
+    .ans { font-size: 28px; font-weight: 800; line-height: 1.2; margin-top: 4px; }
+    .bhead.ok + .bbody .ans { color: var(--pink); }
+    .apic { height: 118px; margin-top: 6px; }
+    .apic svg { height: 100%; width: auto; }
+    .exp { font-size: 21px; font-weight: 500; line-height: 1.38; margin: 10px 0 0; }
+    .bbody.nov .exp { font-size: 24px; }
+    .bbody.nov .ans { font-size: 32px; }
+    .back .ghost { z-index: 0; }
+    .bbody { position: relative; z-index: 1; }
+    .bvis { flex: 1; min-height: 0; margin-top: 10px; display: flex; justify-content: center; }
+    .bvis svg { width: 100%; height: 100%; }
+
+    /* options */
+    .opts { display: flex; flex-direction: column; gap: 12px; justify-content: center; height: 100%; }
+    .opt { display: flex; align-items: center; gap: 16px; border: 3px solid var(--navy); border-radius: 8px; background: #fff; padding: 12px 18px; min-height: 96px;
+        font-family: inherit; font-size: 23px; font-weight: 600; color: var(--navy); text-align: left; line-height: 1.25; cursor: pointer;
+        transition: background-color .2s, border-color .2s, color .2s, opacity .25s, box-shadow .2s; position: relative; }
+    .opt.short { font-size: 28px; font-weight: 700; }
+    .l { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--cond); font-size: 24px; font-weight: 900;
+        display: flex; align-items: center; justify-content: center; transition: background-color .2s, color .2s; }
+    .l svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .l svg path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: draw .35s .12s var(--ease) forwards; }
+    .opt:hover:not(:disabled), .pcard:hover:not(:disabled) { background: #f6f7fb; }
+    .opt:disabled, .pcard:disabled { cursor: default; }
+    .opt.right, .opt.right:hover { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .opt.right .l { background: #fff; color: var(--pink); }
+    .wrong { border-style: dashed !important; opacity: .5; animation: shake .4s; }
+    .reveal { border-color: var(--pink) !important; box-shadow: 0 0 0 5px rgba(234,0,138,.18); }
+    .reveal .l { background: var(--pink); }
+    .dim { opacity: .3; }
+    .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .pcard { position: relative; border: 3px solid var(--navy); border-radius: 8px; background: #fff; padding: 12px 8px 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 214px;
+        font-family: inherit; color: var(--navy); transition: background-color .2s, border-color .2s, opacity .25s, box-shadow .2s; }
+    .pcard .l { position: absolute; left: 10px; top: 10px; width: 36px; height: 36px; font-size: 22px; }
+    .pcard svg.vis { width: 100%; height: 170px; }
+    .pcard.right, .pcard.right:hover { border-color: var(--pink); background: #fff; box-shadow: 0 0 0 6px rgba(234,0,138,.22); }
+    .pcard.right .l { background: var(--pink); color: #fff; }
+
+
+    /* interactive cards */
+    .fvis { position: relative; }
+    .replay { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 6px; font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+        background: #fff; color: var(--navy); border: 3px solid var(--navy); border-radius: 6px; padding: 4px 11px 3px 8px; cursor: pointer; }
+    .replay svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .replay:hover { background: var(--blank); }
+    .tile { display: inline-flex; align-items: center; gap: 10px; font-family: inherit; font-size: 21px; font-weight: 700; color: var(--navy); background: #fff; border: 3px solid var(--navy); border-radius: 8px; padding: 6px 14px;
+        line-height: 1.2; cursor: grab; touch-action: none; position: relative; z-index: 2; box-shadow: 0 4px 0 #c3c6d0; white-space: nowrap; transition: box-shadow .2s, border-color .2s, background-color .2s; }
+    .tile:hover { background: #f6f7fb; }
+    .tile .mini { width: 32px; height: 32px; flex-shrink: 0; overflow: visible; }
+    .tile.sel { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(234,0,138,.22); }
+    .tile.drag { cursor: grabbing; z-index: 40; box-shadow: 0 14px 30px rgba(27,31,69,.25); border-color: var(--pink); }
+    .tile.right { background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: none; }
+    .tile.wrong { border-style: dashed; background: var(--tint); box-shadow: none; animation: shake .4s; }
+    .tile:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+    .pool { display: flex; flex-wrap: wrap; gap: 12px; align-content: center; justify-content: center; background: var(--blank); border-radius: 12px; padding: 16px; height: 100%; }
+    .pool2 { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 14px; }
+    .pool2 .tile { justify-content: flex-start; font-size: 22px; padding: 8px 14px; }
+    .pool3 { display: grid; grid-template-columns: repeat(3, 1fr); align-content: center; justify-items: center; gap: 16px; }
+    .mtile { padding: 6px; }
+    .mtile svg { width: 92px; height: 92px; display: block; }
+    .mtile.right svg circle[fill="#fbfbf7"], .mtile.right svg path[fill="#fbfbf7"] { fill: #fff; }
+    .wtile { font-size: 26px; padding: 10px 24px; }
+    .kz { flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; }
+    .ordtop { display: flex; align-items: center; gap: 10px; font-family: var(--cond); font-size: 17px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mid-grey); white-space: nowrap; }
+    .ordtop i { flex: 1; height: 3px; background: linear-gradient(90deg, var(--pink), var(--light-grey)); }
+    .ordtop .mini { width: 36px; height: 36px; overflow: visible; flex-shrink: 0; }
+    .ogrid { display: grid; gap: 10px; }
+    .slot { position: relative; border: 3px dashed #c3c6d0; border-radius: 10px; min-height: 96px; display: flex; align-items: center; justify-content: center; padding: 20px 4px 6px; transition: border-color .2s, background-color .2s, box-shadow .2s; }
+    .slot > b { position: absolute; left: 8px; top: 3px; font-family: var(--cond); font-size: 16px; font-weight: 900; color: var(--mid-grey); letter-spacing: .04em; }
+    .slot .sb { display: flex; justify-content: center; width: 100%; }
+    .slot:has(.tile) { border-style: solid; border-color: var(--light-grey); }
+    .slot .tile { box-shadow: none; flex-direction: column; gap: 2px; font-size: 15px; padding: 4px 6px; min-width: 100px; }
+    .slot .tile .mini { width: 30px; height: 30px; }
+    .slot .mtile { min-width: 0; padding: 4px; }
+    .slot .mtile svg { width: 74px; height: 74px; }
+    .slot.hover, .slot.armed:hover { border-color: var(--pink); background: rgba(234,0,138,.06); }
+    .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: 100%; }
+    .bin { border: 3px solid var(--navy); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; transition: box-shadow .2s; }
+    .bin h3 { margin: 0; padding: 6px 14px 5px; font-family: var(--cond); font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--navy); }
+    .bin.pk { border-color: var(--pink); }
+    .bin.pk h3 { background: var(--pink); }
+    .bin .sub { font-size: 15px; font-weight: 600; color: var(--mid-grey); padding: 5px 14px 0; }
+    .bin .area { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; justify-content: center; padding: 8px; }
+    .bin .mtile svg { width: 54px; height: 54px; }
+    .pool4 { display: grid; grid-template-columns: 1fr 1fr; align-content: center; justify-items: center; gap: 20px; }
+    .ai.am svg { width: 60px; height: 60px; }
+    .ai small { font-size: 14px; }
+    .pair { display: flex; gap: 10px; width: 100%; justify-content: center; }
+    .pair svg { width: 48%; height: 100%; }
+    .bin.hover, .bin.armed { box-shadow: 0 0 0 5px rgba(234,0,138,.18); cursor: pointer; }
+    .ctext { font-size: 24px; font-weight: 600; line-height: 1.95; margin: 0; }
+    .blank { display: inline-flex; vertical-align: middle; min-width: 112px; height: 48px; border: 3px dashed #c3c6d0; border-radius: 8px; margin: 0 3px; align-items: center; justify-content: center; transition: border-color .2s, background-color .2s; }
+    .blank:has(.tile) { border-color: transparent; min-width: 0; }
+    .blank .bb { display: flex; }
+    .blank .tile { box-shadow: none; font-size: 22px; padding: 4px 12px; }
+    .blank.hover, .blank.armed:hover { border-color: var(--pink); background: rgba(234,0,138,.06); }
+    .hsw { height: 100%; border: 3px solid var(--navy); border-radius: 14px; background: #fff; overflow: hidden; display: flex; }
+    .hsw svg { width: 100%; height: 100%; }
+    .spinw { flex-direction: column; }
+    .spinw > svg { flex: 1; min-height: 0; cursor: grab; touch-action: none; }
+    .spinw.grab > svg { cursor: grabbing; }
+    .spinw.done > svg { cursor: default; }
+    .spbtns { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px 12px; font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mid-grey); }
+    .sbtn { width: 64px; height: 46px; border: 3px solid var(--navy); border-radius: 8px; background: #fff; color: var(--navy); cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: none; }
+    .sbtn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+    .sbtn:hover { background: var(--blank); }
+    .sbtn:active { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .spinw.done .sbtn { opacity: .35; pointer-events: none; }
+    .hs { cursor: pointer; }
+    .hs .hok, .hs .hno { display: none; }
+    .hs:hover .hdot { fill: var(--tint); }
+    .hs:focus { outline: none; }
+    .hs:focus-visible .hdot { stroke: var(--pink); }
+    .hsv.done .hpl { display: none; }
+    .hsv.done .hs { cursor: default; }
+    .hs.good .hdot { fill: var(--pink); stroke: #fff; }
+    .hs.good .hok { display: block; }
+    .hs.bad .hdot { stroke-dasharray: 5 4; }
+    .hs.bad .hno { display: block; }
+    .hs.off { opacity: .3; }
+    .arow { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .ai { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 13px; font-weight: 700; }
+    .ai .mini { width: 34px; height: 34px; overflow: visible; }
+    .asort { display: grid; grid-template-columns: auto repeat(3, 56px); align-items: center; gap: 4px 8px; margin-top: 6px; justify-content: start; }
+    .asort.a4 { grid-template-columns: repeat(4, 64px); }
+    .asort span { font-family: var(--cond); font-size: 20px; font-weight: 900; text-transform: uppercase; padding-right: 8px; }
+    .asort svg { width: 56px; height: 56px; }
+    .asort.a4 svg { width: 64px; height: 64px; }
+    .actext { font-size: 21px; line-height: 1.4; margin: 6px 0 0; font-weight: 600; }
+    .actext b { color: var(--pink); }
+    /* buckles (shared with the other checking for understanding pages) */
+    .bcount { display: flex; align-items: center; gap: 8px; }
+    .counter-icon { width: 34px; height: 34px; display: block; }
+    .bcount .num { font-family: var(--cond); font-size: 34px; font-weight: 900; line-height: 1; }
+    .bcount .lbl { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); }
+    .award { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.8); opacity: 0; pointer-events: none; z-index: 30;
+        background: #fff; border: 3px solid var(--pink); border-radius: 12px; padding: 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        box-shadow: 0 20px 50px rgba(27,31,69,.25); transition: opacity .3s, transform .35s var(--ease); }
+    .award.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .award.hide { opacity: 0; transform: translate(-50%, -60%) scale(.95); }
+    .award-img { width: 140px; height: auto; }
+    .award-text { font-family: var(--cond); font-size: 40px; font-weight: 900; color: var(--pink); text-transform: uppercase; letter-spacing: .04em; }
+    .confetti-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 29; }
+    .bkmeta { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); }
+    .bkmeta img { width: 22px; height: 22px; }
+    .bkmeta span { color: var(--mid-grey); }
+    .scrow .bk { display: flex; align-items: center; gap: 4px; font-family: var(--cond); font-size: 18px; font-weight: 800; color: var(--navy); white-space: nowrap; }
+    .scrow .bk img { width: 20px; height: 20px; }
+    .bkchip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--cond); font-size: 16px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); }
+    .bkchip img { width: 20px; height: 20px; }
+    .rbk { display: flex; align-items: center; justify-content: center; gap: 10px; margin: -4px 0 10px; font-family: var(--cond); font-size: 22px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .rbk img { width: 34px; height: 34px; }
+    .rbk b { color: var(--pink); font-size: 30px; }
+    .rbk span { color: var(--mid-grey); font-size: 18px; letter-spacing: .1em; }
+    .devcheck { position: absolute; left: 64px; top: 6px; z-index: 50; font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        background: var(--navy); color: #fff; border: none; border-radius: 0 0 6px 6px; padding: 3px 10px; cursor: pointer; }
+    .devcheck.bad { background: var(--pink); }
+    /* piles */
+    .piles { display: flex; gap: 16px; }
+    .pile { white-space: nowrap; display: flex; align-items: center; gap: 8px; font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mid-grey); }
+    .pile i { width: 19px; height: 25px; border-radius: 3px; border: 3px solid var(--pink); background: var(--pink); display: block; }
+    .pile.rv i { background: #fff; border: 3px dashed var(--navy); }
+    .pile b { font-size: 26px; color: var(--navy); min-width: 16px; display: inline-block; }
+    .divv { width: 3px; height: 26px; background: var(--light-grey); }
+
+    /* fx */
+    .pt { position: absolute; pointer-events: none; z-index: 60; }
+    .plus { white-space: nowrap; position: absolute; z-index: 61; font-family: var(--cond); font-size: 40px; font-weight: 900; color: var(--pink); pointer-events: none; line-height: 1; }
+    .shock { position: absolute; z-index: 59; border: 4px solid var(--pink); border-radius: 50%; pointer-events: none; }
+
+    /* results */
+    .res { display: grid; grid-template-columns: 300px 1fr; gap: 44px; height: 100%; }
+    .rleft { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; }
+    .ringw { position: relative; width: 180px; height: 180px; align-self: center; }
+    .ringw svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .rnum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--cond); font-weight: 900; white-space: nowrap; }
+    .rnum b { font-size: 64px; color: var(--pink); line-height: 1; }
+    .rnum span { font-size: 26px; color: var(--mid-grey); margin-left: 8px; align-self: flex-end; margin-bottom: 62px; }
+    .rlab { text-align: center; font-family: var(--cond); font-size: 20px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mid-grey); margin: 0 0 12px; }
+    .rleft .next, .rleft .btn2 { font-size: 20px; padding: 10px 12px; white-space: nowrap; letter-spacing: .04em; }
+    .rright { --rs: 1; display: flex; flex-direction: column; min-height: 0; }
+    .rhead { font-family: var(--cond); font-size: 18px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mid-grey); border-bottom: 4px solid var(--navy); padding-bottom: 6px; display: flex; justify-content: space-between; }
+    .rhead i { font-style: normal; display: flex; gap: 14px; align-items: center; }
+    .rhead i .chip { letter-spacing: 0; text-transform: none; font-family: 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    .rlist { --rs: 1; overflow-y: auto; flex: 1; padding-right: 8px; display: grid; grid-template-columns: 1fr; column-gap: 28px; align-content: start; }
+    .rlist.two { grid-template-columns: 1fr 1fr; }
+    .rlist.three { display: block; column-count: 4; column-gap: 18px; }
+    .rlist.three .rblock { break-inside: avoid; }
+    .rlist.three .rsc { padding: 1px 6px 0; }
+    .rlist.three .chip.n { white-space: normal; }
+    .rblock { padding: calc(var(--rs) * 8px) 0; border-bottom: 2px solid var(--light-grey); min-width: 0; }
+    .rbh { display: flex; align-items: center; gap: 10px; }
+    .rsc { font-family: var(--cond); font-size: calc(var(--rs) * 22px); font-weight: 900; letter-spacing: .04em; border: 3px solid var(--navy); border-radius: 6px; padding: 1px 9px 0; line-height: 1.2; }
+    .rbh b { margin-left: auto; font-family: var(--cond); font-size: calc(var(--rs) * 24px); font-weight: 900; }
+    .rtx { font-size: calc(var(--rs) * 16px); font-weight: 600; line-height: 1.28; margin-top: calc(var(--rs) * 6px); }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: calc(var(--rs) * 7px); }
+    .chip { font-size: calc(var(--rs) * 14px); font-weight: 700; padding: 2px 9px 2px 6px; border-radius: 5px; display: inline-flex; gap: 5px; align-items: center; line-height: 1.2; }
+    .chip svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .chip.y { background: var(--pink); color: #fff; border: 2px solid var(--pink); }
+    .chip.n { border: 2px dashed var(--navy); color: var(--navy); background: #fff; }
+    .chip.dot { padding: 2px 4px; }
+    .tag { display: inline-block; font-family: var(--cond); font-size: calc(var(--rs) * 16px); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px 1px; border-radius: 5px; }
+    .tag.sec { background: var(--pink); color: #fff; }
+    .tag.near { border: 2px solid var(--pink); color: var(--pink); }
+    .tag.rev { background: var(--navy); color: #fff; }
+    .rlist::-webkit-scrollbar, .sclist::-webkit-scrollbar { width: 8px; }
+    .rlist::-webkit-scrollbar-thumb, .sclist::-webkit-scrollbar-thumb { background: var(--navy); border-radius: 4px; }
+    .rlist::-webkit-scrollbar-track, .sclist::-webkit-scrollbar-track { background: var(--blank); border-radius: 4px; }
+
+    /* ===== Micro Creations additions ===== */
+    :root { --mono: 'JetBrains Mono', Consolas, 'Courier New', monospace; --code-bg: #1b1f45; --code-line: #2c3168; --c-str: #7ee2b8; --c-num: #ff8fcf; --c-fn: #8fd3ff; --c-dim: #8a90b8; }
+    /* home: two large decks */
+    .decks.two { grid-template-columns: repeat(2, 360px); justify-content: center; gap: 80px; padding-right: 0; }
+    .decks.two .deck { height: 440px; }
+    .decks.two .dface svg { height: 150px; }
+    .decks.two .dname { font-size: 30px; min-height: 0; }
+    .deck.locked { cursor: not-allowed; }
+    .deck.locked::before { background: #c3c6d0; border-color: #c3c6d0; }
+    .deck.locked::after { border-style: dashed; border-color: #c3c6d0; }
+    .deck.locked .dface { border-style: dashed; border-color: #c3c6d0; color: var(--mid-grey); }
+    .deck.locked .dcode { color: #c3c6d0; }
+    .deck.locked:hover .dface, .deck.locked:focus-visible .dface { transform: none; border-color: var(--mid-grey); }
+    .deck.locked:hover::after { transform: translate(6px, 6px); }
+    .lockchip { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-family: var(--cond); font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--mid-grey); }
+    .lockchip svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* deck screen: learning intention rows */
+    .scrow.li { grid-template-columns: 30px 1fr auto auto; min-height: 98px; padding: 10px 16px; align-items: center; }
+    .lit { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .lit .lh { display: flex; align-items: center; gap: 10px; }
+    .lit .lh b { font-family: var(--cond); font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: .01em; line-height: 1; }
+    .stg { font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); border: 2px solid var(--pink); border-radius: 5px; padding: 1px 7px 0; line-height: 1.2; }
+    .lit .ltx { font-size: 16px; font-weight: 500; line-height: 1.25; }
+    .lit .lsc { font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--pink); }
+
+    /* inline code */
+    code.ic, .opt code, .ans code { font-family: var(--mono); font-weight: 600; font-size: .9em; background: var(--tint); border-radius: 5px; padding: 1px 7px; white-space: nowrap; }
+    .opt code { background: transparent; padding: 0; font-size: 1em; font-weight: 700; }
+    .opt.code-o { font-size: 25px; }
+    .opt.right code { color: #fff; }
+
+    /* code blocks */
+    .cb { background: var(--code-bg); border-radius: 10px; color: #fff; font-family: var(--mono); overflow: hidden; min-width: 72%; max-width: 100%; }
+    .cbh { display: flex; justify-content: space-between; font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-dim); padding: 8px 16px 6px; border-bottom: 2px solid var(--code-line); }
+    .cb ol { list-style: none; margin: 0; padding: 12px 22px 14px 0; counter-reset: ln; }
+    .cb li { counter-increment: ln; display: flex; align-items: baseline; font-size: 27px; font-weight: 500; line-height: 1.6; white-space: pre; }
+    .cb li::before { content: counter(ln); flex-shrink: 0; width: 46px; padding-right: 16px; text-align: right; font-size: .68em; color: #5a6096; }
+    .k-s { color: var(--c-str); }
+    .k-n { color: var(--c-num); }
+    .k-f { color: var(--c-fn); }
+    .k-c { color: var(--c-dim); font-style: italic; }
+    .cb mark { background: var(--pink); color: #fff; border-radius: 5px; padding: 0 4px; margin: 0 -4px; }
+    .cb mark span { color: #fff; }
+    .io { display: grid; grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; }
+    .io .cb { min-width: 0; }
+    .io > i { width: 30px; height: 4px; background: var(--light-grey); position: relative; }
+    .io > i::after { content: ''; position: absolute; right: -4px; top: -6px; border: 8px solid transparent; border-left: 10px solid var(--light-grey); border-right: 0; }
+    .scr { background: #0f1230; border-radius: 10px; color: #fff; font-family: var(--mono); overflow: hidden; align-self: stretch; display: flex; flex-direction: column; }
+    .scr pre { margin: 0; padding: 12px 16px; font-family: inherit; font-size: 24px; font-weight: 600; line-height: 1.5; white-space: pre-wrap; }
+    .scr .err { color: #ff6fb8; font-size: .78em; }
+    .bvis { align-items: center; overflow: hidden; }
+    .bvis .cb li { font-size: 19px; line-height: 1.5; }
+    .bvis .cb li::before { width: 36px; padding-right: 12px; }
+    .bvis .cbh { font-size: 13px; padding: 5px 12px 4px; }
+    .bvis .cb ol { padding: 6px 16px 8px 0; }
+    .bvis .scr pre { font-size: 19px; padding: 6px 12px; }
+    .bvis .cb { min-width: 0; }
+
+    /* labelled variable diagram */
+    .lab3 { display: flex; gap: 18px; align-items: flex-start; justify-content: center; background: var(--code-bg); border-radius: 10px; padding: 14px 26px 12px; }
+    .lab3 > span { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .lab3 code { font-family: var(--mono); font-size: 34px; font-weight: 700; color: #fff; line-height: 1; }
+    .lab3 small { font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--c-dim); border-top: 3px solid var(--c-dim); padding-top: 4px; }
+    .lab3 .nm code, .lab3 .nm small { color: var(--pink); border-color: var(--pink); }
+
+    /* code tiles for sort and order */
+    .ctile { font-family: var(--mono); font-size: 19px; font-weight: 600; }
+    .pool2 .ctile { font-size: 18px; padding: 8px 12px; justify-content: center; }
+    .slot .ctile { font-size: 22px; padding: 6px 10px; }
+    .bin .area .ctile { font-size: 16px; padding: 4px 8px; }
+    .bins.b3 .bin h3 { font-size: 21px; }
+    .bins.b3 .bin .sub { font-size: 14px; }
+
+    /* tap-the-code hotspots */
+    .hsw:has(.chs) { background: var(--code-bg); align-items: center; }
+    .chs .hs:hover .hdot { fill: #343a7a; }
+    .chs .hs.good text { fill: #fff !important; }
+    .chs .hs.bad .hdot { stroke: #fff; }
+
+    .decks.two .dface > * { flex-shrink: 0; }
+    .decks.two .dface svg { height: 140px; }
+    .decks.two .dname { font-size: 28px; line-height: 1.1; }
+    .scrow.li { flex-shrink: 0; }
+    .lit .ltx, .lit .lsc { font-size: 15px; }
+    .fvis .cb { min-width: 78%; }
+    .fvis .cb li { font-size: 30px; }
+    .bvis > .cb { min-width: 58%; }
+    .pool:not(.pool2) .ctile { font-size: 28px; padding: 8px 18px; }
+    .ghost { white-space: nowrap; }
+    .decks.two .dcode, .dscreen .dcode { font-size: 50px; line-height: 1; }
+    .pcode { font-size: 64px; }
+    .scrow.li { min-height: 0; padding: 8px 14px; gap: 12px; }
+    .lit { gap: 2px; }
+    .lit .lh b { font-size: 24px; }
+    .lit .ltx, .lit .lsc { font-size: 14.5px; line-height: 1.22; }
+    .dscreen .sclist { gap: 8px; }
+    .dscreen .dcode { font-size: 44px; white-space: nowrap; }
+    .fmeta > span { white-space: nowrap; }
+    .fmeta .lgc { font-size: 17px; }
+    .fmeta .lgc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .fmeta .sctag, .fmeta .tchip { flex-shrink: 0; }
+
+    .actext code { font-family: var(--mono); font-weight: 600; font-size: .85em; background: var(--tint); border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+    .mlab { font-family: var(--cond); font-size: 15px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; fill: #8a90b8; }
+    .mcode { font-family: var(--mono); font-size: 22px; font-weight: 600; white-space: pre; }
+    .mln { font-family: var(--mono); font-size: 14px; font-weight: 500; fill: #5a6096; }
+    .mval { font-family: var(--mono); font-size: 32px; font-weight: 800; fill: var(--navy); }
+    .mtag { font-family: var(--mono); font-size: 18px; font-weight: 700; fill: #fff; }
+    .mcalc { font-family: var(--mono); font-size: 22px; font-weight: 800; fill: var(--pink); }
+    .mout { font-family: var(--mono); font-size: 22px; font-weight: 600; fill: #fff; white-space: pre; }
+</style>
+<body>
+<div class="stage" id="stage">
+    <div class="top">
+        <h1 class="sheet-title">Micro Creations <span>flashcards</span></h1>
+        <div class="topr"><div class="counter" id="counter"></div>
+            <div class="bcount" title="Buckles earned">
+                <img src="buckle.svg" alt="" class="counter-icon" onerror="this.style.visibility='hidden'">
+                <div class="num" id="buckleCount">0</div>
+                <div class="lbl">Buckles</div>
+            </div>
+            <button class="snd" id="snd" aria-label="Turn sound on"></button></div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="caption"><div class="txt" id="cap"></div><div class="btns" id="btns"></div></div>
+    <div class="progress" id="progress"></div>
+</div>
+
+<div class="award" id="award" role="status" aria-live="polite">
+    <img src="penguin-with-buckle.svg" alt="" class="award-img" onerror="this.style.display='none'">
+    <div class="award-text" id="awardText">+1 Buckle!</div>
+</div>
+
+<script>
+/* =====================================================================================
+   MICRO CREATIONS FLASHCARDS: MAINTENANCE GUIDE
+   Built from the Earth and space flashcards template. Read this before adding, editing
+   or removing cards.
+
+   1. DECKS AND SUB-DECKS
+      - Decks are checkpoints (CP1 Variables, CP2 Conditional statements). They live in DECKS.
+      - Each deck is split into sub-decks, one per learning intention (Predict, Run,
+        Investigate, Modify). They live in SUBS. A card's second argument is its sub-deck key.
+      - CP2 is a locked placeholder. To open it: remove locked: true, list its sub-deck keys
+        in subs, add those keys to SUBS (with deck: 'CP2') and write its cards.
+
+   2. BUCKLES (shared reward system)
+      - Buckles are stored in localStorage under 'buckles-shared', the same record used by
+        the other checking for understanding pages. Each entry is 'PAGE_ID:card-id': 1.
+      - One buckle per card, awarded the first time the card is answered correctly and
+        never again. A wrong answer awards nothing, so the card can still be earned later.
+      - PAGE_ID must never change. Changing it would orphan every buckle already earned.
+
+   3. CARD IDS (permanent)
+      - The first argument of C() is the card's buckle ID, for example 'var-run-tap-the-bug'.
+      - Use lowercase letters, numbers and hyphens. Start with the deck and sub-deck
+        (var-predict-, var-run-, ... and cond- for the conditional statements deck).
+      - Once a card is published its ID is permanent. Everything else can be edited freely.
+      - Adding a card: write a new C('new-id', ...) and add 'new-id' to RELEASED_IDS.
+      - Deleting a card: remove the C(...) entry and add its ID to RETIRED_IDS. Leave it in
+        RELEASED_IDS. Never reuse a retired ID.
+      - If an ID ever has to change, add 'old-id': 'new-id' to ID_ALIASES.
+
+   4. DATA CHECK
+      - validateCards() runs on every load. Problems and reminders are listed in the browser
+        console, and a small strip appears at the top left of the page.
+
+   5. CARD TYPES (opts[0] is correct unless ans is given)
+      Multiple choice:  C(id, sub, label, question, [4 options], explanation, { vis?, backVis?, codeOpts?, type?, ordered?, ans? })
+                        vis: codeHTML('line 1\nline 2')   backVis: io('code', 'output')   codeOpts: show options as code
+      Predict (watch):  { scene: 'mem', mem: {...}, vis: memSVG(mem) }  code runs into a named box (see memSVG)
+      Put in order:     { kind: 'order', seq: [...keys in order], tile: key => html, cols, ordTop, slotLab?, instr, ansHTML }
+      Sort:             { kind: 'sort', bins: [[title, hint], ...2 or 3 bins], items: [[html, bin index], ...], tileCls?, poolCls?, instr, ansHTML }
+      Fill the gaps:    { kind: 'cloze', text: 'Use [] for each gap', answers: [...], bank: [...answers plus spares], instr, ansHTML }
+      Tap the code:     { kind: 'hotspot', ...hsCode(['line 1', 'line 2'], ['text of correct piece']), instr, ansHTML }
+      Code helpers: wrap part of a line in ⟦ ⟧ inside codeHTML or io to highlight it in pink.
+
+   6. HOUSE STYLE
+      - Swiss design, navy #1b1f45 and pink #ea008a, Barlow / Helvetica, 1280 x 720 stage.
+      - Australian English in all student-facing text. No em dashes.
+      - Animations always play at full speed. Do not add prefers-reduced-motion rules or any
+        code that shortens or disables animation (classroom laptops have reduced motion on).
+   ===================================================================================== */
+const FILE_VERSION = '1.0';
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), content = $('#content'), cap = $('#cap'), btns = $('#btns'), counter = $('#counter'), progress = $('#progress'), sndBtn = $('#snd');
+const NV = '#1b1f45', PK = '#ea008a', LT = '#f0f3f6', GR = '#c9ccd6', TN = '#e9ecf5';
+let scaleK = 1;
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function say(html) { cap.innerHTML = `<span class="in">${html}</span>`; }
+function addBtn(t, cls, fn) { const b = el('button', cls, t); b.onclick = fn; btns.appendChild(b); return b; }
+function A(e, kf, o = {}) { const a = e.animate(kf, { duration: 500, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'both', ...o }); return a.finished.catch(() => {}); }
+const easeInOut = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const local = r => { const s = stage.getBoundingClientRect(); return { x: (r.left - s.left) / scaleK, y: (r.top - s.top) / scaleK, w: r.width / scaleK, h: r.height / scaleK }; };
+const TICK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CROSS = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+/* ---------- sound ---------- */
+let sound = false, actx = null;
+const SPK = on => `<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/>${on ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9.5l5 5M22 9.5l-5 5"/>'}</svg>`;
+function setSound(on) { sound = on; sndBtn.innerHTML = SPK(on); sndBtn.classList.toggle('on', on); sndBtn.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on'); }
+sndBtn.onclick = () => { setSound(!sound); if (sound) tone([[880, .1]]); };
+function tone(seq) {
+    if (!sound) return;
+    try {
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        let t = actx.currentTime + .01;
+        seq.forEach(([f, d, type = 'sine', v = .14]) => {
+            const o = actx.createOscillator(), g = actx.createGain();
+            o.type = type; o.frequency.value = f;
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + d);
+            o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + .03); t += d * .62;
+        });
+    } catch (e) {}
+}
+setSound(false);
+
+/* =========================================================
+   DRAWING HELPERS
+   ========================================================= */
+const f1 = v => (+v).toFixed(1);
+const V = (w, h, inner, cls = '') => `<svg class="vis ${cls}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+const SVGNS = 'http://www.w3.org/2000/svg';
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const PATTERN = (() => { let s = ''; for (let r = 60; r < 900; r += 46) s += `<circle cx="600" cy="490" r="${r}" fill="none" stroke="${PK}" stroke-width="2" opacity="${(.55 - r / 2000).toFixed(2)}"/>`; return `<svg viewBox="0 0 584 470" preserveAspectRatio="xMidYMid slice">${s}<circle cx="600" cy="490" r="34" fill="${PK}"/></svg>`; })();
+const REPLAY = `<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>`;
+const LOCK = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+/* ---------- Python syntax colouring ----------
+   tokenize() splits one line of Python into coloured pieces.
+   k: 's' string, 'n' number, 'f' function, 'c' comment, 'ws' space, '' everything else.
+   split: true breaks strings into separate quote marks and text (used by tap-the-code cards). */
+const FNS = new Set(['print', 'input', 'int', 'float', 'str', 'if', 'elif', 'else']);
+const COL = { s: '#7ee2b8', n: '#ff8fcf', f: '#8fd3ff', c: '#8a90b8' };
+function tokenize(s, split = false) {
+    const out = [], rx = split ? /(")|(#.*$)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|(\s+)|(.)/g : /("[^"]*"?|'[^']*'?)|(#.*$)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|(\s+)|(.)/g;
+    let inStr = false;
+    for (const m of s.matchAll(rx)) {
+        const t = m[0];
+        if (split && m[1]) { out.push({ t, k: 's' }); inStr = !inStr; continue; }
+        if (inStr) { out.push({ t, k: m[5] ? 'ws' : 's' }); continue; }
+        let k = '';
+        if (m[1]) k = 's'; else if (m[2]) k = 'c'; else if (m[3]) k = 'n'; else if (m[5]) k = 'ws';
+        else if (m[4] && (FNS.has(t) || /^\s*\(/.test(s.slice(m.index + t.length)))) k = 'f';
+        out.push({ t, k });
+    }
+    return out;
+}
+/* hl: one line of code as coloured HTML. Wrap part of a line in ⟦ ⟧ to highlight it in pink. */
+const hl = src => src.split(/(⟦[^⟧]*⟧)/).map(seg => {
+    const mk = seg.startsWith('⟦'), body = tokenize(mk ? seg.slice(1, -1) : seg).map(t => t.k && t.k !== 'ws' ? `<span class="k-${t.k}">${esc(t.t)}</span>` : esc(t.t)).join('');
+    return mk ? `<mark>${body}</mark>` : body;
+}).join('');
+/* codeHTML: a numbered code panel. Use \n between lines. */
+const codeHTML = (src, o = {}) => `<div class="cb"><div class="cbh"><span>${o.label || 'Code'}</span></div><ol>${src.split('\n').map(l => `<li>${hl(l) || ' '}</li>`).join('')}</ol></div>`;
+/* io: code on the left, what appears on the screen on the right */
+const io = (src, out) => `<div class="io">${codeHTML(src)}<i></i><div class="scr"><div class="cbh"><span>Output</span></div><pre>${out}</pre></div></div>`;
+/* lab: a line of code with each part labelled underneath. parts: [[code, label, pink?], ...] */
+const lab = (parts, o = {}) => `<div class="lab3"${o.tight ? ' style="gap:10px;padding:14px 16px 12px"' : ''}>${parts.map(([c, l, p]) => `<span class="${p ? 'nm' : ''}"><code${o.tight ? ' style="font-size:28px"' : ''}>${esc(c)}</code><small${o.tight ? ' style="font-size:13px"' : ''}>${l}</small></span>`).join('')}</div>`;
+const svgLine = s => tokenize(s).map(t => `<tspan fill="${COL[t.k] || '#fff'}">${esc(t.t)}</tspan>`).join('');
+
+/* ---------- tap-the-code hotspots ----------
+   hsCode(lines, hits, { split }) draws code as tappable pieces and returns { hsSVG, correct }.
+   hits lists the text of every correct piece, for example ['Age'] or ['"']. */
+function hsCode(lines, hits, o = {}) {
+    const fs = 30, cw = 18, LH = 64, x0 = 74, gap = 12;
+    let s = '', k = 0, maxX = 0;
+    const correct = [];
+    lines.forEach((line, i) => {
+        const y = 92 + i * LH, toks = tokenize(line, o.split);
+        s += `<text x="${x0 - 22}" y="${y}" text-anchor="end" class="mln" style="font-size:18px">${i + 1}</text>`;
+        let x = x0;
+        toks.forEach((t, j) => {
+            if (t.k === 'ws') { x += t.t.length * cw; return; }
+            const w = t.t.length * cw, col = COL[t.k] || '#fff';
+            if (hits.includes(t.t)) correct.push(k);
+            s += `<g class="hs" data-k="${k}" tabindex="0" role="button" aria-label="${esc(t.t)}">`
+                + `<rect class="hdot" x="${x - 6}" y="${y - 32}" width="${w + 12}" height="44" rx="7" fill="#262b5c" stroke="#3a4080" stroke-width="2"/>`
+                + `<rect class="hpl" x="${x - 6}" y="${y - 32}" width="${w + 12}" height="44" rx="7" fill="none" stroke="${PK}" stroke-width="2.5"><animate attributeName="stroke-opacity" values=".9;.12;.9" dur="1.8s" begin="${(k * .15).toFixed(2)}s" repeatCount="indefinite"/></rect>`
+                + `<text x="${x}" y="${y}" xml:space="preserve" textLength="${w}" lengthAdjust="spacingAndGlyphs" style="font-family:var(--mono);font-size:${fs}px;font-weight:600;fill:${col}">${esc(t.t)}</text></g>`;
+            k++;
+            x += w + (toks[j + 1] && toks[j + 1].k !== 'ws' ? gap : 0);
+        });
+        maxX = Math.max(maxX, x);
+    });
+    const W = Math.max(440, maxX + 40), H = 92 + (lines.length - 1) * LH + 40;
+    const head = `<text x="22" y="30" class="mlab">Code</text><line x1="0" x2="${W}" y1="44" y2="44" stroke="#2c3168" stroke-width="2"/>`;
+    return { hsSVG: `<svg class="vis hsv chs" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${head}${s}</svg>`, correct };
+}
+
+/* ---------- memory model: code on the left, a named box on the right ----------
+   mem: { name, lines: [...], pause, steps: [{ ln, val?, calc?: [...], out?, err? }] }
+   The front of the card plays the steps before pause, then stops on the next line.
+   The back of the card plays the rest. */
+const MLY = i => 84 + i * 46;
+function memSVG(m) {
+    let s = `<rect x="14" y="14" width="300" height="206" rx="10" fill="${NV}"/><text x="30" y="38" class="mlab">Code</text><line x1="14" x2="314" y1="48" y2="48" stroke="#2c3168" stroke-width="2"/>`;
+    s += `<g class="mhl" opacity="0"><rect x="14" y="-25" width="300" height="36" fill="${PK}" opacity=".26"/><rect x="14" y="-25" width="6" height="36" fill="${PK}"/><text class="mnx mlab" x="304" y="-1" text-anchor="end" style="fill:#ff8fcf" opacity="0">Next</text></g>`;
+    m.lines.forEach((l, i) => { s += `<text x="46" y="${MLY(i)}" text-anchor="end" class="mln">${i + 1}</text><text x="60" y="${MLY(i)}" class="mcode" xml:space="preserve">${svgLine(l)}</text>`; });
+    s += `<polygon points="360,110 374,96 486,96 500,110" fill="${NV}"/>`;
+    s += `<polygon points="360,110 374,96 350,74 334,90" fill="#fff" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/><polygon points="500,110 486,96 510,74 526,90" fill="#fff" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/>`;
+    s += `<rect x="360" y="110" width="140" height="110" fill="#fff" stroke="${NV}" stroke-width="3"/>`;
+    s += `<rect x="380" y="176" width="100" height="32" rx="6" fill="${PK}"/><text x="430" y="198" text-anchor="middle" class="mtag">${esc(m.name)}</text>`;
+    s += `<g class="mvals"></g><text class="mcalc" x="430" y="58" text-anchor="middle" opacity="0"></text>`;
+    s += `<rect x="14" y="232" width="512" height="56" rx="10" fill="#0f1230"/><text x="30" y="265" class="mlab">Output</text><line x1="100" x2="100" y1="244" y2="276" stroke="#2c3168" stroke-width="2"/><text class="mout" x="116" y="268" xml:space="preserve"></text>`;
+    return V(540, 300, s);
+}
+
+/* ---------- animated scenes (Predict cards) ---------- */
+const SCENE = {
+    mem(svg, c) {
+        const m = c.mem, q = s => svg.querySelector(s);
+        const hlg = q('.mhl'), nx = q('.mnx'), vals = q('.mvals'), calc = q('.mcalc'), outt = q('.mout');
+        let tok = 0, cur = null, hy = null;
+        const live = my => my === tok && document.body.contains(svg);
+        const tw = (my, dur, f) => new Promise(res => { const st = performance.now(); const fr = n => { if (!live(my)) return; const k = Math.min(1, (n - st) / dur); f(easeInOut(k)); if (k < 1) requestAnimationFrame(fr); else res(); }; requestAnimationFrame(fr); });
+        const wait = (my, ms) => new Promise(res => setTimeout(() => { if (live(my)) res(); }, ms));
+        const reset = () => { vals.innerHTML = ''; cur = null; calc.textContent = ''; calc.setAttribute('opacity', 0); outt.textContent = ''; hlg.setAttribute('opacity', 0); nx.setAttribute('opacity', 0); hy = null; };
+        const newVal = v => { const t = document.createElementNS(SVGNS, 'text'); t.setAttribute('x', 430); t.setAttribute('y', 158); t.setAttribute('text-anchor', 'middle'); t.setAttribute('class', 'mval'); t.textContent = v; vals.appendChild(t); return t; };
+        async function moveHL(my, ln, inst) {
+            const y = MLY(ln);
+            if (inst || hy === null) { hlg.setAttribute('transform', `translate(0 ${y})`); hy = y; if (inst) { hlg.setAttribute('opacity', 1); return; } await tw(my, 260, k => hlg.setAttribute('opacity', k)); return; }
+            const y0 = hy; hy = y;
+            await tw(my, 380, k => hlg.setAttribute('transform', `translate(0 ${f1(y0 + (y - y0) * k)})`));
+        }
+        async function step(my, s, inst) {
+            nx.setAttribute('opacity', 0);
+            await moveHL(my, s.ln, inst);
+            if (!inst) { tone([[440, .05, 'triangle', .04]]); await wait(my, 420); }
+            if (s.calc && !inst) for (const part of s.calc) { calc.textContent = part; calc.setAttribute('opacity', 1); await tw(my, 200, k => calc.setAttribute('opacity', k)); await wait(my, 760); }
+            if (s.val !== undefined) {
+                const old = cur, t = newVal(s.val); cur = t;
+                if (inst) { if (old) old.remove(); }
+                else {
+                    const y0 = s.calc ? 58 : 34;
+                    t.setAttribute('y', y0); t.setAttribute('opacity', 0);
+                    if (old) tw(my, 520, k => { old.setAttribute('x', f1(430 + 70 * k)); old.setAttribute('y', f1(158 - 80 * k)); old.setAttribute('opacity', f1(1 - k)); }).then(() => old.remove());
+                    if (s.calc) calc.setAttribute('opacity', 0);
+                    await tw(my, 620, k => { t.setAttribute('y', f1(y0 + (158 - y0) * k)); t.setAttribute('opacity', f1(Math.min(1, k * 2))); });
+                    tone([[660, .06, 'triangle', .05]]);
+                }
+            }
+            if (s.out !== undefined) {
+                outt.textContent = s.out;
+                outt.style.fill = s.err ? '#ff6fb8' : '#fff'; outt.style.fontSize = s.err ? '16px' : '22px';
+                if (!inst) await tw(my, 300, k => outt.setAttribute('opacity', k));
+            }
+        }
+        reset();
+        return {
+            async intro() {
+                const my = ++tok; reset(); await wait(my, 150);
+                for (let i = 0; i < m.pause; i++) { await step(my, m.steps[i]); await wait(my, 380); }
+                await moveHL(my, m.steps[m.pause].ln);
+                await tw(my, 240, k => nx.setAttribute('opacity', k));
+            },
+            async outcome() {
+                const my = ++tok; reset();
+                for (let i = 0; i < m.pause; i++) await step(my, m.steps[i], true);
+                await wait(my, 250);
+                for (let i = m.pause; i < m.steps.length; i++) { await step(my, m.steps[i]); await wait(my, 300); }
+            }
+        };
+    }
+};
+
+/* deck icons */
+const ICON = {
+    CP1: `<svg viewBox="0 0 200 150"><text x="100" y="30" text-anchor="middle" style="font-family:var(--mono);font-size:30px;font-weight:800;fill:${PK}">5</text>
+        <line x1="100" y1="40" x2="100" y2="60" stroke="${NV}" stroke-width="3.5" stroke-linecap="round"/><polygon points="100,70 93,58 107,58" fill="${NV}"/>
+        <polygon points="56,86 68,74 132,74 144,86" fill="${NV}"/>
+        <polygon points="56,86 68,74 50,58 38,70" fill="#fff" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/><polygon points="144,86 132,74 150,58 162,70" fill="#fff" stroke="${NV}" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="56" y="86" width="88" height="58" fill="#fff" stroke="${NV}" stroke-width="3"/>
+        <rect x="70" y="104" width="60" height="26" rx="5" fill="${PK}"/><text x="100" y="122" text-anchor="middle" style="font-family:var(--mono);font-size:16px;font-weight:700;fill:#fff">num</text></svg>`,
+    CP2: `<svg viewBox="0 0 200 150"><polygon points="100,8 146,42 100,76 54,42" fill="none" stroke="#c3c6d0" stroke-width="3.5" stroke-linejoin="round"/>
+        <text x="100" y="49" text-anchor="middle" style="font-family:var(--mono);font-size:20px;font-weight:700;fill:#9a9a9a">if</text>
+        <path d="M54 42H30v52M146 42h24v52" fill="none" stroke="#c3c6d0" stroke-width="3.5" stroke-linejoin="round"/>
+        <polygon points="30,102 23,90 37,90" fill="#c3c6d0"/><polygon points="170,102 163,90 177,90" fill="#c3c6d0"/>
+        <rect x="4" y="106" width="52" height="34" rx="6" fill="none" stroke="#c3c6d0" stroke-width="3"/><rect x="144" y="106" width="52" height="34" rx="6" fill="none" stroke="#c3c6d0" stroke-width="3"/>
+        <text x="30" y="129" text-anchor="middle" style="font-family:var(--mono);font-size:13px;font-weight:700;fill:#9a9a9a">True</text><text x="170" y="129" text-anchor="middle" style="font-family:var(--mono);font-size:13px;font-weight:700;fill:#9a9a9a">False</text></svg>`
+};
+
+/* =========================================================
+   CURRICULUM
+   Decks are checkpoints. Each deck is split into sub-decks, one per learning intention.
+   A locked deck shows on the home screen but cannot be opened. To open it, remove locked,
+   list its sub-deck keys in subs, add those keys to SUBS and write its cards.
+   ========================================================= */
+const DECKS = [
+    { id: 'CP1', title: 'Checkpoint 1', short: 'Variables', text: 'Store, change and print information using variables in Python.', subs: ['predict', 'run', 'investigate', 'modify'] },
+    { id: 'CP2', title: 'Checkpoint 2', short: 'Conditional statements', text: 'Use if and else to make decisions in Python.', subs: [], locked: true }
+];
+const SUBS = {
+    predict: { deck: 'CP1', stage: 'Predict', g: '?', title: 'Variables', li: 'We are learning what a variable is, and what the print function does.', sc: 'I can identify the name and value of a variable, and explain what print does.' },
+    run: { deck: 'CP1', stage: 'Run', g: '>_', title: 'Running Code', li: 'We are learning to run real Python code and read the output it gives us.', sc: 'I can explain what my code printed, and why a NameError appears.' },
+    investigate: { deck: 'CP1', stage: 'Investigate', g: '=', title: 'Assignment', li: 'We are learning how a variable is built in code, and the three types of data it can hold.', sc: 'I can write a variable using a name, an = and a value, and name its data type.' },
+    modify: { deck: 'CP1', stage: 'Modify', g: '( )', title: 'Writing Code', li: 'We are learning to type and change our own code using correct Python syntax.', sc: 'I can write a working line of code, and choose the right data type for the job.' }
+};
+const SUBORDER = Object.keys(SUBS);
+const DTITLE = id => DECKS.find(d => d.id === id).title;
+const ic = s => `<code class="ic">${esc(s)}</code>`;
+const DRAG_WORDS = 'Drag or tap a word into each gap, then press <b>Check</b>.';
+const DRAG_SORT = 'Drag each piece of code into a group, or tap it then a group. Press <b>Check</b>.';
+const TAP_CODE = 'Tap a part of the code.';
+
+/* Card factory. The first argument is the card's permanent buckle ID (see the maintenance guide at the top of this script).
+   The first option is the correct one unless ans is given. ordered keeps the options in the order written.
+   codeOpts shows the options as code. type sets the label on the card front. */
+const C = (id, sc, label, q, opts, exp, x = {}) => ({ id, sc, lg: SUBS[sc] && SUBS[sc].deck, label, q, opts, exp, ans: 0, ...x });
+
+const M_SCORE = { name: 'score', lines: ['score = 10', 'score = 25', 'print(score)'], pause: 1, steps: [{ ln: 0, val: '10' }, { ln: 1, val: '25' }, { ln: 2, out: '25' }] };
+const M_AGE_ERR = { name: 'age', lines: ['age = 12', 'print(Age)'], pause: 1, steps: [{ ln: 0, val: '12' }, { ln: 1, out: "NameError: name 'Age' is not defined", err: true }] };
+const M_AGE_PLUS = { name: 'age', lines: ['age = 12', 'age = age + 1', 'print(age)'], pause: 1, steps: [{ ln: 0, val: '12' }, { ln: 1, calc: ['age + 1', '12 + 1', '13'], val: '13' }, { ln: 2, out: '13' }] };
+const PRINT_PARTS = lab([['print', 'Job'], ['(', 'Bracket'], ['"', 'Quote', 1], ['Hello', 'Message'], ['"', 'Quote', 1], [')', 'Bracket']], { tight: true });
+const sortAns = (rows) => `<p class="actext">${rows.map(([t, items]) => `<b>${t}:</b> ${items.map(ic).join(' ')}`).join('<br>')}</p>`;
+
+const CARDS = [
+    /* ---------- Predict: Variables ---------- */
+    C('var-predict-what-is-a-variable', 'predict', 'What is a variable?', 'What is a variable?', ['A named container that stores a value', 'A line of code that shows text on the screen', 'A mistake that stops code from running', 'A type of whole number'], 'A variable is a named container. Programs use variables to keep track of, and remember, information.'),
+    C('var-predict-two-parts', 'predict', 'The two parts of a variable', 'A variable always has two parts. What are they?', ['A name and a value', 'A box and a lid', 'A print and a screen', 'A number and a decimal'], 'The name is the label on the container. The value is the thing stored inside it.'),
+    C('var-predict-tap-the-name', 'predict', 'Tap the name', 'Tap the <b>name</b> of this variable.', [], 'The name goes on the left of the equals sign. playerName is the label on the container, and "Alex" is the value stored inside it.', { kind: 'hotspot',
+        ...hsCode(['playerName = "Alex"'], ['playerName']), instr: TAP_CODE, ansHTML: '<div class="ans"><code>playerName</code></div>', backVis: lab([['playerName', 'Name', 1], ['=', 'Assignment'], ['"Alex"', 'Value']]) }),
+    C('var-predict-spot-the-value', 'predict', 'Spot the value', 'Which part of this code is the <b>value</b>?', ['3.14', 'pi', '=', 'pi = 3.14'], 'The value sits on the right of the equals sign. It is the thing stored in the container called pi.', { vis: codeHTML('pi = 3.14'), backVis: lab([['pi', 'Name'], ['=', 'Assignment'], ['3.14', 'Value', 1]]), codeOpts: true, type: 'Read the code' }),
+    C('var-predict-what-print-does', 'predict', 'What print does', `What does the ${ic('print')} function do?`, ['Shows something on the screen', 'Sends your code to a printer', 'Saves your code to a file', 'Deletes a variable'], 'print shows whatever is inside its brackets on the screen. What appears on the screen is called the output.'),
+    C('var-predict-print-a-variable', 'predict', 'Printing a variable', 'What will this code print?', ['Jordan', '"Jordan"', 'name', 'Nothing'], 'There are no quotes around name in print(name), so Python looks inside the container called name and shows its value. The quotes around "Jordan" are not shown.', {
+        vis: codeHTML('name = "Jordan"\nprint(name)'), backVis: io('name = "Jordan"\nprint(name)', 'Jordan'), codeOpts: true, type: 'Predict the output' }),
+    C('var-predict-newest-value-wins', 'predict', 'The newest value wins', 'Watch the code run. Line 1 has stored 10 in score. What will score hold after line 2 runs?', ['25 only', '10 and 25', '10 only', '35'], 'A variable holds one value at a time. Line 2 replaces 10 with 25, so print(score) shows 25.', {
+        scene: 'mem', mem: M_SCORE, vis: memSVG(M_SCORE), type: 'Predict' }),
+    C('var-predict-named-containers', 'predict', 'Named containers', 'Complete the facts about variables.', [], 'A variable is like a labelled box. The label (the name) stays the same, but you can swap what is inside (the value).', { kind: 'cloze',
+        text: 'A [] is a named container. Its [] stays the same, but its [] can change. It holds one value at a time.',
+        answers: ['variable', 'name', 'value'], bank: ['variable', 'name', 'value', 'print'], instr: DRAG_WORDS,
+        ansHTML: '<p class="actext">A <b>variable</b> is a named container. Its <b>name</b> stays the same, but its <b>value</b> can change.</p>' }),
+
+    /* ---------- Run: Running Code ---------- */
+    C('var-run-quotes-are-not-shown', 'run', 'Quotes are not shown', 'What appears on the screen when this code runs?', ['Hello!', '"Hello!"', 'print("Hello!")', 'Nothing'], 'The quotes tell Python where the text starts and ends. They are not shown in the output.', {
+        vis: codeHTML('print("Hello!")'), backVis: io('print("Hello!")', 'Hello!'), codeOpts: true, type: 'Predict the output' }),
+    C('var-run-numbers-without-quotes', 'run', 'Numbers without quotes', `Why does ${ic('print(42)')} work without quotes?`, ['42 is a number, and numbers do not need quotes', 'Python ignores quotes', '42 is the name of a variable', 'Quotes are only needed inside print'], 'Quotes are for text. Numbers like 42 can go straight into print, and the output is 42.', { backVis: io('print(42)', '42') }),
+    C('var-run-two-print-lines', 'run', 'Two print lines', 'How many lines of output will this code print?', ['2', '1', '4', 'Nothing'], 'Each print makes its own line of output. This code shows Ada on one line, then Lovelace on the next.', {
+        vis: codeHTML('first = "Ada"\nlast = "Lovelace"\nprint(first)\nprint(last)'), backVis: io('first = "Ada"\nlast = "Lovelace"\nprint(first)\nprint(last)', 'Ada\nLovelace'), type: 'Predict the output' }),
+    C('var-run-quotes-around-a-name', 'run', 'Quotes around a name', 'What will this code print?', ['x', '5', '"x"', 'A NameError'], 'The quotes make "x" a piece of text, so print shows the letter x. To show the value 5, write print(x) with no quotes.', {
+        vis: codeHTML('x = 5\nprint("x")'), backVis: io('x = 5\nprint("x")', 'x'), codeOpts: true, type: 'Predict the output' }),
+    C('var-run-what-a-nameerror-means', 'run', 'What a NameError means', 'A <b>NameError</b> means that Python...', ['cannot find the variable you are trying to use', 'found a spelling mistake inside some text', 'ran out of memory', 'printed the wrong number'], 'A NameError appears when Python looks for a name that has not been created, often because of a typo or a capital letter.'),
+    C('var-run-predict-the-error', 'run', 'Predict the error', 'Watch the code run. What happens when line 2 runs?', ['A NameError, because Age has not been created', 'It prints 12', 'It prints Age', 'It prints age'], 'Python is case sensitive, so age and Age are different names. Only age was created, so Python cannot find Age.', {
+        scene: 'mem', mem: M_AGE_ERR, vis: memSVG(M_AGE_ERR), type: 'Predict' }),
+    C('var-run-tap-the-bug', 'run', 'Tap the bug', 'This code gives a NameError. Tap the part of the code that causes it.', [], 'Line 2 asks for Age with a capital A, but line 1 created age. Python treats them as different names.', { kind: 'hotspot',
+        ...hsCode(['age = 12', 'print(Age)'], ['Age']), instr: TAP_CODE, ansHTML: '<div class="ans"><code>Age</code> on line 2</div>',
+        backVis: io('age = 12\nprint(⟦Age⟧)', `<span class="err">NameError: name 'Age' is not defined</span>`) }),
+    C('var-run-works-or-nameerror', 'run', 'Works or NameError', `The code starts with ${ic('highScore = 50')}. Sort each line by what happens when it runs.`, [], 'Python only finds a name that matches exactly, capitals included. Text in quotes is never a name, so print("highScore") simply shows the word highScore.', { kind: 'sort',
+        bins: [['Works', 'Python can run it'], ['NameError', 'Python cannot find the name']],
+        items: [['print(highScore)', 0], ['print("highScore")', 0], ['print(50)', 0], ['print(highscore)', 1], ['print(HighScore)', 1], ['print(highScor)', 1]].map(([s, k]) => [esc(s), k]),
+        tileCls: 'ctile', poolCls: 'pool2', instr: DRAG_SORT,
+        ansHTML: sortAns([['Works', ['print(highScore)', 'print("highScore")', 'print(50)']], ['NameError', ['print(highscore)', 'print(HighScore)', 'print(highScor)']]]) }),
+
+    /* ---------- Investigate: Assignment ---------- */
+    C('var-investigate-three-parts-in-order', 'investigate', 'Three parts in order', 'Put the three parts of a variable in order, from left to right.', [], 'The name goes on the left, the equals sign in the middle, and the value on the right. In num = 5, num is the name and 5 is the value.', { kind: 'order',
+        seq: ['Name', 'Equals sign', 'Value'], cols: 3, tile: k => `<span>${k}</span>`, tileCls: 'wtile', slotLab: ['Left', 'Middle', 'Right'],
+        ordTop: '<span>Left</span><i></i><span>Right</span>', instr: 'Drag or tap each part into place, then press <b>Check</b>.',
+        ansHTML: '<div class="ans">Name, equals sign, value</div>', backVis: lab([['num', 'Name', 1], ['=', 'Assignment'], ['5', 'Value']]) }),
+    C('var-investigate-name-or-value', 'investigate', 'Name or value?', `In this code, is ${ic('"Brisbane"')} the name of the variable?`, ['No. "Brisbane" is the value, and city is the name', 'Yes. It is the name of the variable', 'No. "Brisbane" is the equals sign', 'Yes. Names always go in quotes'], 'The name sits on the left of the equals sign and never has quotes. "Brisbane" is on the right, so it is the value.', {
+        vis: codeHTML('city = "Brisbane"'), backVis: lab([['city', 'Name', 1], ['=', 'Assignment'], ['"Brisbane"', 'Value']]), type: 'Read the code' }),
+    C('var-investigate-sort-the-data-types', 'investigate', 'Sort the data types', 'Sort each value into its data type.', [], 'Text in quotes is a string, even if it looks like a number. Whole numbers are integers. Numbers with a decimal point are floats.', { kind: 'sort',
+        bins: [['String', 'Text (str)'], ['Integer', 'Whole number (int)'], ['Float', 'Decimal (float)']],
+        items: [['"Hello"', 0], ['"42"', 0], ['42', 1], ['-7', 1], ['3.14', 2], ['37.5', 2]].map(([s, k]) => [esc(s), k]),
+        tileCls: 'ctile', poolCls: 'pool2', instr: 'Drag each value into a group, or tap it then a group. Press <b>Check</b>.',
+        ansHTML: sortAns([['String', ['"Hello"', '"42"']], ['Integer', ['42', '-7']], ['Float', ['3.14', '37.5']]]) }),
+    C('var-investigate-type-of-37-5', 'investigate', 'Type of 37.5', 'What data type is the value in this code?', ['Float', 'Integer', 'String', 'Name'], '37.5 has a decimal point, so it is a float.', {
+        vis: codeHTML('temperature = 37.5'), type: 'Read the code' }),
+    C('var-investigate-a-number-in-quotes', 'investigate', 'A number in quotes', `What data type is stored in ${ic('age')}?`, ['String', 'Integer', 'Float', 'It has no data type'], 'The quotes turn 13 into text. "13" is a string, even though it looks like a number.', {
+        vis: codeHTML('age = "13"'), type: 'Read the code' }),
+    C('var-investigate-why-string', 'investigate', 'Why “string”?', 'Why do programmers call text a <b>string</b>?', ['The computer sees text as characters strung together in order', 'Text is always tied to a number', 'Strings are the longest data type', 'Text is stored inside a ball of string'], 'A computer does not see a word as one object. It sees each character strung together in a sequence: J, o, r, d, a, n.'),
+    C('var-investigate-the-assignment-rule', 'investigate', 'The assignment rule', 'Complete the rule for how assignment works.', [], 'Python works out everything on the right first. Then the = puts that answer into the box named on the left.', { kind: 'cloze',
+        text: 'Take the [] on the [], and put it into the box on the [].', answers: ['worked out value', 'right', 'left'], bank: ['worked out value', 'right', 'left', 'middle', 'name'], instr: DRAG_WORDS,
+        ansHTML: '<p class="actext">Take the <b>worked out value</b> on the <b>right</b>, and put it into the box on the <b>left</b>.</p>', backVis: codeHTML('score = score + 1') }),
+    C('var-investigate-age-plus-one', 'investigate', 'Age plus one', 'Watch the code run. Line 1 has stored 12 in age. What will age hold after line 2 runs?', ['13', '12', '1', 'age + 1'], 'Work out the right side first: age is 12, so age + 1 is 13. Then the = stores 13 in age, replacing 12.', {
+        scene: 'mem', mem: M_AGE_PLUS, vis: memSVG(M_AGE_PLUS), codeOpts: true, type: 'Predict' }),
+    C('var-investigate-x-plus-5', 'investigate', 'x = x + 5', 'What will this code print?', ['8', '3', '5', 'x + 5'], 'Right side first: x is 3, so x + 5 is 8. The = then stores 8 in x, and print shows 8.', {
+        vis: codeHTML('x = 3\nx = x + 5\nprint(x)'), backVis: io('x = 3\nx = x + 5\nprint(x)', '8'), codeOpts: true, type: 'Predict the output' }),
+
+    /* ---------- Modify: Writing Code ---------- */
+    C('var-modify-tap-the-quotes', 'modify', 'Tap the quotes', 'Tap the part of the code that tells Python where the text starts and ends.', [], 'Quotes wrap around text. They show Python where the message starts and ends, and they are not shown in the output.', { kind: 'hotspot',
+        ...hsCode(['print("Hello")'], ['"'], { split: true }), instr: TAP_CODE, ansHTML: '<div class="ans">Either quote mark</div>', backVis: PRINT_PARTS }),
+    C('var-modify-print-hello', 'modify', 'Print the word Hello', 'Which line correctly prints the word Hello?', ['print("Hello")', 'print(Hello)', 'Print("Hello")', 'print "Hello"'], 'print is all lowercase, brackets hold the job, and quotes wrap the text. Without quotes, Python looks for a variable called Hello.', { codeOpts: true, type: 'Write the code', backVis: PRINT_PARTS }),
+    C('var-modify-counting-goals', 'modify', 'Counting goals', 'You want to store how many goals a netball team scored. Which line is best?', ['goals = 12', 'goals = "12"', 'goals = 12.5', '"goals" = 12'], 'Goals are counted in whole numbers, so an integer is the right data type. "12" would be text, and a team can’t score half a goal.', { codeOpts: true, type: 'Write the code' }),
+    C('var-modify-a-race-time', 'modify', 'A race time', 'You want to store a 100 m sprint time of 13.6 seconds so you can do maths with it. Which line is best?', ['time = 13.6', 'time = 13', 'time = "13.6"', '13.6 = time'], 'A time with a decimal point is a float. Rounding to 13 loses detail, quotes turn it into text, and the name must go on the left.', { codeOpts: true, type: 'Write the code' }),
+    C('var-modify-favourite-colour', 'modify', 'Favourite colour', 'You want to store a favourite colour, teal. Which line will work?', ['colour = "teal"', 'colour = teal', '"teal" = colour', 'colour = "teal'], 'Text needs quotes on both sides. Without quotes, Python looks for a variable called teal, and the name always goes on the left.', { codeOpts: true, type: 'Write the code' }),
+    C('var-modify-commas-in-print', 'modify', 'Commas in print', 'What will this code print?', ['Score 10', 'Score10', '"Score", 10', 'Score, 10'], 'A comma inside print joins things together with a space. The quotes and the comma are not shown.', {
+        vis: codeHTML('print("Score", 10)'), backVis: io('print("Score", 10)', 'Score 10'), codeOpts: true, type: 'Predict the output' }),
+    C('var-modify-build-a-print-line', 'modify', 'Build a print line', 'Build a line of code that prints the word Hello.', [], 'Start with the job (print), open the brackets, put the text in quotes, then close the brackets.', { kind: 'order',
+        seq: ['print', '(', '"Hello"', ')'], cols: 4, tile: k => esc(k), tileCls: 'ctile', ordTop: '<span>Start of the line</span><i></i><span>End of the line</span>',
+        instr: 'Drag or tap each piece into place, then press <b>Check</b>.', ansHTML: '<div class="ans"><code>print("Hello")</code></div>', backVis: io('print("Hello")', 'Hello') }),
+    C('var-modify-spot-the-error', 'modify', 'Spot the error', 'Which line will cause an error?', ['Print("Hi")', 'print("Hi")', 'print(7)', 'print("Score", 10)'], 'Python is case sensitive. The function is print with a lowercase p, so Print gives a NameError.', { codeOpts: true, type: 'Read the code' })
+];
+const nb = t => t.replace(/(\d) (m|cm|seconds)\b/g, '$1\u00a0$2');
+CARDS.forEach(c => { c.q = nb(c.q); c.exp = nb(c.exp); });
+
+
+/* ========================== Buckles (localStorage) ======================= */
+/* Same storage and rules as the other checking for understanding pages: one shared
+   'buckles-shared' record, keys namespaced by page, one buckle per question, awarded
+   the first time the question is answered correctly and never again. */
+const PAGE_ID = 'micro-creations-flashcards';   /* NEVER CHANGE: it namespaces every buckle this page has awarded */
+CARDS.forEach(c => { c.buckles = 1; });
+
+/* ---------- card ID registry (see the maintenance guide at the top of this script) ---------- */
+/* Every ID ever published. Add new IDs here when you publish new cards. Never remove an ID from this list. */
+const RELEASED_IDS = [
+    'var-predict-what-is-a-variable', 'var-predict-two-parts', 'var-predict-tap-the-name',
+    'var-predict-spot-the-value', 'var-predict-what-print-does', 'var-predict-print-a-variable',
+    'var-predict-newest-value-wins', 'var-predict-named-containers', 'var-run-quotes-are-not-shown',
+    'var-run-numbers-without-quotes', 'var-run-two-print-lines', 'var-run-quotes-around-a-name',
+    'var-run-what-a-nameerror-means', 'var-run-predict-the-error', 'var-run-tap-the-bug',
+    'var-run-works-or-nameerror', 'var-investigate-three-parts-in-order', 'var-investigate-name-or-value',
+    'var-investigate-sort-the-data-types', 'var-investigate-type-of-37-5', 'var-investigate-a-number-in-quotes',
+    'var-investigate-why-string', 'var-investigate-the-assignment-rule', 'var-investigate-age-plus-one',
+    'var-investigate-x-plus-5', 'var-modify-tap-the-quotes', 'var-modify-print-hello',
+    'var-modify-counting-goals', 'var-modify-a-race-time', 'var-modify-favourite-colour',
+    'var-modify-commas-in-print', 'var-modify-build-a-print-line', 'var-modify-spot-the-error',
+];
+/* IDs of cards that have been deleted. Keep them here (and in RELEASED_IDS) so they are never reused. */
+const RETIRED_IDS = [];
+/* Only if an ID ever has to change: 'old-id': 'new-id'. Earned buckles are moved across once, never doubled. */
+const ID_ALIASES = {};
+const Buckles = {
+    key: 'buckles-shared',
+    ns(id) { return PAGE_ID + ':' + id; },
+    load() { try { const d = JSON.parse(localStorage.getItem(this.key)); return d && typeof d === 'object' && !Array.isArray(d) ? d : {}; } catch (e) { return {}; } },
+    save(d) { try { localStorage.setItem(this.key, JSON.stringify(d)); } catch (e) {} },
+    isDone(id) { return !!this.load()[this.ns(id)]; },
+    award(id, n) { const d = this.load(); const k = this.ns(id); if (!d[k]) { d[k] = n; this.save(d); } },
+    total() { return Object.values(this.load()).reduce((a, b) => a + (Number(b) || 0), 0); },
+    /* moves buckles saved under an old ID to its new ID, so a renamed card is never earned twice */
+    migrate() {
+        const d = this.load(); let changed = false;
+        Object.entries(ID_ALIASES).forEach(([from, to]) => {
+            const kf = this.ns(from), kt = this.ns(to);
+            if (d[kf] !== undefined) { if (d[kt] === undefined) d[kt] = d[kf]; delete d[kf]; changed = true; }
+        });
+        if (changed) this.save(d);
+    }
+};
+Buckles.migrate();
+const BK = '<img src="buckle.svg" alt="" onerror="this.style.display=\'none\'">';
+const earnedIn = list => list.filter(c => Buckles.isDone(c.id)).length;
+function refreshCount() { $('#buckleCount').textContent = Buckles.total(); }
+function celebrate(n) {
+    const a = $('#award');
+    $('#awardText').textContent = '+' + n + ' Buckle' + (n > 1 ? 's' : '') + '!';
+    a.classList.remove('hide'); a.classList.add('show');
+    burstConfetti();
+    setTimeout(() => { a.classList.remove('show'); a.classList.add('hide'); setTimeout(() => a.classList.remove('hide'), 360); }, 1100);
+}
+function burstConfetti() {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'confetti-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ea008a', '#1b1f45', '#f7a8d4', '#c3c6d0'], cx = innerWidth / 2, cy = innerHeight / 2, parts = [];
+    for (let i = 0; i < 150; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = 4 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: 5 + Math.random() * 7,
+            color: colors[Math.floor(Math.random() * colors.length)], rot: Math.random() * Math.PI, vrot: (Math.random() - .5) * .3, life: 0 });
+    }
+    const gravity = 0.22, drag = 0.992; let frame = 0;
+    (function tick() {
+        frame++;
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        parts.forEach(p => {
+            p.vx *= drag; p.vy = p.vy * drag + gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, 1 - p.life / 95);
+            ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6); ctx.restore();
+        });
+        if (frame < 95) requestAnimationFrame(tick); else canvas.remove();
+    })();
+}
+
+/* =========================================================
+   SCREENS
+   ========================================================= */
+let screen = 'home', S = null;
+function clearAll() { content.innerHTML = ''; btns.innerHTML = ''; document.querySelectorAll('.pt,.plus,.shock').forEach(e => e.remove()); }
+
+function home() {
+    screen = 'home'; S = null; clearAll();
+    counter.innerHTML = '<span>Year 7 <b>Micro Creations</b></span>';
+    progress.style.width = '0';
+    const g = el('div', 'decks two');
+    DECKS.forEach((d, i) => {
+        const list = CARDS.filter(c => c.lg === d.id), n = list.length;
+        const meta = d.locked
+            ? `<div class="dmeta"><span>Python</span><span>Coming soon</span></div><div class="lockchip">${LOCK}Not open yet</div>`
+            : `<div class="dmeta"><span>${d.subs.length} learning intentions</span><span>${n} cards</span></div><div class="bkmeta">${BK}${earnedIn(list)} <span>/ ${n} buckles</span></div>`;
+        const b = el('button', 'deck' + (d.locked ? ' locked' : ''), `<div class="dface">${ICON[d.id]}<div class="dcode">${d.title}</div><div class="dname">${d.short}</div>${meta}</div>`);
+        if (d.locked) {
+            b.setAttribute('aria-disabled', 'true');
+            b.onclick = () => { A(b, [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(0)' }], { duration: 400, fill: 'none' }); tone([[196, .18, 'triangle', .08]]); say(`<b>${d.short}</b> is not open yet. Check back soon.`); };
+        } else b.onclick = () => deckScreen(d);
+        g.appendChild(b);
+        A(b, [{ opacity: 0, transform: 'translateY(60px) rotate(4deg)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 80 + i * 120 });
+    });
+    content.appendChild(g);
+    say('Choose a deck to see its learning intentions.');
+    const open = CARDS.filter(c => !DECKS.find(d => d.id === c.lg).locked);
+    addBtn('Mix all decks', 'btn2', () => start(open, 'All decks'));
+}
+
+function deckScreen(d) {
+    screen = 'deck'; clearAll();
+    counter.innerHTML = `<b>${d.title}</b>&nbsp;${d.short}`;
+    const sel = new Set(d.subs);
+    const wrap = el('div', 'dscreen');
+    const left = el('div', 'deck', `<div class="dface">${ICON[d.id]}<div class="dcode">${d.title}</div><div class="dname">${d.short}</div><div class="dstate">${d.text}</div></div>`);
+    const right = el('div', 'sccol');
+    const head = el('div', 'sch', '<span>Learning intentions</span>');
+    const allBtn = el('button', '', 'Select all'); head.appendChild(allBtn);
+    const list = el('div', 'sclist');
+    const rows = d.subs.map(k => {
+        const s = SUBS[k], cs = CARDS.filter(c => c.sc === k), n = cs.length;
+        const r = el('button', 'scrow li on', `<span class="box">${TICK}</span><span class="lit"><span class="lh"><b>${s.title}</b><span class="stg">${s.stage}</span></span><span class="ltx">${s.li}</span><span class="lsc">${s.sc}</span></span><span class="n">${n} cards</span><span class="bk">${BK}${earnedIn(cs)}/${n}</span>`);
+        r.onclick = () => { sel.has(k) ? sel.delete(k) : sel.add(k); r.classList.toggle('on', sel.has(k)); upd(); };
+        list.appendChild(r); return r;
+    });
+    allBtn.onclick = () => { d.subs.forEach(s => sel.add(s)); rows.forEach(r => r.classList.add('on')); upd(); };
+    right.append(head, list); wrap.append(left, right); content.appendChild(wrap);
+    A(left, [{ opacity: 0, transform: 'translateX(-40px) rotate(-3deg)' }, { opacity: 1, transform: 'none' }], { duration: 550 });
+    rows.forEach((r, i) => A(r, [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 400, delay: 120 + i * 60, fill: 'backwards' }));
+    say('Tap a learning intention to leave it out, then press <b>Start</b>.');
+    addBtn('Back', 'btn2', home);
+    const go = addBtn('', 'next', () => start(CARDS.filter(c => sel.has(c.sc)), d.title));
+    function upd() { const n = CARDS.filter(c => sel.has(c.sc)).length; go.textContent = n ? `Start ${n} cards` : 'Start'; go.disabled = !n; }
+    upd();
+}
+
+/* ---------- play ---------- */
+function start(cards, label) {
+    screen = 'play'; clearAll();
+    S = { label, all: cards.slice(), cards: shuffle(cards), i: 0, res: [], newBk: 0, streak: 0, got: 0, rev: 0, tok: Math.random(), locked: true, busy: false };
+    counter.innerHTML = `<div class="piles"><div class="pile" id="pGot"><i></i><b>0</b>Got it</div><div class="pile rv" id="pRev"><i></i><b>0</b>Revise</div></div><div class="divv"></div><span id="cnum"></span>`;
+    const play = el('div', 'play');
+    const cw = el('div', 'cwrap');
+    const opts = el('div', 'optcol');
+    play.append(cw, opts); content.appendChild(play);
+    S.cw = cw; S.optcol = opts;
+    for (let k = 3; k >= 1; k--) { const s = el('div', 'stk'); s.style.transform = `translate(${k * 7}px, ${k * 7}px)`; s.dataset.k = k; cw.appendChild(s); }
+    deal();
+}
+function stackUpdate() {
+    const left = S.cards.length - S.i - 1;
+    S.cw.querySelectorAll('.stk').forEach(s => { const k = +s.dataset.k; s.style.opacity = k <= left ? 1 : 0; });
+}
+const KTYPE = { order: 'Put in order', sort: 'Sort', hotspot: 'Tap the code', cloze: 'Fill the gaps' };
+const typeOf = c => c.kind ? KTYPE[c.kind] : c.type || (c.scene ? 'Predict' : c.vis ? 'Read the code' : 'Quick recall');
+const optHTML = (c, o) => c.codeOpts ? `<code>${esc(o)}</code>` : o;
+const hasKZ = c => c.kind === 'order' || c.kind === 'sort' || c.kind === 'cloze';
+function frontHTML(c) {
+    const body = hasKZ(c) ? `<div class="fvis kz kz-${c.kind}"></div>` : c.vis ? `<div class="fvis">${c.vis}${c.scene ? `<button class="replay" aria-label="Replay">${REPLAY}<span>Replay</span></button>` : ''}</div>` : `<div class="ghost">${SUBS[c.sc].g}</div>`;
+    return `<div class="fmeta"><span class="sctag">${SUBS[c.sc].title}</span><span class="tchip">${typeOf(c)}</span>${Buckles.isDone(c.id) ? `<span class="bkchip">${BK}Earned</span>` : ''}<span class="lgc">${DTITLE(c.lg)}</span></div><div class="fq">${c.q}</div>${body}`;
+}
+function backHTML(c, ok) {
+    const ans = c.ansHTML || (c.pic ? `<div class="apic">${c.opts[c.ans]}</div>` : `<div class="ans">${optHTML(c, c.opts[c.ans])}</div>`);
+    const bv = c.backVis || (c.vis && !c.pic ? c.vis : '');
+    const vis = bv ? `<div class="bvis">${bv}</div>` : '';
+    const plain = !bv && !c.pic && !c.ansHTML;
+    return `<div class="bhead ${ok ? 'ok' : 'no'}">${ok ? TICK : CROSS}<span>${ok ? 'Correct' : 'Not quite'}</span><span class="bsc">${SUBS[c.sc].stage}</span></div>${plain ? `<div class="ghost">${SUBS[c.sc].g}</div>` : ''}<div class="bbody${plain ? ' nov' : ''}"><div class="alab">${ok ? 'Answer' : 'The answer is'}</div>${ans}<p class="exp">${c.exp}</p>${vis}</div>`;
+}
+function deal() {
+    const c = S.cur = S.cards[S.i]; S.locked = true; S.ctl = null; S.sc = null;
+    document.getElementById('cnum').innerHTML = `Card <b>${S.i + 1}</b> / ${S.cards.length}`;
+    progress.style.width = (S.i / S.cards.length * 100) + '%';
+    stackUpdate();
+    const card = el('div', 'card');
+    card.innerHTML = `<div class="face front${c.vis || hasKZ(c) ? '' : ' t'}">${frontHTML(c)}</div><div class="face back pat">${PATTERN}<div class="pcode">${DTITLE(c.lg)}</div></div>`;
+    S.cw.appendChild(card); S.card = card;
+    A(card, [
+        { transform: 'translate(21px, 21px) rotateY(180deg) scale(1)' },
+        { transform: 'translate(-8px, -22px) rotateY(90deg) scale(1.04)', offset: .45 },
+        { transform: 'translate(0px, 0px) rotateY(0deg) scale(1)' }
+    ], { duration: 720 });
+    tone([[520, .07, 'triangle', .05]]);
+    S.optcol.innerHTML = ''; S.optcol.style.height = '100%';
+    btns.innerHTML = '';
+    addBtn('Decks', 'btn2', home);
+    const front = card.querySelector('.front');
+    if (c.kind) {
+        S.ctl = KIND[c.kind](c, front, S.optcol);
+        S.els = [...S.optcol.children];
+        S.els.forEach((b, j) => A(b, [{ opacity: 0, transform: 'translateX(30px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 380 + j * 70, fill: 'backwards' }));
+        if (S.ctl.check) {
+            const cb = addBtn('Check', 'next', () => {
+                if (!S || S.locked || !S.ctl.ready()) return;
+                S.locked = true; cb.disabled = true;
+                const r = S.ctl.check();
+                finishKind(r.ok, r.anchor, 1100);
+            });
+            cb.id = 'chk';
+            S.refresh = () => { cb.disabled = !S.ctl.ready(); };
+            S.refresh();
+        }
+        say(c.instr + (Buckles.isDone(c.id) ? ' You’ve already earned this buckle.' : ''));
+    } else {
+        S.order = c.ordered ? [0, 1, 2, 3] : shuffle([0, 1, 2, 3]);
+        const box = el('div', 'opts');
+        let grid = box;
+        if (c.pic) { grid = el('div', 'pgrid'); box.appendChild(grid); }
+        const short = !c.pic && !c.codeOpts && c.opts.every(o => o.length < 16);
+        S.els = S.order.map((oi, j) => {
+            const b = el('button', c.pic ? 'pcard' : 'opt' + (short ? ' short' : '') + (c.codeOpts ? ' code-o' : ''), c.pic ? `<span class="l">${'ABCD'[j]}</span>${c.opts[oi]}` : `<span class="l">${'ABCD'[j]}</span><span>${optHTML(c, c.opts[oi])}</span>`);
+            b.onclick = () => choose(j);
+            b.style.opacity = 0;
+            grid.appendChild(b);
+            A(b, [{ opacity: 0, transform: 'translateX(30px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 380 + j * 70, fill: 'forwards' }).then(() => { b.style.opacity = ''; });
+            return b;
+        });
+        S.optcol.appendChild(box);
+        say((c.scene ? 'Watch the code run, then choose your prediction. Press <b>Replay</b> to watch again.' : 'Choose the best answer. You can also press <b>1</b> to <b>4</b> on the keyboard.') + (Buckles.isDone(c.id) ? ' You’ve already earned this buckle.' : ''));
+    }
+    if (c.scene) {
+        const sv = front.querySelector('.fvis svg'), ctl = SCENE[c.scene](sv, c);
+        S.sc = ctl;
+        setTimeout(() => { if (S && S.cur === c) ctl.intro(); }, 760);
+        front.querySelector('.replay').onclick = () => ctl.intro();
+    }
+    setTimeout(() => { if (S && S.cur === c) S.locked = false; }, 450);
+}
+const PRAISE = ['Nailed it.', 'Spot on.', 'Great recall.', 'That’s it.', 'Exactly right.', 'Too easy.', 'Brilliant.'];
+function choose(j) {
+    if (!S || S.locked || S.cur.kind) return;
+    S.locked = true;
+    const c = S.cur, ok = S.order[j] === c.ans, b = S.els[j];
+    S.els.forEach((e, k) => {
+        e.disabled = true; e.style.opacity = '';
+        if (k === j) { e.classList.add(ok ? 'right' : 'wrong'); if (ok) e.querySelector('.l').innerHTML = TICK; }
+        else if (S.order[k] === c.ans) e.classList.add('reveal');
+        else e.classList.add('dim');
+    });
+    resolve(ok, b);
+}
+function finishKind(ok, anchor, delay) {
+    const c = S.cur;
+    if (ok && Buckles.isDone(c.id)) { const r = local(anchor.getBoundingClientRect()); burst(r.x + r.w / 2, r.y + r.h / 2, 26); tone([[784, .11], [1175, .24]]); }
+    setTimeout(() => { if (S && S.cur === c) resolve(ok, anchor, true); }, delay);
+}
+function resolve(ok, b, quiet) {
+    const c = S.cur;
+    S.res.push({ c, ok });
+    const back = S.card.querySelector('.back');
+    back.className = 'face back';
+    back.innerHTML = backHTML(c, ok);
+    A(S.card, [
+        { transform: 'translate(0px, 0px) rotateY(0deg) scale(1)' },
+        { transform: 'translate(0px, -14px) rotateY(-90deg) scale(1.04)', offset: .5 },
+        { transform: 'translate(0px, 0px) rotateY(-180deg) scale(1)' }
+    ], { duration: 640 });
+    if (c.scene) { const sv = back.querySelector('.bvis svg'); if (sv) { const ctl = SCENE[c.scene](sv, c); setTimeout(() => { if (S && S.cur === c) ctl.outcome(); }, 650); } }
+    if (ok) {
+        S.streak++;
+        const r = local(b.getBoundingClientRect());
+        /* one buckle per question, the first time it is answered correctly */
+        const fresh = !Buckles.isDone(c.id);
+        if (fresh) { Buckles.award(c.id, c.buckles); refreshCount(); celebrate(c.buckles); S.newBk++; tone([[784, .1], [988, .1], [1319, .26]]); }
+        else if (!quiet) { burst(r.x + r.w / 2, r.y + r.h / 2, S.streak >= 3 ? 34 : 24); tone(S.streak >= 3 ? [[784, .1], [988, .1], [1319, .26]] : [[784, .11], [1175, .24]]); }
+        if (!fresh || S.streak >= 3) plusOne(r.x + r.w / 2, r.y - 10, S.streak >= 3 ? `${S.streak} in a row` : '+1');
+        if (!quiet) A(b, [{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 360, fill: 'none' });
+        say(`<b>${PRAISE[Math.floor(Math.random() * PRAISE.length)]}</b> ${fresh ? 'You earned a buckle.' : S.streak >= 3 ? `That’s ${S.streak} in a row.` : 'You’ve already earned this buckle.'}`);
+    } else {
+        S.streak = 0;
+        tone([[196, .22, 'triangle', .1]]);
+        say('<b class="no">Not quite.</b> Read the answer card so it sticks next time.');
+    }
+    btns.innerHTML = '';
+    addBtn('Decks', 'btn2', home);
+    const nb = addBtn(S.i === S.cards.length - 1 ? 'See results' : 'Next card', 'next', next);
+    nb.classList.add('pop-in');
+    setTimeout(() => nb.focus({ preventScroll: true }), 50);
+}
+
+/* ---------- drag and drop: drag a tile, or tap it ---------- */
+function dnd(pool, zones, onChange, o = {}) {
+    let sel = null;
+    const all = () => [pool, ...zones];
+    const zoneOf = t => all().find(z => z.box.contains(t));
+    const armAll = on => zones.forEach(z => z.el.classList.toggle('armed', on));
+    const deselect = () => { if (sel) sel.classList.remove('sel'); sel = null; armAll(false); };
+    function moveTo(t, z) {
+        t.style.transform = ''; t.classList.remove('wrong', 'drag');
+        z.box.appendChild(t);
+        A(t, [{ transform: 'scale(.82)' }, { transform: 'scale(1.06)', offset: .6 }, { transform: 'scale(1)' }], { duration: 300, fill: 'none' });
+        tone([[660, .05, 'triangle', .05]]);
+        deselect(); onChange();
+    }
+    function put(t, z) {
+        if (zoneOf(t) === z) { t.style.transform = ''; return; }
+        if (z.cap === 1) { const ex = z.box.querySelector('.tile'); if (ex) moveTo(ex, pool); }
+        moveTo(t, z);
+    }
+    const hit = (x, y) => all().find(z => { const r = z.el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+    zones.forEach(z => z.el.addEventListener('click', () => { if (sel && S && !S.locked) put(sel, z); }));
+    function tile(html, key, cls = '') {
+        const t = el('span', 'tile ' + cls, html);
+        t.k = key; t.tabIndex = 0; t.setAttribute('role', 'button');
+        const tap = () => {
+            if (!S || S.locked) return;
+            if (zoneOf(t) !== pool) { put(t, pool); return; }
+            if (o.auto) { const e = zones.find(z => !z.box.querySelector('.tile')); if (e) put(t, e); return; }
+            if (sel === t) { deselect(); return; }
+            deselect(); sel = t; t.classList.add('sel'); armAll(true);
+        };
+        t.addEventListener('click', e => e.stopPropagation());
+        t.addEventListener('pointerdown', e => {
+            if (!S || S.locked || e.button > 0) return;
+            e.preventDefault(); e.stopPropagation();
+            if (zoneOf(t) !== pool) { put(t, pool); return; }
+            t.setPointerCapture(e.pointerId);
+            const sx = e.clientX, sy = e.clientY; let moved = false;
+            const move = ev => {
+                const dx = ev.clientX - sx, dy = ev.clientY - sy;
+                if (!moved && Math.hypot(dx, dy) > 6) { moved = true; t.classList.add('drag'); deselect(); }
+                if (!moved) return;
+                t.style.transform = `translate(${dx / scaleK}px, ${dy / scaleK}px) rotate(-3deg) scale(1.05)`;
+                const h = hit(ev.clientX, ev.clientY);
+                all().forEach(z => z.el.classList.toggle('hover', z === h && z !== pool));
+            };
+            const up = ev => {
+                t.removeEventListener('pointermove', move); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up);
+                all().forEach(z => z.el.classList.remove('hover'));
+                if (!moved) { tap(); return; }
+                t.classList.remove('drag');
+                const h = hit(ev.clientX, ev.clientY);
+                if (h && h !== pool) put(t, h); else { t.style.transform = ''; }
+            };
+            t.addEventListener('pointermove', move); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
+        });
+        t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); tap(); } });
+        return t;
+    }
+    return { tile };
+}
+const KIND = {
+    order(c, front, col) {
+        const kz = front.querySelector('.kz');
+        kz.innerHTML = `<div class="ordtop">${c.ordTop}</div><div class="ogrid" style="grid-template-columns:repeat(${c.cols}, 1fr)"></div>`;
+        const grid = kz.querySelector('.ogrid');
+        const slots = c.seq.map((k, i) => { const s = el('div', 'slot', `<b>${c.slotLab ? c.slotLab[i] : i + 1}</b><div class="sb"></div>`); grid.appendChild(s); return s; });
+        const pool = el('div', 'pool ' + (c.poolCls || '')); col.appendChild(pool);
+        const zones = slots.map(s => ({ el: s, box: s.querySelector('.sb'), cap: 1 }));
+        const D = dnd({ el: pool, box: pool }, zones, () => S.refresh && S.refresh(), { auto: true });
+        shuffle(c.seq).forEach(k => pool.appendChild(D.tile(c.tile(k), k, c.tileCls || '')));
+        return {
+            ready: () => !pool.querySelector('.tile'),
+            check() {
+                let ok = true;
+                zones.forEach((z, i) => { const t = z.box.querySelector('.tile'); const r = t.k === c.seq[i]; t.classList.add(r ? 'right' : 'wrong'); if (!r) ok = false; });
+                return { ok, anchor: grid };
+            }
+        };
+    },
+    sort(c, front, col) {
+        const kz = front.querySelector('.kz');
+        kz.innerHTML = `<div class="bins${c.bins.length > 2 ? ' b3' : ''}" style="grid-template-columns:repeat(${c.bins.length}, 1fr)">${c.bins.map((b, i) => `<div class="bin${i ? '' : ' pk'}"><h3>${b[0]}</h3><div class="sub">${b[1]}</div><div class="area"></div></div>`).join('')}</div>`;
+        const bins = [...kz.querySelectorAll('.bin')];
+        const pool = el('div', 'pool ' + (c.poolCls || 'pool3')); col.appendChild(pool);
+        const zones = bins.map((b, i) => ({ el: b, box: b.querySelector('.area'), cap: Infinity, key: i }));
+        const D = dnd({ el: pool, box: pool }, zones, () => S.refresh && S.refresh());
+        shuffle(c.items).forEach(([html, k]) => pool.appendChild(D.tile(html, k, c.tileCls || 'mtile')));
+        return {
+            ready: () => !pool.querySelector('.tile'),
+            check() {
+                let ok = true;
+                zones.forEach(z => z.box.querySelectorAll('.tile').forEach(t => { const r = t.k === z.key; t.classList.add(r ? 'right' : 'wrong'); if (!r) ok = false; }));
+                return { ok, anchor: kz };
+            }
+        };
+    },
+    cloze(c, front, col) {
+        const kz = front.querySelector('.kz');
+        let i = 0;
+        kz.innerHTML = `<p class="ctext">${c.text.replace(/\[\]/g, () => `<span class="blank" data-i="${i++}"><span class="bb"></span></span>`)}</p>`;
+        const blanks = [...kz.querySelectorAll('.blank')];
+        const pool = el('div', 'pool poolw'); col.appendChild(pool);
+        const zones = blanks.map(b => ({ el: b, box: b.querySelector('.bb'), cap: 1 }));
+        const D = dnd({ el: pool, box: pool }, zones, () => S.refresh && S.refresh(), { auto: true });
+        shuffle(c.bank).forEach(w => pool.appendChild(D.tile(w, w, 'wtile')));
+        return {
+            ready: () => zones.every(z => z.box.querySelector('.tile')),
+            check() {
+                let ok = true;
+                zones.forEach((z, k) => { const t = z.box.querySelector('.tile'); const r = t.k === c.answers[k]; t.classList.add(r ? 'right' : 'wrong'); if (!r) ok = false; });
+                return { ok, anchor: kz };
+            }
+        };
+    },
+    hotspot(c, front, col) {
+        const w = el('div', 'hsw', c.hsSVG); col.appendChild(w);
+        const svg = w.querySelector('svg');
+        svg.querySelectorAll('.hs').forEach(g => {
+            const go = () => {
+                if (!S || S.locked) return;
+                S.locked = true;
+                const k = +g.dataset.k, ok = c.correct.includes(k);
+                svg.classList.add('done');
+                svg.querySelectorAll('.hs').forEach(h => { const kk = +h.dataset.k; if (c.correct.includes(kk)) h.classList.add('good'); else if (h !== g) h.classList.add('off'); });
+                g.classList.add(ok ? 'good' : 'bad');
+                const bul = svg.querySelector('.bulge');
+                if (bul) A(bul, [{ opacity: 0, transform: 'scale(.6, .8)' }, { opacity: 1, transform: 'scale(1, 1)' }], { duration: 900, delay: 150 });
+                finishKind(ok, g, 1500);
+            };
+            g.addEventListener('click', go);
+            g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+        });
+        return {};
+    }
+};
+
+
+async function next() {
+    if (!S || S.busy || !S.locked) return;
+    S.busy = true;
+    const tok = S.tok, last = S.res[S.res.length - 1], pile = document.getElementById(last.ok ? 'pGot' : 'pRev');
+    const pr = local(pile.querySelector('i').getBoundingClientRect()), cr = local(S.card.getBoundingClientRect());
+    const dx = pr.x + pr.w / 2 - (cr.x + cr.w / 2), dy = pr.y + pr.h / 2 - (cr.y + cr.h / 2);
+    btns.querySelectorAll('button').forEach(b => b.disabled = true);
+    S.els.forEach((e, k) => A(e, [{ opacity: getComputedStyle(e).opacity, transform: 'none' }, { opacity: 0, transform: 'translateX(-20px)' }], { duration: 260, delay: k * 30 }));
+    const card = S.card;
+    await A(card, [
+        { transform: 'translate(0px, 0px) rotateY(-180deg) scale(1) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) rotateY(-180deg) scale(.05) rotate(${last.ok ? -14 : 14}deg)`, opacity: .7 }
+    ], { duration: 560, easing: 'cubic-bezier(.55,0,.8,.45)' });
+    if (!S || S.tok !== tok) return;
+    card.remove();
+    if (last.ok) S.got++; else S.rev++;
+    const num = pile.querySelector('b'); num.textContent = last.ok ? S.got : S.rev;
+    A(pile, [{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 380, fill: 'none' });
+    if (last.ok) { const p = local(pile.getBoundingClientRect()); burst(pr.x + pr.w / 2, pr.y + pr.h / 2, 10, 70); }
+    S.i++;
+    S.busy = false;
+    if (S.i >= S.cards.length) results(); else deal();
+}
+
+/* ---------- feedback effects ---------- */
+function burst(x, y, n = 24, spread = 130) {
+    const sh = el('div', 'shock'); sh.style.cssText = `left:${x - 20}px;top:${y - 20}px;width:40px;height:40px`; stage.appendChild(sh);
+    A(sh, [{ transform: 'scale(.3)', opacity: 1 }, { transform: `scale(${spread / 22})`, opacity: 0 }], { duration: 600, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => sh.remove());
+    for (let i = 0; i < n; i++) {
+        const p = el('i', 'pt'), sz = 7 + Math.random() * 9, a = Math.random() * Math.PI * 2, d = spread * (.45 + Math.random() * .75), col = [PK, PK, NV, '#ff7cc4'][i % 4];
+        const star = i % 5 === 0, round = i % 3 === 0;
+        p.style.cssText = `left:${x - sz / 2}px;top:${y - sz / 2}px;width:${star ? sz * 1.7 : sz}px;height:${star ? sz * 1.7 : sz}px;background:${col};border-radius:${round && !star ? '50%' : '2px'};${star ? 'clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)' : ''}`;
+        stage.appendChild(p);
+        A(p, [{ transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 50}px) rotate(${(Math.random() - .5) * 600}deg) scale(.3)`, opacity: 0 }],
+            { duration: 700 + Math.random() * 450, easing: 'cubic-bezier(.12,.7,.3,1)' }).then(() => p.remove());
+    }
+}
+function plusOne(x, y, t) {
+    const p = el('div', 'plus', t); stage.appendChild(p); p.style.left = (x - p.offsetWidth / 2) + 'px'; p.style.top = y + 'px';
+    A(p, [{ transform: 'translateY(10px) scale(.6)', opacity: 0 }, { transform: 'translateY(-26px) scale(1.1)', opacity: 1, offset: .3 }, { transform: 'translateY(-70px) scale(1)', opacity: 0 }], { duration: 1100, easing: 'cubic-bezier(.2,.8,.2,1)' }).then(() => p.remove());
+}
+
+/* ---------- results ---------- */
+function results() {
+    screen = 'results'; clearAll();
+    const res = S.res, N = res.length, n = res.filter(r => r.ok).length;
+    counter.innerHTML = `<b>${S.label}</b>&nbsp;complete`;
+    progress.style.width = '100%';
+    const wrap = el('div', 'res');
+    const left = el('div', 'rleft');
+    const C2 = 2 * Math.PI * 84;
+    left.innerHTML = `<div class="ringw"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="84" fill="none" stroke="${LT}" stroke-width="18"/><circle class="rg" cx="100" cy="100" r="84" fill="none" stroke="${PK}" stroke-width="18" stroke-dasharray="${C2.toFixed(1)}" stroke-dashoffset="${C2.toFixed(1)}"/></svg><div class="rnum"><b id="rn">0</b><span>/ ${N}</span></div></div><div class="rlab">Cards correct</div><div class="rbk">${BK}<b>${earnedIn(S.all)} / ${S.all.length}</b><span>Buckles${S.newBk ? ` (+${S.newBk} new)` : ''}</span></div>`;
+    const missed = res.filter(r => !r.ok).map(r => r.c);
+    if (missed.length) { const b = el('button', 'next', `Revise ${missed.length} missed card${missed.length > 1 ? 's' : ''}`); b.onclick = () => start(missed, 'Revision'); left.appendChild(b); }
+    const ag = el('button', 'btn2', 'Play these cards again'); ag.onclick = () => start(S.all, S.label); left.appendChild(ag);
+    const hm = el('button', 'btn2', 'Choose another deck'); hm.onclick = home; left.appendChild(hm);
+
+    const scs = [...new Set(res.map(r => r.c.sc))].sort((a, b) => SUBORDER.indexOf(a) - SUBORDER.indexOf(b));
+    const compact = scs.length > 8;
+    const right = el('div', 'rright');
+    right.innerHTML = `<div class="rhead"><span>Your cards by learning intention</span><i><span class="chip y">${TICK}Correct</span><span class="chip n">${CROSS}Revise</span></i></div>`;
+    const list = el('div', 'rlist' + (compact ? ' three' : scs.length > 4 ? ' two' : ''));
+    const blocks = scs.map(sc => {
+        const rs = res.filter(r => r.c.sc === sc).sort((a, b) => b.ok - a.ok), k = rs.filter(r => r.ok).length, f = k / rs.length;
+        const tag = f === 1 ? '<span class="tag sec">Secure</span>' : f >= .5 ? '<span class="tag near">Nearly</span>' : '<span class="tag rev">Revise</span>';
+        const chips = rs.map(r => compact && r.ok ? `<span class="chip y dot" title="${r.c.label}">${TICK}</span>` : `<span class="chip ${r.ok ? 'y' : 'n'}">${r.ok ? TICK : CROSS}${r.c.label}</span>`).join('');
+        const b = el('div', 'rblock', `<div class="rbh"><span class="rsc">${SUBS[sc].title}</span>${tag}<b>${k} / ${rs.length}</b></div>${compact ? '' : `<div class="rtx">${SUBS[sc].sc}</div>`}<div class="chips">${chips}</div>`);
+        list.appendChild(b); return b;
+    });
+    right.appendChild(list);
+    wrap.append(left, right); content.appendChild(wrap);
+    let rsz = 1;
+    while (list.scrollHeight > list.clientHeight + 1 && rsz > .62) { rsz -= .03; list.style.setProperty('--rs', rsz.toFixed(2)); }
+    blocks.forEach((b, i) => A(b, [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 250 + i * 60, fill: 'backwards' }));
+    say('Take a screenshot of this screen and paste it into Stile as evidence of your work.');
+    const ring = left.querySelector('.rg'), frac = N ? n / N : 0;
+    A(ring, [{ strokeDashoffset: C2 }, { strokeDashoffset: C2 * (1 - frac) }], { duration: 1300, delay: 200, easing: 'cubic-bezier(.3,.7,.2,1)' });
+    const rn = left.querySelector('#rn'), t0 = performance.now() + 200, tok = S.tok;
+    const tick = t => { if (!S || S.tok !== tok || screen !== 'results') return; const k = Math.max(0, Math.min(1, (t - t0) / 1300)); rn.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick); else if (frac >= .8) ringCelebrate(); };
+    requestAnimationFrame(tick);
+    tone([[523, .1], [659, .1], [784, .1], [1047, .3]]);
+}
+function ringCelebrate() {
+    const r = local(document.querySelector('.ringw').getBoundingClientRect());
+    burst(r.x + r.w / 2, r.y + r.h / 2, 40, 200);
+}
+
+/* keyboard */
+document.addEventListener('keydown', e => {
+    if (screen !== 'play' || !S) return;
+    const k = '1234'.indexOf(e.key) >= 0 ? '1234'.indexOf(e.key) : 'abcd'.indexOf(e.key.toLowerCase());
+    if (k >= 0 && !S.locked && e.key.length === 1) { e.preventDefault(); choose(k); }
+});
+
+/* ---------- scale to window ---------- */
+function fit() {
+    scaleK = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    stage.style.transform = `scale(${scaleK})`;
+    stage.style.margin = `${(720 * scaleK - 720) / 2}px ${(1280 * scaleK - 1280) / 2}px`;
+}
+window.addEventListener('resize', fit);
+function fitTitle() { const t = document.querySelector('.sheet-title'); t.style.fontSize = ''; let f = 42; while (t.scrollWidth > t.clientWidth + 1 && f > 20) { f--; t.style.fontSize = f + 'px'; } }
+new MutationObserver(fitTitle).observe(counter, { childList: true, subtree: true, characterData: true });
+fit();
+/* ---------- data check: runs on every load and reports problems before students find them ---------- */
+function validateCards() {
+    const err = [], warn = [], seen = new Map(), labels = new Set(), idRx = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+    const released = new Set(RELEASED_IDS), retired = new Set(RETIRED_IDS);
+    CARDS.forEach((c, i) => {
+        const at = `Card ${i + 1} (${c.id || 'no id'})`;
+        if (typeof c.id !== 'string' || !idRx.test(c.id)) err.push(`${at}: the ID must use lowercase letters, numbers and hyphens only.`);
+        if (seen.has(c.id)) err.push(`${at}: duplicate ID, also used by card ${seen.get(c.id) + 1}. Both would share one buckle.`); else seen.set(c.id, i);
+        if (retired.has(c.id)) err.push(`${at}: this ID was retired and must not be reused. Choose a new ID.`);
+        if (!released.has(c.id)) warn.push(`${at}: new ID. Add '${c.id}' to RELEASED_IDS when you publish this card.`);
+        if (!SUBS[c.sc] || !DECKS.find(d => d.id === SUBS[c.sc].deck && d.subs.includes(c.sc))) err.push(`${at}: ${c.sc} is not listed in SUBS and DECKS.`);
+        if (!c.label || !c.q || !c.exp) err.push(`${at}: label, question and explanation are all required.`);
+        const lk = c.sc + '|' + c.label; if (labels.has(lk)) warn.push(`${at}: another ${c.sc} card has the label "${c.label}", which makes the results screen confusing.`); labels.add(lk);
+        if (c.scene && (!SCENE[c.scene] || !c.vis)) err.push(`${at}: scene "${c.scene}" needs a matching SCENE entry and a vis.`);
+        if (c.kind) {
+            if (!KIND[c.kind]) { err.push(`${at}: unknown kind "${c.kind}".`); return; }
+            if (!c.instr) warn.push(`${at}: add an instr line so students know what to do.`);
+            if (c.kind === 'order' && (!Array.isArray(c.seq) || c.seq.length < 2 || typeof c.tile !== 'function')) err.push(`${at}: order cards need seq (2 or more) and a tile function.`);
+            if (c.kind === 'sort' && (!Array.isArray(c.bins) || c.bins.length < 2 || c.bins.length > 3 || !Array.isArray(c.items) || c.items.some(it => !(Number.isInteger(it[1]) && it[1] >= 0 && it[1] < c.bins.length)))) err.push(`${at}: sort cards need 2 or 3 bins and items tagged with a bin number.`);
+            if (c.kind === 'cloze') {
+                const gaps = (c.text.match(/\[\]/g) || []).length, bank = (c.bank || []).slice();
+                if (gaps !== (c.answers || []).length) err.push(`${at}: the text has ${gaps} gaps but ${(c.answers || []).length} answers.`);
+                (c.answers || []).forEach(a => { const k = bank.indexOf(a); if (k < 0) err.push(`${at}: the answer "${a}" is missing from the word bank.`); else bank.splice(k, 1); });
+            }
+            if (c.kind === 'hotspot' && (!c.hsSVG || !Array.isArray(c.correct) || !c.correct.length)) err.push(`${at}: hotspot cards need hsSVG and a correct list.`);
+        } else {
+            if (!Array.isArray(c.opts) || c.opts.length !== 4) err.push(`${at}: multiple choice cards need exactly 4 options.`);
+            if (!Number.isInteger(c.ans) || c.ans < 0 || c.ans > 3) err.push(`${at}: ans must be 0, 1, 2 or 3.`);
+        }
+    });
+    RELEASED_IDS.forEach(id => { if (!seen.has(id) && !retired.has(id) && !ID_ALIASES[id]) err.push(`Released ID '${id}' is missing. If the card was deleted, add it to RETIRED_IDS. If it was renamed, restore the old ID or add an ID_ALIASES entry.`); });
+    Object.entries(ID_ALIASES).forEach(([a, b]) => { if (!seen.has(b)) err.push(`ID_ALIASES points '${a}' to '${b}', but no card has the ID '${b}'.`); });
+    if (err.length || warn.length) {
+        console.group(`Card data check: ${err.length} problem${err.length === 1 ? '' : 's'}, ${warn.length} reminder${warn.length === 1 ? '' : 's'}`);
+        err.forEach(m => console.error(m)); warn.forEach(m => console.warn(m)); console.groupEnd();
+        const b = el('button', 'devcheck' + (err.length ? ' bad' : ''), `Card data check: ${err.length ? `${err.length} problem${err.length === 1 ? '' : 's'}` : `${warn.length} reminder${warn.length === 1 ? '' : 's'}`}. Open the browser console for details.`);
+        b.title = 'Click to hide'; b.onclick = () => b.remove(); stage.appendChild(b);
+    }
+    return { err, warn };
+}
+window.addEventListener('storage', e => { if (e.key === 'buckles-shared') refreshCount(); });
+refreshCount();
+validateCards();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fit(); refreshCount(); home(); fitTitle(); });
+</script>
+</body>
+</html>
